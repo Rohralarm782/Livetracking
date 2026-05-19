@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Tracking</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; }
+
+    #resetBtn {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 9999;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    #teamCarToggle {
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      z-index: 9999;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #teamCarToggle input[type="checkbox"] {
+      cursor: pointer;
+      width: 15px;
+      height: 15px;
+      accent-color: #e53935;
+    }
+
+    #teamCarToggle.active {
+      border-color: #e53935;
+      color: #c62828;
+    }
+
+    #status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 9999;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 13px;
+      background: white;
+      border: 1px solid #ccc;
+    }
+
+    #status.ok   { border-color: #4caf50; color: #2e7d32; }
+    #status.warn { border-color: #f44336; color: #c62828; }
+  </style>
+</head>
+<body>
+
+<button id="resetBtn">🧹 Karte leeren</button>
+
+<label id="teamCarToggle">
+  <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort (Teamauto)
+</label>
+
+<div id="status" class="warn">⚪ Warte auf Daten…</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+
+// =======================
+// MAP
+// =======================
+const map = L.map('map').setView([52.52, 13.405], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+// =======================
+// STATE
+// =======================
+const markers       = {};
+const lastPositions = {};
+const trails        = {};
+
+let firstDevice  = true;
+let lastDataTime = null;
+
+// =======================
+// TEAMAUTO – EIGENER MARKER (ROT)
+// =======================
+const teamCarIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    background: #e53935;
+    border: 3px solid white;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    width: 22px;
+    height: 22px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  "></div>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  tooltipAnchor: [0, -28]
+});
+
+let teamCarMarker      = null;
+let teamCarWatchId     = null;
+let teamCarAccCircle   = null;   // optionaler Genauigkeitskreis
+
+function startTeamCarTracking() {
+  if (!navigator.geolocation) {
+    alert("GPS wird von diesem Browser nicht unterstützt.");
+    document.getElementById('teamCarCheckbox').checked = false;
+    return;
+  }
+
+  teamCarWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const latlng = [pos.coords.latitude, pos.coords.longitude];
+      const accuracy = pos.coords.accuracy;
+
+      if (!teamCarMarker) {
+        teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
+          .addTo(map)
+          .bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
+
+        teamCarAccCircle = L.circle(latlng, {
+          radius: accuracy,
+          color: '#e53935',
+          fillColor: '#e53935',
+          fillOpacity: 0.08,
+          weight: 1
+        }).addTo(map);
+
+      } else {
+        teamCarMarker.setLatLng(latlng);
+        teamCarAccCircle.setLatLng(latlng);
+        teamCarAccCircle.setRadius(accuracy);
+      }
+
+      console.log("🚗 Teamauto-Position:", latlng, "Genauigkeit:", accuracy + "m");
+    },
+    (err) => {
+      console.error("❌ Geolocation-Fehler:", err.message);
+      if (err.code === 1) {
+        alert("GPS-Zugriff verweigert. Bitte in den Browser-Einstellungen erlauben.");
+        document.getElementById('teamCarCheckbox').checked = false;
+        document.getElementById('teamCarToggle').classList.remove('active');
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000
+    }
+  );
+}
+
+function stopTeamCarTracking() {
+  if (teamCarWatchId !== null) {
+    navigator.geolocation.clearWatch(teamCarWatchId);
+    teamCarWatchId = null;
+  }
+
+  if (teamCarMarker) {
+    map.removeLayer(teamCarMarker);
+    teamCarMarker = null;
+  }
+
+  if (teamCarAccCircle) {
+    map.removeLayer(teamCarAccCircle);
+    teamCarAccCircle = null;
+  }
+
+  console.log("🛑 Teamauto-Tracking gestoppt");
+}
+
+document.getElementById('teamCarCheckbox').addEventListener('change', function () {
+  const toggle = document.getElementById('teamCarToggle');
+  if (this.checked) {
+    toggle.classList.add('active');
+    startTeamCarTracking();
+  } else {
+    toggle.classList.remove('active');
+    stopTeamCarTracking();
+  }
+});
+
+// =======================
+// STATUS-ANZEIGE
+// =======================
+const statusEl = document.getElementById('status');
+
+function updateStatus() {
+  if (!lastDataTime) return;
+  const ago = (Date.now() - lastDataTime) / 1000;
+  if (ago < 5) {
+    statusEl.className = 'ok';
+    statusEl.textContent = '🟢 Verbunden';
+  } else {
+    statusEl.className = 'warn';
+    statusEl.textContent = `🔴 Kein Signal seit ${Math.round(ago)}s`;
+  }
+}
+
+setInterval(updateStatus, 1000);
+
+// =======================
+// SMOOTH MARKER MOVEMENT
+// =======================
+function animateMarker(marker, from, to, duration = 800) {
+  const start = performance.now();
+  function step(time) {
+    const t = Math.min((time - start) / duration, 1);
+    const lat = from[0] + (to[0] - from[0]) * t;
+    const lng = from[1] + (to[1] - from[1]) * t;
+    marker.setLatLng([lat, lng]);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// =======================
+// LOAD POSITIONS
+// =======================
+async function loadPositions() {
+  try {
+    const res  = await fetch('http://127.0.0.1:3000/positions');
+    const data = await res.json();
+
+    const ids = Object.keys(data);
+    if (ids.length === 0) return;
+
+    lastDataTime = Date.now();
+
+    ids.forEach(id => {
+      const pos    = data[id];
+      const latlng = [pos.lat, pos.lon];
+
+      if (!trails[id]) {
+        trails[id] = L.polyline([], {
+          color: '#3388ff',
+          weight: 3,
+          opacity: 0.6
+        }).addTo(map);
+      }
+
+      if (!markers[id]) {
+        markers[id] = L.marker(latlng)
+          .addTo(map)
+          .bindTooltip(id, { permanent: true, direction: 'top' });
+
+        lastPositions[id] = latlng;
+
+        if (firstDevice) {
+          map.setView(latlng, 15);
+          firstDevice = false;
+        }
+      } else {
+        animateMarker(markers[id], lastPositions[id], latlng);
+
+        const prev  = lastPositions[id];
+        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 ||
+                      Math.abs(prev[1] - latlng[1]) > 0.000005;
+        if (moved) trails[id].addLatLng(latlng);
+
+        lastPositions[id] = latlng;
+      }
+
+      map.panTo(latlng, { animate: true, duration: 0.6 });
+    });
+
+  } catch (err) {
+    console.error("💥 Fetch Fehler:", err);
+  }
+}
+
+// =======================
+// RESET
+// =======================
+async function clearMap() {
+  await fetch('http://127.0.0.1:3000/positions', { method: 'DELETE' });
+
+  Object.keys(markers).forEach(id => map.removeLayer(markers[id]));
+  Object.keys(trails).forEach(id  => map.removeLayer(trails[id]));
+
+  Object.keys(markers).forEach(id      => delete markers[id]);
+  Object.keys(trails).forEach(id       => delete trails[id]);
+  Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
+
+  lastDataTime = null;
+  firstDevice  = true;
+  statusEl.className   = 'warn';
+  statusEl.textContent = '⚪ Warte auf Daten…';
+
+  console.log("🧹 Karte + Backend geleert");
+}
+
+document.getElementById("resetBtn").addEventListener("click", clearMap);
+
+// =======================
+// LOOP
+// =======================
+loadPositions();
+setInterval(loadPositions, 1000);
+
+</script>
+</body>
+</html>
