@@ -241,7 +241,7 @@ function animateMarker(marker, from, to, duration = 800) {
 // =======================
 async function loadPositions() {
   try {
-    const res  = await fetch('https://livetracking-production-cf84.up.railway.app/');
+    const res  = await fetch('https://livetracking-production-cf84.up.railway.app/positions');
     const data = await res.json();
 
     const ids = Object.keys(data);
@@ -295,7 +295,7 @@ async function loadPositions() {
 // RESET
 // =======================
 async function clearMap() {
-  await fetch('https://livetracking-production-cf84.up.railway.app/', { method: 'DELETE' });
+  await fetch('https://livetracking-production-cf84.up.railway.app/positions', { method: 'DELETE' });
 
   Object.keys(markers).forEach(id => map.removeLayer(markers[id]));
   Object.keys(trails).forEach(id  => map.removeLayer(trails[id]));
