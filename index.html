@@ -86,10 +86,11 @@
 // =======================
 const map = L.map('map').setView([52.52, 13.405], 13);
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+// CartoDB Voyager – Straßen, Ortsnamen, Topografie; weniger POI-Icons als OSM
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '© CartoDB'
-})
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
+}).addTo(map);
 
 // =======================
 // STATE
