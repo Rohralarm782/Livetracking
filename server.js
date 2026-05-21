@@ -15,14 +15,9 @@ app.use((req, res, next) => {
 });
 
 // =======================
-// FRONTEND
-// =======================
-app.use(express.static(__dirname));
-
-// =======================
 // STATE
 // =======================
-let positions = Object.create(null); // sauberer als {}
+let positions = Object.create(null);
 
 // =======================
 // HEALTH CHECK
@@ -35,7 +30,7 @@ app.get('/health', (req, res) => {
 // POSITIONEN SPEICHERN
 // =======================
 app.post('/positions', (req, res) => {
-  const { id, lat, lon } = req.body;
+  const { id, lat, lon, bat } = req.body;
 
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({
@@ -46,7 +41,8 @@ app.post('/positions', (req, res) => {
   positions[id] = {
     lat,
     lon,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    ...(typeof bat === 'number' && { bat })
   };
 
   console.log("📍 gespeichert:", id, positions[id]);
@@ -62,10 +58,9 @@ app.get('/positions', (req, res) => {
 });
 
 // =======================
-// 🧹 RESET (DELETE)
+// RESET (DELETE)
 // =======================
 app.delete('/positions', (req, res) => {
-
   const keys = Object.keys(positions);
 
   if (keys.length === 0) {
@@ -80,6 +75,11 @@ app.delete('/positions', (req, res) => {
 
   res.json({ ok: true, message: "cleared" });
 });
+
+// =======================
+// FRONTEND  ← nach den API-Routen
+// =======================
+app.use(express.static(__dirname));
 
 // =======================
 // START SERVER
