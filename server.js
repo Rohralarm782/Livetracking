@@ -15,6 +15,11 @@ app.use((req, res, next) => {
 });
 
 // =======================
+// FRONTEND
+// =======================
+app.use(express.static(__dirname));
+
+// =======================
 // STATE
 // =======================
 let positions = Object.create(null);
@@ -41,8 +46,9 @@ app.post('/positions', (req, res) => {
   positions[id] = {
     lat,
     lon,
-    timestamp: Date.now(),
-    ...(typeof bat === 'number' && { bat })
+    // bat nur speichern wenn als Zahl gesendet (optional)
+    ...(typeof bat === 'number' && { bat }),
+    timestamp: Date.now()
   };
 
   console.log("📍 gespeichert:", id, positions[id]);
@@ -58,9 +64,10 @@ app.get('/positions', (req, res) => {
 });
 
 // =======================
-// RESET (DELETE)
+// 🧹 RESET (DELETE)
 // =======================
 app.delete('/positions', (req, res) => {
+
   const keys = Object.keys(positions);
 
   if (keys.length === 0) {
@@ -75,11 +82,6 @@ app.delete('/positions', (req, res) => {
 
   res.json({ ok: true, message: "cleared" });
 });
-
-// =======================
-// FRONTEND  ← nach den API-Routen
-// =======================
-app.use(express.static(__dirname));
 
 // =======================
 // START SERVER
