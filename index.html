@@ -292,7 +292,6 @@ function renderPanel() {
  
   if (ids.length === 0) {
     empty.style.display = '';
-    // Remove existing rows
     body.querySelectorAll('.tracker-row').forEach(el => el.remove());
     return;
   }
@@ -338,7 +337,6 @@ function renderPanel() {
       <div class="tracker-coords">${d.lat.toFixed(5)}, ${d.lon.toFixed(5)}</div>
     `;
  
-    // Rename button
     const renameBtn = row.querySelector('[data-rename]');
     if (renameBtn) {
       renameBtn.addEventListener('click', () => {
@@ -349,13 +347,11 @@ function renderPanel() {
       });
     }
  
-    // Save button
     const saveBtn = row.querySelector('[data-save]');
     if (saveBtn) {
       saveBtn.addEventListener('click', () => commitRename(id, rid));
     }
  
-    // Enter key in input
     const inp = document.getElementById(`ri-${rid}`);
     if (inp) {
       inp.addEventListener('keydown', (e) => {
@@ -365,11 +361,8 @@ function renderPanel() {
     }
   });
  
-  // Update map tooltips
   ids.forEach(id => {
-    if (markers[id]) {
-      markers[id].setTooltipContent(displayName(id));
-    }
+    if (markers[id]) markers[id].setTooltipContent(displayName(id));
   });
 }
  
@@ -479,7 +472,7 @@ function animateMarker(marker, from, to, duration = 800) {
 // =======================
 async function loadPositions() {
   try {
-    const res  = await fetch('https://livetracking-production-cf84.up.railway.app/positions');
+    const res  = await fetch('https://livetracking-fq4l.onrender.com/positions');
     const data = await res.json();
     const ids  = Object.keys(data);
     if (ids.length === 0) return;
@@ -491,7 +484,6 @@ async function loadPositions() {
       const pos    = data[id];
       const latlng = [pos.lat, pos.lon];
  
-      // Update trackerData
       const prev = trackerData[id] || {};
       const batChanged = pos.bat !== undefined && pos.bat !== prev.bat;
       trackerData[id] = {
@@ -501,12 +493,10 @@ async function loadPositions() {
       };
       if (!prev.lat || batChanged) panelDirty = true;
  
-      // Trail
       if (!trails[id]) {
         trails[id] = L.polyline([], { color: '#3388ff', weight: 3, opacity: 0.6 }).addTo(map);
       }
  
-      // Marker
       if (!markers[id]) {
         markers[id] = L.marker(latlng)
           .addTo(map)
@@ -538,7 +528,7 @@ async function loadPositions() {
 // RESET
 // =======================
 async function clearMap() {
-  await fetch('https://livetracking-production-cf84.up.railway.app/positions', { method: 'DELETE' });
+  await fetch('https://livetracking-fq4l.onrender.com/positions', { method: 'DELETE' });
  
   Object.keys(markers).forEach(id => map.removeLayer(markers[id]));
   Object.keys(trails).forEach(id  => map.removeLayer(trails[id]));
@@ -565,4 +555,3 @@ setInterval(loadPositions, 1000);
 </script>
 </body>
 </html>
- 
