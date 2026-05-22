@@ -1,557 +1,92 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>Live Tracking</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
-  <style>
-    /* ── Base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
-    html, body { height: 100%; font-family: 'DM Mono', monospace; }
- 
-    #map { height: 100%; }
- 
-    /* ── Shared control card ── */
-    .ctrl {
-      position: absolute;
-      z-index: 9999;
-      background: rgba(15,15,20,0.88);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 8px;
-      color: #e8e8e8;
-      font-size: 12px;
-    }
- 
-    /* ── Reset button ── */
-    #resetBtn {
-      top: 12px; left: 50px;
-      padding: 8px 14px;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: background 0.15s, color 0.15s;
-    }
-    #resetBtn:hover { background: rgba(229,57,53,0.2); color: #ff6b6b; border-color: rgba(229,57,53,0.4); }
- 
-    /* ── Teamcar toggle ── */
-    #teamCarToggle {
-      top: 54px; left: 50px;
-      padding: 8px 14px;
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; user-select: none;
-      letter-spacing: 0.04em;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    #teamCarToggle input[type="checkbox"] {
-      cursor: pointer; width: 14px; height: 14px; accent-color: #e53935;
-    }
-    #teamCarToggle.active { border-color: rgba(229,57,53,0.5); color: #ff6b6b; }
- 
-    /* ── Status ── */
-    #status {
-      top: 12px; right: 12px;
-      padding: 7px 14px;
-      letter-spacing: 0.05em;
-      font-size: 11px;
-      transition: border-color 0.3s, color 0.3s;
-    }
-    #status.ok   { border-color: rgba(76,175,80,0.5); color: #81c784; }
-    #status.warn { border-color: rgba(244,67,54,0.4); color: #e57373; }
- 
-    /* ══════════════════════════════════════
-       TRACKER PANEL (oben rechts, unter Status)
-    ══════════════════════════════════════ */
-    #trackerPanel {
-      top: 54px; right: 12px;
-      width: 240px;
-      overflow: hidden;
-    }
- 
-    #panelHeader {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      cursor: pointer;
-      letter-spacing: 0.08em;
-      font-family: 'Syne', sans-serif;
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #aaa;
-      user-select: none;
-    }
-    #panelHeader:hover { color: #e8e8e8; }
- 
-    #panelChevron {
-      transition: transform 0.25s;
-      font-size: 10px;
-      color: #666;
-    }
-    #panelHeader.open #panelChevron { transform: rotate(180deg); }
- 
-    #panelBody {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-    #panelBody.open { max-height: 600px; }
- 
-    /* ── Tracker row ── */
-    .tracker-row {
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    .tracker-row:last-child { border-bottom: none; }
- 
-    .tracker-top {
-      display: flex; align-items: center; justify-content: space-between;
-    }
- 
-    .tracker-id {
-      font-size: 11px;
-      color: #666;
-      letter-spacing: 0.05em;
-    }
- 
-    .tracker-name-wrap {
-      display: flex; align-items: center; gap: 6px;
-    }
- 
-    .tracker-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: #e8e8e8;
-    }
- 
-    .rename-btn {
-      background: none; border: none;
-      color: #555; cursor: pointer;
-      font-size: 11px; padding: 2px 4px;
-      border-radius: 3px;
-      transition: color 0.15s, background 0.15s;
-      line-height: 1;
-    }
-    .rename-btn:hover { color: #aaa; background: rgba(255,255,255,0.06); }
- 
-    /* inline rename input */
-    .rename-input {
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 4px;
-      color: #e8e8e8;
-      padding: 2px 6px;
-      width: 120px;
-      outline: none;
-    }
-    .rename-input:focus { border-color: rgba(255,255,255,0.35); }
- 
-    /* ── Battery ── */
-    .bat-row {
-      display: flex; align-items: center; gap: 8px;
-    }
- 
-    .bat-bar-wrap {
-      flex: 1;
-      height: 5px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 3px;
-      overflow: hidden;
-    }
- 
-    .bat-bar {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.4s ease, background 0.4s;
-    }
- 
-    .bat-label {
-      font-size: 11px;
-      color: #aaa;
-      min-width: 32px;
-      text-align: right;
-    }
- 
-    .bat-unknown {
-      font-size: 11px;
-      color: #555;
-      font-style: italic;
-    }
- 
-    /* ── Coords ── */
-    .tracker-coords {
-      font-size: 10px;
-      color: #555;
-      letter-spacing: 0.03em;
-    }
- 
-    /* empty state */
-    #panelEmpty {
-      padding: 14px;
-      font-size: 11px;
-      color: #555;
-      text-align: center;
-      font-style: italic;
-    }
-  </style>
-</head>
-<body>
- 
-<button class="ctrl" id="resetBtn">🧹 Karte leeren</button>
- 
-<label class="ctrl" id="teamCarToggle">
-  <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
-</label>
- 
-<div class="ctrl" id="status">⚪ Warte auf Daten…</div>
- 
-<!-- ── Tracker Panel ── -->
-<div class="ctrl" id="trackerPanel">
-  <div id="panelHeader">
-    <span>Tracker</span>
-    <span id="panelChevron">▾</span>
-  </div>
-  <div id="panelBody">
-    <div id="panelEmpty">Noch keine Tracker online</div>
-  </div>
-</div>
- 
-<div id="map"></div>
- 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
- 
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+
 // =======================
-// MAP
+// MIDDLEWARE
 // =======================
-const map = L.map('map').setView([52.52, 13.405], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
- 
+app.use(cors());
+app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.url}`);
+  next();
+});
+
+// =======================
+// FRONTEND
+// =======================
+app.use(express.static(__dirname));
+
 // =======================
 // STATE
 // =======================
-const markers       = {};
-const lastPositions = {};
-const trails        = {};
-const trackerData   = {};   // { id: { lat, lon, bat, ts } }
-const customNames   = {};   // { id: string }  – gespeicherte Umbenennungen
- 
-let firstDevice  = true;
-let lastDataTime = null;
- 
-// Namen aus localStorage laden
-try {
-  const saved = JSON.parse(localStorage.getItem('tracker_names') || '{}');
-  Object.assign(customNames, saved);
-} catch(_) {}
- 
-function saveNames() {
-  try { localStorage.setItem('tracker_names', JSON.stringify(customNames)); } catch(_) {}
-}
- 
-function displayName(id) {
-  return customNames[id] || id;
-}
- 
+let positions = Object.create(null);
+
 // =======================
-// PANEL TOGGLE
+// HEALTH CHECK
 // =======================
-document.getElementById('panelHeader').addEventListener('click', () => {
-  const header = document.getElementById('panelHeader');
-  const body   = document.getElementById('panelBody');
-  header.classList.toggle('open');
-  body.classList.toggle('open');
+app.get('/health', (req, res) => {
+  res.send('🚀 Tracking Server läuft');
 });
- 
-// Standardmäßig offen
-document.getElementById('panelHeader').classList.add('open');
-document.getElementById('panelBody').classList.add('open');
- 
+
 // =======================
-// PANEL RENDERING
+// POSITIONEN SPEICHERN
 // =======================
-function batColor(pct) {
-  if (pct > 60) return '#66bb6a';
-  if (pct > 25) return '#ffa726';
-  return '#ef5350';
-}
- 
-let renamingId = null;
- 
-function renderPanel() {
-  const body  = document.getElementById('panelBody');
-  const empty = document.getElementById('panelEmpty');
-  const ids   = Object.keys(trackerData);
- 
-  if (ids.length === 0) {
-    empty.style.display = '';
-    body.querySelectorAll('.tracker-row').forEach(el => el.remove());
-    return;
-  }
-  empty.style.display = 'none';
- 
-  ids.forEach(id => {
-    const d   = trackerData[id];
-    const rid = `row-${id.replace(/[^a-z0-9]/gi, '_')}`;
- 
-    let row = document.getElementById(rid);
-    if (!row) {
-      row = document.createElement('div');
-      row.className = 'tracker-row';
-      row.id = rid;
-      body.appendChild(row);
-    }
- 
-    const bat = (d.bat !== undefined && d.bat !== null) ? d.bat : -1;
-    const batHTML = bat >= 0
-      ? `<div class="bat-bar-wrap">
-           <div class="bat-bar" style="width:${bat}%;background:${batColor(bat)}"></div>
-         </div>
-         <span class="bat-label">${bat}%</span>`
-      : `<span class="bat-unknown">Akku unbekannt</span>`;
- 
-    const isRenaming = (renamingId === id);
- 
-    row.innerHTML = `
-      <div class="tracker-top">
-        <span class="tracker-id">${id}</span>
-        <div class="tracker-name-wrap">
-          ${isRenaming
-            ? `<input class="rename-input" id="ri-${rid}" value="${displayName(id)}" maxlength="24" autofocus>`
-            : `<span class="tracker-name">${displayName(id)}</span>`
-          }
-          ${isRenaming
-            ? `<button class="rename-btn" data-save="${id}" title="Speichern">✓</button>`
-            : `<button class="rename-btn" data-rename="${id}" title="Umbenennen">✎</button>`
-          }
-        </div>
-      </div>
-      <div class="bat-row">${batHTML}</div>
-      <div class="tracker-coords">${d.lat.toFixed(5)}, ${d.lon.toFixed(5)}</div>
-    `;
- 
-    const renameBtn = row.querySelector('[data-rename]');
-    if (renameBtn) {
-      renameBtn.addEventListener('click', () => {
-        renamingId = id;
-        renderPanel();
-        const inp = document.getElementById(`ri-${rid}`);
-        if (inp) { inp.focus(); inp.select(); }
-      });
-    }
- 
-    const saveBtn = row.querySelector('[data-save]');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => commitRename(id, rid));
-    }
- 
-    const inp = document.getElementById(`ri-${rid}`);
-    if (inp) {
-      inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter')  commitRename(id, rid);
-        if (e.key === 'Escape') { renamingId = null; renderPanel(); }
-      });
-    }
-  });
- 
-  ids.forEach(id => {
-    if (markers[id]) markers[id].setTooltipContent(displayName(id));
-  });
-}
- 
-function commitRename(id, rid) {
-  const inp = document.getElementById(`ri-${rid}`);
-  if (inp) {
-    const val = inp.value.trim();
-    if (val) { customNames[id] = val; saveNames(); }
-  }
-  renamingId = null;
-  renderPanel();
-}
- 
-// =======================
-// TEAMAUTO
-// =======================
-const teamCarIcon = L.divIcon({
-  className: '',
-  html: `<div style="background:#e53935;border:3px solid white;border-radius:50% 50% 50% 0;
-    transform:rotate(-45deg);width:22px;height:22px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
-  iconSize: [28,28], iconAnchor: [14,28], tooltipAnchor: [0,-28]
-});
- 
-let teamCarMarker = null, teamCarWatchId = null, teamCarAccCircle = null;
- 
-function startTeamCarTracking() {
-  if (!navigator.geolocation) {
-    alert("GPS wird von diesem Browser nicht unterstützt.");
-    document.getElementById('teamCarCheckbox').checked = false;
-    return;
-  }
-  teamCarWatchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      const latlng   = [pos.coords.latitude, pos.coords.longitude];
-      const accuracy = pos.coords.accuracy;
-      if (!teamCarMarker) {
-        teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
-          .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
-        teamCarAccCircle = L.circle(latlng, {
-          radius: accuracy, color: '#e53935', fillColor: '#e53935',
-          fillOpacity: 0.08, weight: 1
-        }).addTo(map);
-      } else {
-        teamCarMarker.setLatLng(latlng);
-        teamCarAccCircle.setLatLng(latlng);
-        teamCarAccCircle.setRadius(accuracy);
-      }
-    },
-    (err) => {
-      if (err.code === 1) {
-        alert("GPS-Zugriff verweigert.");
-        document.getElementById('teamCarCheckbox').checked = false;
-        document.getElementById('teamCarToggle').classList.remove('active');
-      }
-    },
-    { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
-  );
-}
- 
-function stopTeamCarTracking() {
-  if (teamCarWatchId !== null) { navigator.geolocation.clearWatch(teamCarWatchId); teamCarWatchId = null; }
-  if (teamCarMarker)    { map.removeLayer(teamCarMarker);    teamCarMarker    = null; }
-  if (teamCarAccCircle) { map.removeLayer(teamCarAccCircle); teamCarAccCircle = null; }
-}
- 
-document.getElementById('teamCarCheckbox').addEventListener('change', function() {
-  document.getElementById('teamCarToggle').classList.toggle('active', this.checked);
-  this.checked ? startTeamCarTracking() : stopTeamCarTracking();
-});
- 
-// =======================
-// STATUS
-// =======================
-const statusEl = document.getElementById('status');
-function updateStatus() {
-  if (!lastDataTime) return;
-  const ago = (Date.now() - lastDataTime) / 1000;
-  if (ago < 5) {
-    statusEl.className = 'ctrl ok';
-    statusEl.textContent = '🟢 Verbunden';
-  } else {
-    statusEl.className = 'ctrl warn';
-    statusEl.textContent = `🔴 Kein Signal seit ${Math.round(ago)}s`;
-  }
-}
-setInterval(updateStatus, 1000);
- 
-// =======================
-// SMOOTH MOVEMENT
-// =======================
-function animateMarker(marker, from, to, duration = 800) {
-  const start = performance.now();
-  function step(time) {
-    const t = Math.min((time - start) / duration, 1);
-    marker.setLatLng([
-      from[0] + (to[0] - from[0]) * t,
-      from[1] + (to[1] - from[1]) * t
-    ]);
-    if (t < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
- 
-// =======================
-// LOAD POSITIONS
-// =======================
-async function loadPositions() {
-  try {
-    const res  = await fetch('https://livetracking-fq4l.onrender.com/positions');
-    const data = await res.json();
-    const ids  = Object.keys(data);
-    if (ids.length === 0) return;
- 
-    lastDataTime = Date.now();
-    let panelDirty = false;
- 
-    ids.forEach(id => {
-      const pos    = data[id];
-      const latlng = [pos.lat, pos.lon];
- 
-      const prev = trackerData[id] || {};
-      const batChanged = pos.bat !== undefined && pos.bat !== prev.bat;
-      trackerData[id] = {
-        lat: pos.lat,
-        lon: pos.lon,
-        bat: pos.bat !== undefined ? pos.bat : prev.bat
-      };
-      if (!prev.lat || batChanged) panelDirty = true;
- 
-      if (!trails[id]) {
-        trails[id] = L.polyline([], { color: '#3388ff', weight: 3, opacity: 0.6 }).addTo(map);
-      }
- 
-      if (!markers[id]) {
-        markers[id] = L.marker(latlng)
-          .addTo(map)
-          .bindTooltip(displayName(id), { permanent: true, direction: 'top' });
-        lastPositions[id] = latlng;
-        if (firstDevice) { map.setView(latlng, 15); firstDevice = false; }
-        panelDirty = true;
-      } else {
-        animateMarker(markers[id], lastPositions[id], latlng);
-        const prev2 = lastPositions[id];
-        if (Math.abs(prev2[0]-latlng[0]) > 0.000005 || Math.abs(prev2[1]-latlng[1]) > 0.000005) {
-          trails[id].addLatLng(latlng);
-          panelDirty = true;
-        }
-        lastPositions[id] = latlng;
-      }
- 
-      map.panTo(latlng, { animate: true, duration: 0.6 });
+app.post('/positions', (req, res) => {
+  const { id, lat, lon, bat } = req.body;
+
+  if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
+    return res.status(400).json({
+      error: 'id (string), lat (number), lon (number) required'
     });
- 
-    if (panelDirty) renderPanel();
- 
-  } catch (err) {
-    console.error("💥 Fetch Fehler:", err);
   }
-}
- 
+
+  positions[id] = {
+    lat,
+    lon,
+    bat: bat ?? null,
+    timestamp: Date.now()
+  };
+
+  console.log("📍 gespeichert:", id, positions[id]);
+
+  res.json({ ok: true });
+});
+
 // =======================
-// RESET
+// POSITIONEN LADEN
 // =======================
-async function clearMap() {
-  await fetch('https://livetracking-fq4l.onrender.com/positions', { method: 'DELETE' });
- 
-  Object.keys(markers).forEach(id => map.removeLayer(markers[id]));
-  Object.keys(trails).forEach(id  => map.removeLayer(trails[id]));
-  Object.keys(markers).forEach(id      => delete markers[id]);
-  Object.keys(trails).forEach(id       => delete trails[id]);
-  Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
-  Object.keys(trackerData).forEach(id   => delete trackerData[id]);
- 
-  lastDataTime = null;
-  firstDevice  = true;
-  statusEl.className   = 'ctrl warn';
-  statusEl.textContent = '⚪ Warte auf Daten…';
-  renderPanel();
-}
- 
-document.getElementById('resetBtn').addEventListener('click', clearMap);
- 
+app.get('/positions', (req, res) => {
+  res.json(positions);
+});
+
 // =======================
-// LOOP
+// RESET (DELETE)
 // =======================
-loadPositions();
-setInterval(loadPositions, 1000);
- 
-</script>
-</body>
-</html>
+app.delete('/positions', (req, res) => {
+
+  const keys = Object.keys(positions);
+
+  if (keys.length === 0) {
+    return res.json({ ok: true, message: "already empty" });
+  }
+
+  for (const key of keys) {
+    delete positions[key];
+  }
+
+  console.log("🧹 ALLE POSITIONEN GELÖSCHT");
+
+  res.json({ ok: true, message: "cleared" });
+});
+
+// =======================
+// START SERVER
+// =======================
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server läuft auf Port ${PORT}`);
+});
