@@ -32,14 +32,6 @@ app.get('/health', (req, res) => {
 });
 
 // =======================
-// KEEPALIVE PING (vom Tracker alle 30s)
-// Verhindert Railway-Sleep bei stationärem Gerät
-// =======================
-app.get('/ping', (req, res) => {
-  res.json({ ok: true, ts: Date.now() });
-});
-
-// =======================
 // POSITIONEN SPEICHERN
 // =======================
 app.post('/positions', (req, res) => {
@@ -54,8 +46,7 @@ app.post('/positions', (req, res) => {
   positions[id] = {
     lat,
     lon,
-    // bat nur speichern wenn als Zahl mitgesendet
-    ...(typeof bat === 'number' && { bat }),
+    bat: bat ?? null,
     timestamp: Date.now()
   };
 
@@ -72,9 +63,10 @@ app.get('/positions', (req, res) => {
 });
 
 // =======================
-// 🧹 RESET (DELETE)
+// RESET (DELETE)
 // =======================
 app.delete('/positions', (req, res) => {
+
   const keys = Object.keys(positions);
 
   if (keys.length === 0) {
@@ -86,19 +78,8 @@ app.delete('/positions', (req, res) => {
   }
 
   console.log("🧹 ALLE POSITIONEN GELÖSCHT");
+
   res.json({ ok: true, message: "cleared" });
-});
-
-// =======================
-// FEHLERBEHANDLUNG
-// Verhindert Serverabsturz bei unbehandelten Fehlern
-// =======================
-process.on('uncaughtException', (err) => {
-  console.error('💥 Unbehandelter Fehler:', err);
-});
-
-process.on('unhandledRejection', (reason) => {
-  console.error('💥 Unbehandelte Promise-Rejection:', reason);
 });
 
 // =======================
