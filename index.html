@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Tracking</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
@@ -18,6 +19,7 @@
       background: rgba(0,0,0,0.6);
       align-items: center;
       justify-content: center;
+      padding: 20px;
     }
 
     #loginModal.hidden {
@@ -85,12 +87,13 @@
       min-height: 20px;
     }
 
-    /* BUTTONS */
+    /* BUTTONS - MOBILE FIRST */
     .btnGroup {
       position: absolute;
-      top: 10px;
+      bottom: 10px;
       left: 10px;
-      z-index: 9999;
+      right: 10px;
+      z-index: 999;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -106,6 +109,8 @@
       font-family: sans-serif;
       transition: all 0.2s;
       white-space: nowrap;
+      flex: 1;
+      min-width: 120px;
     }
 
     .btn:hover {
@@ -130,16 +135,30 @@
       display: none;
     }
 
-    .btn.disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    /* DESKTOP - BUTTONS Oben RECHTS */
+    @media (min-width: 768px) {
+      .btnGroup {
+        position: absolute;
+        top: 10px;
+        left: auto;
+        right: 120px;
+        bottom: auto;
+        flex-direction: row;
+        width: auto;
+      }
+
+      .btn {
+        flex: 0 1 auto;
+        min-width: auto;
+      }
     }
 
     #teamCarToggle {
       position: absolute;
-      top: 60px;
+      bottom: 70px;
       left: 10px;
-      z-index: 9999;
+      right: 10px;
+      z-index: 999;
       padding: 10px 14px;
       background: white;
       border: 1px solid #ccc;
@@ -170,11 +189,23 @@
       color: #c62828;
     }
 
+    /* DESKTOP */
+    @media (min-width: 768px) {
+      #teamCarToggle {
+        position: absolute;
+        top: 60px;
+        left: 10px;
+        right: auto;
+        bottom: auto;
+        width: auto;
+      }
+    }
+
     #status {
       position: absolute;
       top: 10px;
       right: 10px;
-      z-index: 9999;
+      z-index: 999;
       padding: 8px 14px;
       border-radius: 6px;
       font-size: 13px;
@@ -252,7 +283,7 @@
   </div>
 </div>
 
-<!-- BUTTONS -->
+<!-- BUTTONS - UNTEN AUF MOBILE, OBEN RECHTS AUF DESKTOP -->
 <div class="btnGroup">
   <button class="btn reset" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
