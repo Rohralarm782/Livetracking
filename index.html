@@ -117,6 +117,16 @@
       background: #f5f5f5;
     }
 
+    .btn.primary {
+      background: #2196F3;
+      color: white;
+      border-color: #1976D2;
+    }
+
+    .btn.primary:hover {
+      background: #1976D2;
+    }
+
     .btn.logout {
       background: #f44336;
       color: white;
@@ -174,6 +184,10 @@
 
     #teamCarToggle:hover {
       background: #f5f5f5;
+    }
+
+    #teamCarToggle.hidden {
+      display: none;
     }
 
     #teamCarToggle input[type="checkbox"] {
@@ -283,14 +297,15 @@
   </div>
 </div>
 
-<!-- BUTTONS - UNTEN AUF MOBILE, OBEN RECHTS AUF DESKTOP -->
+<!-- BUTTONS -->
 <div class="btnGroup">
-  <button class="btn reset" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
+  <button class="btn primary" id="loginBtnTop" title="Als Admin anmelden">🔓 Login</button>
+  <button class="btn reset hidden" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
-<!-- TEAMAUTO TOGGLE -->
-<label id="teamCarToggle" title="GPS aktivieren und Position global teilen (Admin)">
+<!-- TEAMAUTO TOGGLE (nur nach Login sichtbar) -->
+<label id="teamCarToggle" class="hidden" title="GPS aktivieren und Position global teilen (Admin)">
   <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
 </label>
 
@@ -312,14 +327,24 @@ function saveToken(token) {
   authToken = token;
   localStorage.setItem('authToken', token);
   document.getElementById('loginModal').classList.add('hidden');
+  
+  // Admin-Funktionen einblenden
+  document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
+  document.getElementById('resetBtn').classList.remove('hidden');
+  document.getElementById('teamCarToggle').classList.remove('hidden');
+  
   console.log("✅ Eingeloggt");
 }
 
 function loadToken() {
   authToken = localStorage.getItem('authToken');
   if (authToken) {
+    // Admin-Funktionen einblenden
+    document.getElementById('loginBtnTop').classList.add('hidden');
     document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('resetBtn').classList.remove('hidden');
+    document.getElementById('teamCarToggle').classList.remove('hidden');
   }
 }
 
@@ -335,12 +360,28 @@ function logout() {
   localStorage.removeItem('authToken');
   stopTeamCarTracking();
   document.getElementById('teamCarCheckbox').checked = false;
+  
+  // Admin-Funktionen verstecken
+  document.getElementById('loginBtnTop').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('resetBtn').classList.add('hidden');
+  document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('loginModal').classList.add('hidden');
+  
   console.log("🚪 Abgemeldet");
 }
 
-// LOGIN EVENT
+function showLoginModal(reason = 'Um als Admin angemeldet zu sein') {
+  document.getElementById('loginReason').textContent = reason;
+  document.getElementById('loginModal').classList.remove('hidden');
+  document.getElementById('passwordInput').focus();
+}
+
+// LOGIN BUTTONS
+document.getElementById('loginBtnTop').addEventListener('click', () => {
+  showLoginModal('🔐 Admin-Login erforderlich');
+});
+
 document.getElementById('loginBtn').addEventListener('click', async () => {
   const password = document.getElementById('passwordInput').value;
   const errorEl = document.getElementById('loginError');
@@ -425,12 +466,6 @@ let teamCarMarker      = null;
 let teamCarWatchId     = null;
 let teamCarAccCircle   = null;
 
-function showLoginModal(reason = 'Um diese Funktion zu nutzen') {
-  document.getElementById('loginReason').textContent = reason;
-  document.getElementById('loginModal').classList.remove('hidden');
-  document.getElementById('passwordInput').focus();
-}
-
 function startTeamCarTracking() {
   if (!authToken) {
     showLoginModal('🚗 Zum Aktivieren des Teamauto-Trackings');
@@ -449,7 +484,6 @@ function startTeamCarTracking() {
       const latlng = [pos.coords.latitude, pos.coords.longitude];
       const accuracy = pos.coords.accuracy;
 
-      // Position an Server senden
       try {
         await fetch('https://livetracking-fq4l.onrender.com/team-position', {
           method: 'POST',
@@ -573,6 +607,11 @@ function animateMarker(marker, from, to, duration = 800) {
 // CONTEXT MENU
 // =======================
 function showMarkerMenu(e, markerId) {
+  if (!authToken) {
+    showLoginModal('✏️ Zum Umbenennen von Trackern anmelden');
+    return;
+  }
+
   if (currentMarkerMenu) {
     currentMarkerMenu.remove();
   }
@@ -582,78 +621,67 @@ function showMarkerMenu(e, markerId) {
   container.style.left = e.pageX + 'px';
   container.style.top = e.pageY + 'px';
 
-  if (!authToken) {
-    const lockedBtn = document.createElement('button');
-    lockedBtn.textContent = '🔒 Zum Umbenennen anmelden';
-    lockedBtn.addEventListener('click', () => {
-      showLoginModal('✏️ Zum Umbenennen von Trackern');
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Neuer Name…';
+  input.value = markerId;
+
+  const renameBtn = document.createElement('button');
+  renameBtn.textContent = '✏️ Umbenennen';
+
+  renameBtn.addEventListener('click', async () => {
+    const newName = input.value.trim();
+    if (!newName || newName === markerId) {
       container.remove();
-    });
-    container.appendChild(lockedBtn);
-  } else {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Neuer Name…';
-    input.value = markerId;
+      return;
+    }
 
-    const renameBtn = document.createElement('button');
-    renameBtn.textContent = '✏️ Umbenennen';
+    try {
+      const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ oldName: markerId, newName })
+      });
 
-    renameBtn.addEventListener('click', async () => {
-      const newName = input.value.trim();
-      if (!newName || newName === markerId) {
-        container.remove();
+      if (!res.ok) {
+        alert('❌ Fehler beim Umbenennen');
         return;
       }
 
-      try {
-        const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ oldName: markerId, newName })
-        });
-
-        if (!res.ok) {
-          alert('❌ Fehler beim Umbenennen');
-          return;
+      if (markers[markerId]) {
+        markers[newName] = markers[markerId];
+        delete markers[markerId];
+        
+        if (lastPositions[markerId]) {
+          lastPositions[newName] = lastPositions[markerId];
+          delete lastPositions[markerId];
         }
 
-        // Update lokal
-        if (markers[markerId]) {
-          markers[newName] = markers[markerId];
-          delete markers[markerId];
-          
-          if (lastPositions[markerId]) {
-            lastPositions[newName] = lastPositions[markerId];
-            delete lastPositions[markerId];
-          }
-
-          if (trails[markerId]) {
-            trails[newName] = trails[markerId];
-            delete trails[markerId];
-          }
-
-          markers[newName].setTooltipContent(newName);
-          console.log(`✏️ ${markerId} → ${newName}`);
+        if (trails[markerId]) {
+          trails[newName] = trails[markerId];
+          delete trails[markerId];
         }
 
-        container.remove();
-      } catch (err) {
-        alert('❌ Fehler: ' + err.message);
+        markers[newName].setTooltipContent(newName);
+        console.log(`✏️ ${markerId} → ${newName}`);
       }
-    });
 
-    container.appendChild(input);
-    container.appendChild(renameBtn);
-    input.focus();
-    input.select();
-  }
+      container.remove();
+    } catch (err) {
+      alert('❌ Fehler: ' + err.message);
+    }
+  });
 
+  container.appendChild(input);
+  container.appendChild(renameBtn);
   document.body.appendChild(container);
   currentMarkerMenu = container;
+  
+  input.focus();
+  input.select();
 }
 
 // =======================
@@ -735,11 +763,6 @@ async function loadPositions() {
 // RESET / CLEAR
 // =======================
 async function clearMap() {
-  if (!authToken) {
-    showLoginModal('🧹 Zum Löschen aller Positionen');
-    return;
-  }
-
   if (!confirm('🚨 Wirklich ALLE Positionen löschen? Das kann nicht rückgängig gemacht werden.')) {
     return;
   }
