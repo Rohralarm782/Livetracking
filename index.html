@@ -477,8 +477,8 @@ function formatTime(unixTs) {
   return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
 
-function buildTileUrl(path) {
-  return `https://tilecache.rainviewer.com${path}/${TILE_SIZE}/{z}/{x}/{y}/${COLOR_SCHEME}/${SMOOTH}_${SNOW}.png`;
+function buildTileUrl(host, path) {
+  return `${host}${path}/${TILE_SIZE}/{z}/{x}/{y}/${COLOR_SCHEME}/${SMOOTH}_${SNOW}.png`;
 }
 
 async function fetchRainFrames() {
@@ -486,23 +486,33 @@ async function fetchRainFrames() {
     const res  = await fetch(RAINVIEWER_API);
     const data = await res.json();
 
+    const host = data.host || 'https://tilecache.rainviewer.com';
     rainFrames = [];
 
-    // Nur Nowcast-Vorhersage (nächste ~60 Min, alle 10 Min)
-    const nowcast = data.radar.nowcast || [];
-    nowcast.forEach(f => rainFrames.push({ time: f.time, path: f.path, isForecast: true }));
+    const nowcast = data.radar?.nowcast || [];
+    const past    = data.radar?.past    || [];
+
+    if (nowcast.length > 0) {
+      // Vorhersage vorhanden → nur Nowcast zeigen
+      nowcast.forEach(f => rainFrames.push({ time: f.time, path: f.path, host, isForecast: true }));
+    } else if (past.length > 0) {
+      // Kein Niederschlag aktuell → letzte 3 Radar-Frames als "aktuelle Lage"
+      past.slice(-3).forEach(f => rainFrames.push({ time: f.time, path: f.path, host, isForecast: false }));
+    }
+
+    console.log(`🌧️ RainViewer: ${nowcast.length} nowcast, ${past.length} past → zeige ${rainFrames.length} frames`);
 
     if (rainFrames.length === 0) {
-      rainTimeLabel.textContent = 'Keine Vorhersage verfügbar';
+      rainTimeLabel.textContent = 'Keine Radardaten verfügbar';
       return;
     }
 
     buildTimeline();
-    showFrame(0); // ersten Vorhersage-Frame zeigen
+    showFrame(0);
 
   } catch (err) {
     console.error("🌧️ RainViewer Fehler:", err);
-    rainTimeLabel.textContent = 'Radardaten nicht verfügbar';
+    rainTimeLabel.textContent = 'Fehler beim Laden der Radardaten';
   }
 }
 
@@ -510,9 +520,9 @@ function buildTimeline() {
   rainTimeline.innerHTML = '';
   rainFrames.forEach((f, i) => {
     const btn = document.createElement('button');
-    btn.className = 'rain-frame-btn forecast';
+    btn.className = 'rain-frame-btn' + (f.isForecast ? ' forecast' : '');
     btn.textContent = formatTime(f.time);
-    btn.title = `Vorhersage ${formatTime(f.time)}`;
+    btn.title = (f.isForecast ? 'Vorhersage ' : 'Radar ') + formatTime(f.time);
     btn.addEventListener('click', () => { stopPlay(); showFrame(i); });
     rainTimeline.appendChild(btn);
   });
@@ -526,20 +536,21 @@ function showFrame(index) {
   currentFrame = index;
   const frame  = rainFrames[index];
 
-  rainLayer = L.tileLayer(buildTileUrl(frame.path), {
+  rainLayer = L.tileLayer(buildTileUrl(frame.host, frame.path), {
     opacity:        rainOpacity,
     zIndex:         500,
     tileSize:       TILE_SIZE,
     attribution:    '© RainViewer',
-    maxNativeZoom:  6,   // RainViewer Nowcast hat Tiles bis Zoom 6
-    maxZoom:        19   // darüber hinaus einfach hochskalieren
+    maxNativeZoom:  8,
+    maxZoom:        19
   }).addTo(map);
 
   document.querySelectorAll('.rain-frame-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === index);
   });
 
-  rainTimeLabel.textContent = `🔮 Vorhersage ${formatTime(frame.time)}`;
+  const prefix = frame.isForecast ? '🔮 Vorhersage' : '📡 Aktuell';
+  rainTimeLabel.textContent = `${prefix} ${formatTime(frame.time)}`;
 }
 
 function nextFrame() {
