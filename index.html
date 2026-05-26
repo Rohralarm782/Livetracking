@@ -452,7 +452,7 @@ document.getElementById("resetBtn").addEventListener("click", clearMap);
 // 🌧️ REGEN-RADAR (RainViewer)
 // =======================
 const RAINVIEWER_API = 'https://api.rainviewer.com/public/weather-maps.json';
-const TILE_SIZE      = 256;
+const TILE_SIZE      = 512;
 const COLOR_SCHEME   = 2;   // Standard-Radarfarben
 const SMOOTH         = 1;
 const SNOW           = 1;   // Schnee einblenden
@@ -541,9 +541,14 @@ function showFrame(index) {
     zIndex:         500,
     tileSize:       TILE_SIZE,
     attribution:    '© RainViewer',
-    maxNativeZoom:  8,
+    maxNativeZoom:  3,
     maxZoom:        19
   }).addTo(map);
+
+  // Falls RainViewer trotzdem ein Error-Bild schickt: Tile ausblenden
+  rainLayer.on('tileerror', function(e) {
+    e.tile.style.display = 'none';
+  });
 
   document.querySelectorAll('.rain-frame-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === index);
