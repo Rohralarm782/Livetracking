@@ -488,19 +488,17 @@ async function fetchRainFrames() {
 
     rainFrames = [];
 
-    // Vergangene Radardaten (letzte ~12 Frames ≈ 2h)
-    const pastFrames = (data.radar.past || []).slice(-8);
-    pastFrames.forEach(f => rainFrames.push({ time: f.time, path: f.path, isForecast: false }));
-
-    // Nowcast-Vorhersage (nächste ~60 Min, alle 10 Min)
+    // Nur Nowcast-Vorhersage (nächste ~60 Min, alle 10 Min)
     const nowcast = data.radar.nowcast || [];
     nowcast.forEach(f => rainFrames.push({ time: f.time, path: f.path, isForecast: true }));
 
-    buildTimeline();
+    if (rainFrames.length === 0) {
+      rainTimeLabel.textContent = 'Keine Vorhersage verfügbar';
+      return;
+    }
 
-    // Starte auf letztem echten Frame
-    const lastPastIdx = pastFrames.length - 1;
-    if (lastPastIdx >= 0) showFrame(lastPastIdx);
+    buildTimeline();
+    showFrame(0); // ersten Vorhersage-Frame zeigen
 
   } catch (err) {
     console.error("🌧️ RainViewer Fehler:", err);
@@ -512,9 +510,9 @@ function buildTimeline() {
   rainTimeline.innerHTML = '';
   rainFrames.forEach((f, i) => {
     const btn = document.createElement('button');
-    btn.className = 'rain-frame-btn' + (f.isForecast ? ' forecast' : '');
+    btn.className = 'rain-frame-btn forecast';
     btn.textContent = formatTime(f.time);
-    if (f.isForecast) btn.title = `Vorhersage ${formatTime(f.time)}`;
+    btn.title = `Vorhersage ${formatTime(f.time)}`;
     btn.addEventListener('click', () => { stopPlay(); showFrame(i); });
     rainTimeline.appendChild(btn);
   });
@@ -523,28 +521,25 @@ function buildTimeline() {
 function showFrame(index) {
   if (index < 0 || index >= rainFrames.length) return;
 
-  // Alten Layer entfernen
   if (rainLayer) { map.removeLayer(rainLayer); rainLayer = null; }
 
   currentFrame = index;
   const frame  = rainFrames[index];
 
   rainLayer = L.tileLayer(buildTileUrl(frame.path), {
-    opacity:     rainOpacity,
-    zIndex:      500,
-    tileSize:    TILE_SIZE,
-    attribution: '© RainViewer'
+    opacity:        rainOpacity,
+    zIndex:         500,
+    tileSize:       TILE_SIZE,
+    attribution:    '© RainViewer',
+    maxNativeZoom:  6,   // RainViewer Nowcast hat Tiles bis Zoom 6
+    maxZoom:        19   // darüber hinaus einfach hochskalieren
   }).addTo(map);
 
-  // Timeline-Buttons aktualisieren
   document.querySelectorAll('.rain-frame-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === index);
   });
 
-  const label = frame.isForecast
-    ? `🔮 Vorhersage ${formatTime(frame.time)}`
-    : `📡 Radar ${formatTime(frame.time)}`;
-  rainTimeLabel.textContent = label;
+  rainTimeLabel.textContent = `🔮 Vorhersage ${formatTime(frame.time)}`;
 }
 
 function nextFrame() {
