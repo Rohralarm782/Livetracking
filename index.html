@@ -155,22 +155,96 @@
       display: none;
     }
 
-    /* DESKTOP - BUTTONS Oben RECHTS */
+    /* OPTIONS MENU */
+    #optionsBtn {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 999;
+      padding: 10px 14px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: sans-serif;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    #optionsBtn:hover {
+      background: #f5f5f5;
+    }
+
+    #optionsMenu {
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      right: 10px;
+      z-index: 999;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #optionsMenu.hidden {
+      display: none;
+    }
+
+    #optionsMenu .btn {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #eee;
+      border-radius: 0;
+      flex: 0;
+      min-width: unset;
+      margin: 0;
+    }
+
+    #optionsMenu .btn:last-child {
+      border-bottom: none;
+    }
+
+    #optionsMenu .btn:hover {
+      background: #f5f5f5;
+    }
+
+    /* DESKTOP - OPTIONS OBEN RECHTS */
     @media (min-width: 768px) {
-      .btnGroup {
+      #optionsBtn {
         position: absolute;
         top: 10px;
         left: auto;
-        right: 120px;
+        right: 10px;
         bottom: auto;
-        flex-direction: row;
+        z-index: 999;
         width: auto;
       }
 
-      .btn {
-        flex: 0 1 auto;
-        min-width: auto;
+      #optionsMenu {
+        position: absolute;
+        top: 50px;
+        left: auto;
+        right: 10px;
+        bottom: auto;
+        width: 200px;
+        flex-direction: column;
       }
+
+      #optionsMenu .btn {
+        width: 100%;
+      }
+    }
+
+    /* ALTE BTNGROUP VERSTECKEN */
+    .btnGroup {
+      display: none;
     }
 
     #teamCarToggle {
@@ -307,11 +381,13 @@
   </div>
 </div>
 
-<!-- BUTTONS -->
-<div class="btnGroup">
+<!-- OPTIONS BUTTON & MENU -->
+<button id="optionsBtn">⚙️ Optionen</button>
+
+<div id="optionsMenu" class="hidden">
   <button class="btn primary" id="loginBtnTop" title="Als Admin anmelden">🔓 Login</button>
-  <button class="btn reset hidden" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
   <button class="btn wakeLock" id="wakeLockBtn" title="Bildschirm bleibt an">💡 Bildschirm aktiv</button>
+  <button class="btn reset hidden" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
@@ -433,6 +509,31 @@ document.getElementById('passwordInput').addEventListener('keypress', (e) => {
 document.getElementById('logoutBtn').addEventListener('click', logout);
 
 loadToken();
+
+// =======================
+// OPTIONS MENU TOGGLE
+// =======================
+const optionsBtn = document.getElementById('optionsBtn');
+const optionsMenu = document.getElementById('optionsMenu');
+
+optionsBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  optionsMenu.classList.toggle('hidden');
+});
+
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
+    optionsMenu.classList.add('hidden');
+  }
+});
+
+// Close menu when clicking on a button
+optionsMenu.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    optionsMenu.classList.add('hidden');
+  });
+});
 
 // =======================
 // WAKE LOCK – Bildschirm bleibt an
