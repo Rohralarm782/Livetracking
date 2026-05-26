@@ -248,26 +248,25 @@
     }
 
     #teamCarToggle {
-      position: absolute;
-      bottom: 70px;
-      left: 10px;
-      right: 10px;
-      z-index: 999;
-      padding: 10px 14px;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 13px;
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
       user-select: none;
+      padding: 10px 14px;
+      background: white;
+      border: none;
+      border-bottom: 1px solid #eee;
+      width: 100%;
+      font-size: 13px;
+      font-family: sans-serif;
+      color: #666;
       transition: all 0.2s;
     }
 
     #teamCarToggle:hover {
       background: #f5f5f5;
+      color: #333;
     }
 
     #teamCarToggle.hidden {
@@ -279,24 +278,16 @@
       width: 16px;
       height: 16px;
       accent-color: #e53935;
+      flex-shrink: 0;
     }
 
     #teamCarToggle.active {
       background: #fff3e0;
-      border-color: #e53935;
       color: #c62828;
     }
 
-    /* DESKTOP */
-    @media (min-width: 768px) {
-      #teamCarToggle {
-        position: absolute;
-        top: 60px;
-        left: 10px;
-        right: auto;
-        bottom: auto;
-        width: auto;
-      }
+    #optionsMenu #teamCarToggle:last-child {
+      border-bottom: none;
     }
 
     #status {
@@ -388,15 +379,13 @@
   <button class="btn primary" id="loginBtnTop" title="Als Admin anmelden">🔓 Login</button>
   <button class="btn wakeLock" id="wakeLockBtn" title="Bildschirm bleibt an">💡 Bildschirm aktiv</button>
   <button class="btn reset hidden" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
+  <label id="teamCarToggle" class="hidden" title="GPS aktivieren und Position global teilen (Admin)">
+    <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
+  </label>
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
-<!-- TEAMAUTO TOGGLE (nur nach Login sichtbar) -->
-<label id="teamCarToggle" class="hidden" title="GPS aktivieren und Position global teilen (Admin)">
-  <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
-</label>
 
-<!-- STATUS -->
 <div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
 
 <!-- MAP -->
@@ -533,6 +522,11 @@ optionsMenu.querySelectorAll('.btn').forEach(btn => {
   btn.addEventListener('click', () => {
     optionsMenu.classList.add('hidden');
   });
+});
+
+// Close menu when clicking on teamCarToggle
+document.getElementById('teamCarToggle').addEventListener('change', () => {
+  optionsMenu.classList.add('hidden');
 });
 
 // =======================
