@@ -97,7 +97,7 @@
       #optionsBtn { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; z-index: 999; width: auto; }
       #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 220px; flex-direction: column; }
       #optionsMenu .btn { width: 100%; }
-      #status { right: auto; left: 10px; }
+      #status { right: auto; left: 10px; width: fit-content; }
     }
 
     #teamCarToggle {
@@ -143,42 +143,6 @@
     }
     .markerMenu input:focus { outline: none; background: #f9f9f9; }
 
-    /* REGEN PANEL */
-    #rainPanel {
-      position: absolute;
-      bottom: 60px; left: 50%; transform: translateX(-50%);
-      z-index: 998;
-      background: rgba(255,255,255,0.96);
-      border: 1px solid #ccc; border-radius: 10px;
-      padding: 10px 14px 8px;
-      min-width: 300px; max-width: 420px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-    }
-    #rainPanel.hidden { display: none; }
-
-    @media (min-width: 768px) {
-      #rainPanel { bottom: 30px; }
-    }
-
-    #rainPanel .rain-header {
-      font-size: 12px; font-weight: 600; color: #1a237e;
-      margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center;
-    }
-    #rainTimeline { display: flex; gap: 3px; margin-bottom: 7px; align-items: flex-end; }
-    .rain-frame-btn {
-      flex: 1; height: 28px; border: none; border-radius: 3px;
-      cursor: pointer; font-size: 9px; padding: 0 2px;
-      transition: transform 0.1s; background: #fff3e0;
-      color: #e65100; line-height: 1.2; text-align: center;
-    }
-    .rain-frame-btn.active { transform: scaleY(1.15); outline: 2px solid #1565c0; }
-    #rainControls { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-    #rainTimeLabel { flex: 1; color: #333; font-size: 12px; }
-    #opacitySlider { width: 65px; accent-color: #1565c0; }
-    #rainOpacityLabel { color: #777; font-size: 11px; white-space: nowrap; }
-    .legend-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 6px; }
-    .legend-bar div { flex: 1; }
-    .legend-labels { display: flex; justify-content: space-between; font-size: 9px; color: #888; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -200,7 +164,6 @@
 <div id="optionsMenu" class="hidden">
   <button class="btn primary" id="loginBtnTop">🔓 Login</button>
   <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
-  <button class="btn" id="rainToggleBtn">🌧️ Regen-Radar</button>
   <button class="btn" id="gpxBtn">📂 GPX laden</button>
   <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
   <input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
@@ -211,28 +174,6 @@
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
-<!-- REGEN PANEL -->
-<div id="rainPanel" class="hidden">
-  <div class="rain-header">
-    🌦️ Niederschlag-Vorhersage
-    <span id="rainSourceLabel" style="font-weight:400;color:#777;font-size:11px">RainViewer</span>
-  </div>
-  <div id="rainTimeline"></div>
-  <div id="rainControls">
-    <span id="rainTimeLabel">Lade…</span>
-    <label id="rainOpacityLabel">
-      Deckkraft&nbsp;<input type="range" id="opacitySlider" min="10" max="100" value="60">
-    </label>
-  </div>
-  <div class="legend-bar">
-    <div style="background:#97d1c6"></div><div style="background:#4bbbdb"></div>
-    <div style="background:#2895d3"></div><div style="background:#2659b6"></div>
-    <div style="background:#1c993b"></div><div style="background:#36cd42"></div>
-    <div style="background:#f1e21e"></div><div style="background:#f4a31e"></div>
-    <div style="background:#f06a1e"></div><div style="background:#e82313"></div>
-  </div>
-  <div class="legend-labels"><span>Leicht</span><span>Mäßig</span><span>Stark</span><span>Extrem</span></div>
-</div>
 
 <div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
 <div id="map"></div>
@@ -338,9 +279,7 @@ document.addEventListener('click', e => {
 });
 
 optionsMenu.querySelectorAll('.btn').forEach(btn => {
-  if (btn.id !== 'rainToggleBtn') {
-    btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
-  }
+  btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
 });
 
 document.getElementById('teamCarToggle').addEventListener('change', () => {
@@ -606,218 +545,6 @@ async function clearMap() {
   } catch (err) { alert('❌ Fehler: ' + err.message); }
 }
 document.getElementById("resetBtn").addEventListener("click", clearMap);
-
-// =======================
-// 🌧️ REGEN-RADAR (RainViewer)
-// =======================
-const RAINVIEWER_API = 'https://api.rainviewer.com/public/weather-maps.json';
-const TILE_SIZE      = 256;
-const COLOR_SCHEME   = 2;
-const SMOOTH         = 1;
-const SNOW           = 1;
-
-let rainFrames   = [];
-let currentFrame = -1;
-let rainLayerA   = null;
-let baseLayer    = null;
-let rainVisible  = false;
-let rainOpacity  = 0.60;
-
-const rainPanel      = document.getElementById('rainPanel');
-const rainTimeline   = document.getElementById('rainTimeline');
-const rainTimeLabel  = document.getElementById('rainTimeLabel');
-const opacitySlider  = document.getElementById('opacitySlider');
-const rainToggleBtn  = document.getElementById('rainToggleBtn');
-
-function formatTime(unixTs) {
-  return new Date(unixTs * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-}
-
-function buildTileUrl(host, path) {
-  return `${host}${path}/${TILE_SIZE}/{z}/{x}/{y}/${COLOR_SCHEME}/${SMOOTH}_${SNOW}.png`;
-}
-
-function makeTileLayer(host, path, opacity, zIndex) {
-  const layer = L.tileLayer(buildTileUrl(host, path), {
-    opacity, zIndex, attribution: '© RainViewer', maxNativeZoom: 4, maxZoom: 19
-  }).addTo(map);
-  layer.on('tileerror', e => { e.tile.style.display = 'none'; });
-  return layer;
-}
-
-// Smooth fade helper
-function fadeLayer(layer, from, to, duration, onDone) {
-  const start = performance.now();
-  function step(now) {
-    const t    = Math.min((now - start) / duration, 1);
-    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
-    layer.setOpacity(from + (to - from) * ease);
-    if (t < 1) requestAnimationFrame(step);
-    else if (onDone) onDone();
-  }
-  requestAnimationFrame(step);
-}
-
-async function fetchRainFrames() {
-  rainTimeLabel.textContent = 'Lade…';
-  try {
-    const res  = await fetch(RAINVIEWER_API);
-    const data = await res.json();
-    const host = data.host || 'https://tilecache.rainviewer.com';
-
-    // Basis-Layer: neuester Past-Frame (immer sichtbar, kein Button)
-    const latestPast = (data.radar?.past || []).slice(-1)[0];
-    if (baseLayer) { map.removeLayer(baseLayer); baseLayer = null; }
-    if (latestPast) baseLayer = makeTileLayer(host, latestPast.path, rainOpacity, 499);
-
-    // Nowcast-Frames für die Timeline
-    const nowcast = data.radar?.nowcast || [];
-    rainFrames = nowcast.map(f => ({ time: f.time, path: f.path, host }));
-
-    buildTimeline();
-
-    if (nowcast.length === 0) {
-      rainTimeLabel.textContent = '☀️ Kein Niederschlag – aktuelle Radarlage';
-    } else {
-      showFrame(0);
-    }
-  } catch (err) {
-    console.error('RainViewer Fehler:', err);
-    rainTimeLabel.textContent = 'Fehler beim Laden';
-  }
-}
-
-function buildTimeline() {
-  rainTimeline.innerHTML = '';
-  rainFrames.forEach((f, i) => {
-    const btn = document.createElement('button');
-    btn.className   = 'rain-frame-btn';
-    btn.textContent = formatTime(f.time);
-    btn.title       = 'Vorhersage ' + formatTime(f.time);
-    btn.addEventListener('click', () => showFrame(i));
-    rainTimeline.appendChild(btn);
-  });
-}
-
-function showFrame(index) {
-  if (index < 0 || index >= rainFrames.length) return;
-  currentFrame = index;
-  const frame  = rainFrames[index];
-
-  const newLayer = makeTileLayer(frame.host, frame.path, 0, 500);
-  const oldLayer = rainLayerA;
-  if (oldLayer) fadeLayer(oldLayer, rainOpacity, 0, 350, () => map.removeLayer(oldLayer));
-  fadeLayer(newLayer, 0, rainOpacity, 350);
-  rainLayerA = newLayer;
-
-  document.querySelectorAll('.rain-frame-btn').forEach((btn, i) => btn.classList.toggle('active', i === index));
-  rainTimeLabel.textContent = '🔮 ' + formatTime(frame.time);
-}
-
-opacitySlider.addEventListener('input', function () {
-  rainOpacity = this.value / 100;
-  if (rainLayerA) rainLayerA.setOpacity(rainOpacity);
-  if (baseLayer)  baseLayer.setOpacity(rainOpacity);
-});
-
-// Alle 5 Min aktualisieren
-setInterval(() => { if (rainVisible) fetchRainFrames(); }, 5 * 60 * 1000);
-
-rainToggleBtn.addEventListener('click', () => {
-  rainVisible = !rainVisible;
-  rainToggleBtn.classList.toggle('rain-active', rainVisible);
-  rainPanel.classList.toggle('hidden', !rainVisible);
-
-  if (rainVisible) {
-    fetchRainFrames();
-  } else {
-    if (rainLayerA) { map.removeLayer(rainLayerA); rainLayerA = null; }
-    if (baseLayer)  { map.removeLayer(baseLayer);  baseLayer  = null; }
-    rainFrames = []; currentFrame = -1;
-  }
-  // Menü offen lassen damit man Deckkraft etc. sieht
-});
-
-// =======================
-// 📂 GPX TRACKS
-// =======================
-let gpxLayer = null;
-
-document.getElementById('gpxBtn').addEventListener('click', () => {
-  document.getElementById('gpxFileInput').click();
-});
-
-document.getElementById('gpxFileInput').addEventListener('change', function () {
-  const file = this.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      loadGpx(e.target.result, file.name);
-    } catch (err) {
-      alert('❌ GPX konnte nicht geladen werden: ' + err.message);
-    }
-    this.value = ''; // Reset damit dieselbe Datei nochmal geladen werden kann
-  };
-  reader.readAsText(file);
-});
-
-function loadGpx(xmlText, filename) {
-  // Alten GPX-Layer entfernen
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-
-  const parser = new DOMParser();
-  const xml    = parser.parseFromString(xmlText, 'application/xml');
-
-  if (xml.querySelector('parsererror')) {
-    throw new Error('Ungültige GPX-Datei');
-  }
-
-  const coords = [];
-
-  // Track-Punkte aus allen <trk>/<trkseg>/<trkpt>
-  xml.querySelectorAll('trkpt').forEach(pt => {
-    const lat = parseFloat(pt.getAttribute('lat'));
-    const lon = parseFloat(pt.getAttribute('lon'));
-    if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
-  });
-
-  // Fallback: Route-Punkte <rtept>
-  if (coords.length === 0) {
-    xml.querySelectorAll('rtept').forEach(pt => {
-      const lat = parseFloat(pt.getAttribute('lat'));
-      const lon = parseFloat(pt.getAttribute('lon'));
-      if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
-    });
-  }
-
-  if (coords.length === 0) {
-    alert('❌ Keine Track-Punkte in der GPX-Datei gefunden.');
-    return;
-  }
-
-  gpxLayer = L.polyline(coords, {
-    color:   '#e65100',
-    weight:  4,
-    opacity: 0.8,
-    lineJoin: 'round',
-    lineCap:  'round'
-  }).addTo(map);
-
-  // Karte auf Track zoomen
-  map.fitBounds(gpxLayer.getBounds(), { padding: [40, 40] });
-
-  // "Entfernen"-Button einblenden
-  document.getElementById('gpxRemoveBtn').classList.remove('hidden');
-
-  console.log(`📂 GPX geladen: ${filename} (${coords.length} Punkte)`);
-}
-
-document.getElementById('gpxRemoveBtn').addEventListener('click', () => {
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-  document.getElementById('gpxRemoveBtn').classList.add('hidden');
-});
 
 // =======================
 // MAIN LOOP
