@@ -547,6 +547,64 @@ async function clearMap() {
 document.getElementById("resetBtn").addEventListener("click", clearMap);
 
 // =======================
+// 📂 GPX TRACKS
+// =======================
+let gpxLayer = null;
+
+document.getElementById('gpxBtn').addEventListener('click', () => {
+  setTimeout(() => optionsMenu.classList.add('hidden'), 50);
+  document.getElementById('gpxFileInput').click();
+});
+
+document.getElementById('gpxFileInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try { loadGpx(e.target.result, file.name); }
+    catch (err) { alert('❌ GPX konnte nicht geladen werden: ' + err.message); }
+    this.value = '';
+  };
+  reader.readAsText(file);
+});
+
+function loadGpx(xmlText, filename) {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+
+  const parser = new DOMParser();
+  const xml    = parser.parseFromString(xmlText, 'application/xml');
+  if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
+
+  const coords = [];
+  xml.querySelectorAll('trkpt').forEach(pt => {
+    const lat = parseFloat(pt.getAttribute('lat'));
+    const lon = parseFloat(pt.getAttribute('lon'));
+    if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+  });
+  if (coords.length === 0) {
+    xml.querySelectorAll('rtept').forEach(pt => {
+      const lat = parseFloat(pt.getAttribute('lat'));
+      const lon = parseFloat(pt.getAttribute('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+    });
+  }
+  if (coords.length === 0) { alert('❌ Keine Track-Punkte gefunden.'); return; }
+
+  gpxLayer = L.polyline(coords, {
+    color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
+  }).addTo(map);
+
+  map.fitBounds(gpxLayer.getBounds(), { padding: [40, 40] });
+  document.getElementById('gpxRemoveBtn').classList.remove('hidden');
+  console.log(`📂 GPX: ${filename} (${coords.length} Punkte)`);
+}
+
+document.getElementById('gpxRemoveBtn').addEventListener('click', () => {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  document.getElementById('gpxRemoveBtn').classList.add('hidden');
+});
+
+// =======================
 // MAIN LOOP
 // =======================
 loadPositions();
