@@ -21,11 +21,7 @@
       justify-content: center;
       padding: 20px;
     }
-
-    #loginModal.hidden {
-      display: none !important;
-    }
-
+    #loginModal.hidden { display: none !important; }
     .loginBox {
       background: white;
       padding: 40px;
@@ -35,328 +31,154 @@
       max-width: 380px;
       text-align: center;
     }
-
-    .loginBox h2 {
-      margin: 0 0 10px 0;
-      color: #333;
-      font-size: 24px;
-    }
-
-    .loginBox p {
-      color: #666;
-      margin: 10px 0 25px 0;
-      font-size: 14px;
-    }
-
+    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
+    .loginBox p { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
     .loginBox input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 2px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
+      width: 100%; padding: 12px; margin-bottom: 15px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
       transition: border-color 0.3s;
     }
-
-    .loginBox input:focus {
-      outline: none;
-      border-color: #2196F3;
-    }
-
+    .loginBox input:focus { outline: none; border-color: #2196F3; }
     .loginBox button {
-      width: 100%;
-      padding: 12px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      transition: background 0.3s;
+      width: 100%; padding: 12px; background: #2196F3; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 16px; font-weight: bold; transition: background 0.3s;
     }
+    .loginBox button:hover { background: #1976D2; }
+    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
 
-    .loginBox button:hover {
-      background: #1976D2;
-    }
-
-    .loginBox .error {
-      color: #d32f2f;
-      font-size: 13px;
-      margin-top: 15px;
-      min-height: 20px;
-    }
-
-    /* BUTTONS - MOBILE FIRST */
-    .btnGroup {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      z-index: 999;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
+    /* BUTTONS */
+    .btnGroup { display: none; }
     .btn {
-      padding: 10px 14px;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: sans-serif;
-      transition: all 0.2s;
-      white-space: nowrap;
-      flex: 1;
-      min-width: 120px;
+      padding: 10px 14px; background: white; border: 1px solid #ccc;
+      border-radius: 6px; cursor: pointer; font-size: 13px;
+      font-family: sans-serif; transition: all 0.2s;
+      white-space: nowrap; flex: 1; min-width: 120px;
     }
-
-    .btn:hover {
-      background: #f5f5f5;
-    }
-
-    .btn.primary {
-      background: #2196F3;
-      color: white;
-      border-color: #1976D2;
-    }
-
-    .btn.primary:hover {
-      background: #1976D2;
-    }
-
-    .btn.logout {
-      background: #f44336;
-      color: white;
-      border-color: #c62828;
-    }
-
-    .btn.logout:hover {
-      background: #d32f2f;
-    }
-
-    .btn.reset {
-      color: #f44336;
-    }
-
-    .btn.wakeLock {
-      color: #333;
-    }
-
-    .btn.wakeLock.active {
-      border-color: #ffc107;
-      color: #ff6f00;
-      background: #fff8e1;
-    }
-
-    .btn.hidden {
-      display: none;
-    }
+    .btn:hover { background: #f5f5f5; }
+    .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
+    .btn.primary:hover { background: #1976D2; }
+    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
+    .btn.logout:hover { background: #d32f2f; }
+    .btn.reset { color: #f44336; }
+    .btn.wakeLock { color: #333; }
+    .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
+    .btn.hidden { display: none; }
+    .btn.rain-active { border-color: #1565c0; color: #0d47a1; background: #e3f2fd; }
 
     /* OPTIONS MENU */
     #optionsBtn {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
+      bottom: 10px; left: 10px; right: 10px;
       z-index: 999;
-      padding: 10px 14px;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: sans-serif;
-      transition: all 0.2s;
-      width: 100%;
+      padding: 10px 14px; background: white;
+      border: 1px solid #ccc; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif;
+      transition: all 0.2s; width: 100%;
     }
-
-    #optionsBtn:hover {
-      background: #f5f5f5;
-    }
-
+    #optionsBtn:hover { background: #f5f5f5; }
     #optionsMenu {
       position: absolute;
-      bottom: 50px;
-      left: 10px;
-      right: 10px;
+      bottom: 50px; left: 10px; right: 10px;
       z-index: 999;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+      background: white; border: 1px solid #ccc;
+      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden; display: flex; flex-direction: column;
     }
-
-    #optionsMenu.hidden {
-      display: none;
-    }
-
+    #optionsMenu.hidden { display: none; }
     #optionsMenu .btn {
-      width: 100%;
-      border: none;
-      border-bottom: 1px solid #eee;
-      border-radius: 0;
-      flex: 0;
-      min-width: unset;
-      margin: 0;
+      width: 100%; border: none; border-bottom: 1px solid #eee;
+      border-radius: 0; flex: 0; min-width: unset; margin: 0;
     }
+    #optionsMenu .btn:last-child { border-bottom: none; }
+    #optionsMenu .btn:hover { background: #f5f5f5; }
 
-    #optionsMenu .btn:last-child {
-      border-bottom: none;
-    }
-
-    #optionsMenu .btn:hover {
-      background: #f5f5f5;
-    }
-
-    /* DESKTOP - OPTIONS OBEN RECHTS */
     @media (min-width: 768px) {
-      #optionsBtn {
-        position: absolute;
-        top: 10px;
-        left: auto;
-        right: 10px;
-        bottom: auto;
-        z-index: 999;
-        width: auto;
-      }
-
-      #optionsMenu {
-        position: absolute;
-        top: 50px;
-        left: auto;
-        right: 10px;
-        bottom: auto;
-        width: 200px;
-        flex-direction: column;
-      }
-
-      #optionsMenu .btn {
-        width: 100%;
-      }
-    }
-
-    /* ALTE BTNGROUP VERSTECKEN */
-    .btnGroup {
-      display: none;
+      #optionsBtn { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; z-index: 999; width: auto; }
+      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 220px; flex-direction: column; }
+      #optionsMenu .btn { width: 100%; }
+      #status { right: auto; left: 10px; }
     }
 
     #teamCarToggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      user-select: none;
-      padding: 10px 14px;
-      background: white;
-      border: none;
-      border-bottom: 1px solid #eee;
-      width: 100%;
-      font-size: 13px;
-      font-family: sans-serif;
-      color: #666;
-      transition: all 0.2s;
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+      padding: 10px 14px; background: white;
+      border: none; border-bottom: 1px solid #eee;
+      width: 100%; font-size: 13px; font-family: sans-serif;
+      color: #666; transition: all 0.2s;
     }
-
-    #teamCarToggle:hover {
-      background: #f5f5f5;
-      color: #333;
-    }
-
-    #teamCarToggle.hidden {
-      display: none;
-    }
-
-    #teamCarToggle input[type="checkbox"] {
-      cursor: pointer;
-      width: 16px;
-      height: 16px;
-      accent-color: #e53935;
-      flex-shrink: 0;
-    }
-
-    #teamCarToggle.active {
-      background: #fff3e0;
-      color: #c62828;
-    }
-
-    #optionsMenu #teamCarToggle:last-child {
-      border-bottom: none;
-    }
+    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
+    #teamCarToggle.hidden { display: none; }
+    #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
+    #teamCarToggle.active { background: #fff3e0; color: #c62828; }
+    #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
 
     #status {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 999;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      background: white;
-      border: 1px solid #ccc;
-      font-weight: 500;
+      position: absolute; top: 10px; right: 10px;
+      z-index: 999; padding: 8px 14px; border-radius: 6px;
+      font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
     }
-
     #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
     #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
 
     /* MARKER CONTEXT MENU */
     .markerMenu {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      position: absolute;
-      z-index: 9500;
-      min-width: 200px;
-      overflow: hidden;
+      background: white; border: 1px solid #ddd; border-radius: 6px;
+      padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: absolute; z-index: 9500; min-width: 200px; overflow: hidden;
     }
-
     .markerMenu button {
-      display: block;
-      width: 100%;
-      padding: 10px 14px;
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: sans-serif;
-      color: #666;
-      transition: background 0.2s;
-      border-bottom: 1px solid #f0f0f0;
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #666;
+      transition: background 0.2s; border-bottom: 1px solid #f0f0f0;
     }
-
-    .markerMenu button:last-child {
-      border-bottom: none;
-    }
-
-    .markerMenu button:hover {
-      background: #f5f5f5;
-      color: #333;
-    }
-
+    .markerMenu button:last-child { border-bottom: none; }
+    .markerMenu button:hover { background: #f5f5f5; color: #333; }
     .markerMenu input {
-      display: block;
-      width: 100%;
-      padding: 10px 14px;
-      border: none;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 13px;
-      font-family: sans-serif;
+      display: block; width: 100%; padding: 10px 14px;
+      border: none; border-bottom: 1px solid #f0f0f0;
+      font-size: 13px; font-family: sans-serif;
+    }
+    .markerMenu input:focus { outline: none; background: #f9f9f9; }
+
+    /* REGEN PANEL */
+    #rainPanel {
+      position: absolute;
+      bottom: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 998;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid #ccc; border-radius: 10px;
+      padding: 10px 14px 8px;
+      min-width: 300px; max-width: 420px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    }
+    #rainPanel.hidden { display: none; }
+
+    @media (min-width: 768px) {
+      #rainPanel { bottom: 30px; }
     }
 
-    .markerMenu input:focus {
-      outline: none;
-      background: #f9f9f9;
+    #rainPanel .rain-header {
+      font-size: 12px; font-weight: 600; color: #1a237e;
+      margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center;
     }
+    #rainTimeline { display: flex; gap: 3px; margin-bottom: 7px; align-items: flex-end; }
+    .rain-frame-btn {
+      flex: 1; height: 28px; border: none; border-radius: 3px;
+      cursor: pointer; font-size: 9px; padding: 0 2px;
+      transition: transform 0.1s; background: #fff3e0;
+      color: #e65100; line-height: 1.2; text-align: center;
+    }
+    .rain-frame-btn.active { transform: scaleY(1.15); outline: 2px solid #1565c0; }
+    #rainControls { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    #rainTimeLabel { flex: 1; color: #333; font-size: 12px; }
+    #opacitySlider { width: 65px; accent-color: #1565c0; }
+    #rainOpacityLabel { color: #777; font-size: 11px; white-space: nowrap; }
+    .legend-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .legend-bar div { flex: 1; }
+    .legend-labels { display: flex; justify-content: space-between; font-size: 9px; color: #888; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -376,19 +198,43 @@
 <button id="optionsBtn">⚙️ Optionen</button>
 
 <div id="optionsMenu" class="hidden">
-  <button class="btn primary" id="loginBtnTop" title="Als Admin anmelden">🔓 Login</button>
-  <button class="btn wakeLock" id="wakeLockBtn" title="Bildschirm bleibt an">💡 Bildschirm aktiv</button>
-  <button class="btn reset hidden" id="resetBtn" title="Alle Positionen löschen (Admin)">🧹 Karte leeren</button>
-  <label id="teamCarToggle" class="hidden" title="GPS aktivieren und Position global teilen (Admin)">
+  <button class="btn primary" id="loginBtnTop">🔓 Login</button>
+  <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
+  <button class="btn" id="rainToggleBtn">🌧️ Regen-Radar</button>
+  <button class="btn" id="gpxBtn">📂 GPX laden</button>
+  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
+  <input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
+  <button class="btn reset hidden" id="resetBtn">🧹 Karte leeren</button>
+  <label id="teamCarToggle" class="hidden">
     <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
   </label>
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
+<!-- REGEN PANEL -->
+<div id="rainPanel" class="hidden">
+  <div class="rain-header">
+    🌦️ Niederschlag-Vorhersage
+    <span id="rainSourceLabel" style="font-weight:400;color:#777;font-size:11px">RainViewer</span>
+  </div>
+  <div id="rainTimeline"></div>
+  <div id="rainControls">
+    <span id="rainTimeLabel">Lade…</span>
+    <label id="rainOpacityLabel">
+      Deckkraft&nbsp;<input type="range" id="opacitySlider" min="10" max="100" value="60">
+    </label>
+  </div>
+  <div class="legend-bar">
+    <div style="background:#97d1c6"></div><div style="background:#4bbbdb"></div>
+    <div style="background:#2895d3"></div><div style="background:#2659b6"></div>
+    <div style="background:#1c993b"></div><div style="background:#36cd42"></div>
+    <div style="background:#f1e21e"></div><div style="background:#f4a31e"></div>
+    <div style="background:#f06a1e"></div><div style="background:#e82313"></div>
+  </div>
+  <div class="legend-labels"><span>Leicht</span><span>Mäßig</span><span>Stark</span><span>Extrem</span></div>
+</div>
 
 <div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
-
-<!-- MAP -->
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -403,20 +249,16 @@ function saveToken(token) {
   authToken = token;
   localStorage.setItem('authToken', token);
   document.getElementById('loginModal').classList.add('hidden');
-  
-  // Admin-Funktionen einblenden
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('resetBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
-  
   console.log("✅ Eingeloggt");
 }
 
 function loadToken() {
   authToken = localStorage.getItem('authToken');
   if (authToken) {
-    // Admin-Funktionen einblenden
     document.getElementById('loginBtnTop').classList.add('hidden');
     document.getElementById('logoutBtn').classList.remove('hidden');
     document.getElementById('resetBtn').classList.remove('hidden');
@@ -431,56 +273,38 @@ function logout() {
       headers: { 'Authorization': `Bearer ${authToken}` }
     }).catch(console.error);
   }
-  
   authToken = null;
   localStorage.removeItem('authToken');
   stopTeamCarTracking();
   document.getElementById('teamCarCheckbox').checked = false;
-  
-  // Admin-Funktionen verstecken
   document.getElementById('loginBtnTop').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('resetBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('loginModal').classList.add('hidden');
-  
   console.log("🚪 Abgemeldet");
 }
 
-function showLoginModal(reason = 'Um als Admin angemeldet zu sein') {
+function showLoginModal(reason = '🔐 Admin-Login erforderlich') {
   document.getElementById('loginReason').textContent = reason;
   document.getElementById('loginModal').classList.remove('hidden');
   document.getElementById('passwordInput').focus();
 }
 
-// LOGIN BUTTONS
-document.getElementById('loginBtnTop').addEventListener('click', () => {
-  showLoginModal('🔐 Admin-Login erforderlich');
-});
+document.getElementById('loginBtnTop').addEventListener('click', () => showLoginModal('🔐 Admin-Login erforderlich'));
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
   const password = document.getElementById('passwordInput').value;
-  const errorEl = document.getElementById('loginError');
-  
-  if (!password) {
-    errorEl.textContent = '❌ Passwort erforderlich';
-    return;
-  }
-
+  const errorEl  = document.getElementById('loginError');
+  if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
   try {
-    const res = await fetch('https://livetracking-fq4l.onrender.com/login', {
+    const res  = await fetch('https://livetracking-fq4l.onrender.com/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      errorEl.textContent = '❌ Falsches Passwort';
-      return;
-    }
-
+    if (!res.ok) { errorEl.textContent = '❌ Falsches Passwort'; return; }
     saveToken(data.token);
     document.getElementById('passwordInput').value = '';
     errorEl.textContent = '';
@@ -489,48 +313,42 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('passwordInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    document.getElementById('loginBtn').click();
-  }
+document.getElementById('passwordInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
 });
 
 document.getElementById('logoutBtn').addEventListener('click', logout);
-
 loadToken();
 
 // =======================
-// OPTIONS MENU TOGGLE
+// OPTIONS MENU
 // =======================
-const optionsBtn = document.getElementById('optionsBtn');
+const optionsBtn  = document.getElementById('optionsBtn');
 const optionsMenu = document.getElementById('optionsMenu');
 
-optionsBtn.addEventListener('click', (e) => {
+optionsBtn.addEventListener('click', e => {
   e.stopPropagation();
   optionsMenu.classList.toggle('hidden');
 });
 
-// Close menu when clicking outside
-document.addEventListener('click', (e) => {
+document.addEventListener('click', e => {
   if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
     optionsMenu.classList.add('hidden');
   }
 });
 
-// Close menu when clicking on a button
 optionsMenu.querySelectorAll('.btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    optionsMenu.classList.add('hidden');
-  });
+  if (btn.id !== 'rainToggleBtn') {
+    btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
+  }
 });
 
-// Close menu when clicking on teamCarToggle
 document.getElementById('teamCarToggle').addEventListener('change', () => {
   optionsMenu.classList.add('hidden');
 });
 
 // =======================
-// WAKE LOCK – Bildschirm bleibt an
+// WAKE LOCK
 // =======================
 let wakeLock = null;
 
@@ -539,29 +357,19 @@ async function toggleWakeLock() {
     if (!wakeLock) {
       wakeLock = await navigator.wakeLock.request('screen');
       document.getElementById('wakeLockBtn').classList.add('active');
-      console.log('🔋 Wake Lock aktiviert – Bildschirm bleibt an');
     } else {
       await wakeLock.release();
       wakeLock = null;
       document.getElementById('wakeLockBtn').classList.remove('active');
-      console.log('💤 Wake Lock deaktiviert');
     }
-  } catch (err) {
-    console.error('❌ Wake Lock Fehler:', err);
-  }
+  } catch (err) { console.error('Wake Lock Fehler:', err); }
 }
 
 document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
 
-// Wake Lock erneuern wenn Tab zurück in den Fokus kommt
 document.addEventListener('visibilitychange', async () => {
   if (!document.hidden && wakeLock) {
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      console.log('🔋 Wake Lock erneuert');
-    } catch (err) {
-      console.error('Wake Lock konnte nicht erneuert werden:', err);
-    }
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   }
 });
 
@@ -569,10 +377,7 @@ document.addEventListener('visibilitychange', async () => {
 // MAP
 // =======================
 const map = L.map('map').setView([52.52, 13.405], 13);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
 // =======================
 // STATE
@@ -581,7 +386,6 @@ const markers       = {};
 const lastPositions = {};
 const trails        = {};
 let currentMarkerMenu = null;
-
 let firstDevice  = true;
 let lastDataTime = null;
 
@@ -590,23 +394,13 @@ let lastDataTime = null;
 // =======================
 const teamCarIcon = L.divIcon({
   className: '',
-  html: `<div style="
-    background: #e53935;
-    border: 3px solid white;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    width: 22px;
-    height: 22px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  "></div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-  tooltipAnchor: [0, -28]
+  html: `<div style="background:#e53935;border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+  iconSize: [28, 28], iconAnchor: [14, 28], tooltipAnchor: [0, -28]
 });
 
-let teamCarMarker      = null;
-let teamCarWatchId     = null;
-let teamCarAccCircle   = null;
+let teamCarMarker    = null;
+let teamCarWatchId   = null;
+let teamCarAccCircle = null;
 
 function startTeamCarTracking() {
   if (!authToken) {
@@ -614,96 +408,56 @@ function startTeamCarTracking() {
     document.getElementById('teamCarCheckbox').checked = false;
     return;
   }
-
   if (!navigator.geolocation) {
     alert("GPS wird von diesem Browser nicht unterstützt.");
     document.getElementById('teamCarCheckbox').checked = false;
     return;
   }
-
   teamCarWatchId = navigator.geolocation.watchPosition(
     async (pos) => {
-      const latlng = [pos.coords.latitude, pos.coords.longitude];
+      const latlng   = [pos.coords.latitude, pos.coords.longitude];
       const accuracy = pos.coords.accuracy;
-
       try {
         await fetch('https://livetracking-fq4l.onrender.com/team-position', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
         });
-      } catch (err) {
-        console.error("❌ Fehler beim Senden der Teamauto-Position:", err);
-      }
+      } catch (err) { console.error("Fehler beim Senden:", err); }
 
       if (!teamCarMarker) {
         teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
-          .addTo(map)
-          .bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
-
+          .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
         teamCarAccCircle = L.circle(latlng, {
-          radius: accuracy,
-          color: '#e53935',
-          fillColor: '#e53935',
-          fillOpacity: 0.08,
-          weight: 1
+          radius: accuracy, color: '#e53935', fillColor: '#e53935', fillOpacity: 0.08, weight: 1
         }).addTo(map);
-
       } else {
         teamCarMarker.setLatLng(latlng);
         teamCarAccCircle.setLatLng(latlng);
         teamCarAccCircle.setRadius(accuracy);
       }
-
-      console.log("🚗 Teamauto-Position gesendet:", latlng);
     },
     (err) => {
-      console.error("❌ Geolocation-Fehler:", err.message);
+      console.error("Geolocation-Fehler:", err.message);
       if (err.code === 1) {
-        alert("GPS-Zugriff verweigert. Bitte in Browsereinstellungen erlauben.");
+        alert("GPS-Zugriff verweigert.");
         document.getElementById('teamCarCheckbox').checked = false;
         document.getElementById('teamCarToggle').classList.remove('active');
       }
     },
-    {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000
-    }
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
   );
 }
 
 function stopTeamCarTracking() {
-  if (teamCarWatchId !== null) {
-    navigator.geolocation.clearWatch(teamCarWatchId);
-    teamCarWatchId = null;
-  }
-
-  if (teamCarMarker) {
-    map.removeLayer(teamCarMarker);
-    teamCarMarker = null;
-  }
-
-  if (teamCarAccCircle) {
-    map.removeLayer(teamCarAccCircle);
-    teamCarAccCircle = null;
-  }
-
-  console.log("🛑 Teamauto-Tracking gestoppt");
+  if (teamCarWatchId !== null) { navigator.geolocation.clearWatch(teamCarWatchId); teamCarWatchId = null; }
+  if (teamCarMarker)    { map.removeLayer(teamCarMarker);    teamCarMarker    = null; }
+  if (teamCarAccCircle) { map.removeLayer(teamCarAccCircle); teamCarAccCircle = null; }
 }
 
 document.getElementById('teamCarCheckbox').addEventListener('change', function () {
-  const toggle = document.getElementById('teamCarToggle');
-  if (this.checked) {
-    toggle.classList.add('active');
-    startTeamCarTracking();
-  } else {
-    toggle.classList.remove('active');
-    stopTeamCarTracking();
-  }
+  document.getElementById('teamCarToggle').classList.toggle('active', this.checked);
+  if (this.checked) startTeamCarTracking(); else stopTeamCarTracking();
 });
 
 // =======================
@@ -713,21 +467,19 @@ const statusEl = document.getElementById('status');
 
 function updateStatus() {
   if (!lastDataTime) {
-    statusEl.className = 'warn';
+    statusEl.className   = 'warn';
     statusEl.textContent = '⚪ Warte auf Daten…';
     return;
   }
-
   const ago = (Date.now() - lastDataTime) / 1000;
   if (ago < 5) {
-    statusEl.className = 'ok';
+    statusEl.className   = 'ok';
     statusEl.textContent = '🟢 Verbunden';
   } else {
-    statusEl.className = 'warn';
+    statusEl.className   = 'warn';
     statusEl.textContent = `🔴 Offline (${Math.round(ago)}s)`;
   }
 }
-
 setInterval(updateStatus, 1000);
 
 // =======================
@@ -736,7 +488,7 @@ setInterval(updateStatus, 1000);
 function animateMarker(marker, from, to, duration = 800) {
   const start = performance.now();
   function step(time) {
-    const t = Math.min((time - start) / duration, 1);
+    const t   = Math.min((time - start) / duration, 1);
     const lat = from[0] + (to[0] - from[0]) * t;
     const lng = from[1] + (to[1] - from[1]) * t;
     marker.setLatLng([lat, lng]);
@@ -749,81 +501,44 @@ function animateMarker(marker, from, to, duration = 800) {
 // CONTEXT MENU
 // =======================
 function showMarkerMenu(e, markerId) {
-  if (!authToken) {
-    showLoginModal('✏️ Zum Umbenennen von Trackern anmelden');
-    return;
-  }
-
-  if (currentMarkerMenu) {
-    currentMarkerMenu.remove();
-  }
+  if (!authToken) { showLoginModal('✏️ Zum Umbenennen anmelden'); return; }
+  if (currentMarkerMenu) currentMarkerMenu.remove();
 
   const container = document.createElement('div');
   container.className = 'markerMenu';
   container.style.left = e.pageX + 'px';
-  container.style.top = e.pageY + 'px';
+  container.style.top  = e.pageY + 'px';
 
   const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'Neuer Name…';
-  input.value = markerId;
+  input.type = 'text'; input.placeholder = 'Neuer Name…'; input.value = markerId;
 
   const renameBtn = document.createElement('button');
   renameBtn.textContent = '✏️ Umbenennen';
-
   renameBtn.addEventListener('click', async () => {
     const newName = input.value.trim();
-    if (!newName || newName === markerId) {
-      container.remove();
-      return;
-    }
-
+    if (!newName || newName === markerId) { container.remove(); return; }
     try {
       const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ oldName: markerId, newName })
       });
-
-      if (!res.ok) {
-        alert('❌ Fehler beim Umbenennen');
-        return;
-      }
-
+      if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
       if (markers[markerId]) {
-        markers[newName] = markers[markerId];
-        delete markers[markerId];
-        
-        if (lastPositions[markerId]) {
-          lastPositions[newName] = lastPositions[markerId];
-          delete lastPositions[markerId];
-        }
-
-        if (trails[markerId]) {
-          trails[newName] = trails[markerId];
-          delete trails[markerId];
-        }
-
+        markers[newName] = markers[markerId]; delete markers[markerId];
+        if (lastPositions[markerId]) { lastPositions[newName] = lastPositions[markerId]; delete lastPositions[markerId]; }
+        if (trails[markerId])        { trails[newName] = trails[markerId]; delete trails[markerId]; }
         markers[newName].setTooltipContent(newName);
-        console.log(`✏️ ${markerId} → ${newName}`);
       }
-
       container.remove();
-    } catch (err) {
-      alert('❌ Fehler: ' + err.message);
-    }
+    } catch (err) { alert('❌ Fehler: ' + err.message); }
   });
 
   container.appendChild(input);
   container.appendChild(renameBtn);
   document.body.appendChild(container);
   currentMarkerMenu = container;
-  
-  input.focus();
-  input.select();
+  input.focus(); input.select();
 }
 
 // =======================
@@ -833,8 +548,7 @@ async function loadPositions() {
   try {
     const res  = await fetch('https://livetracking-fq4l.onrender.com/positions');
     const data = await res.json();
-
-    const ids = Object.keys(data);
+    const ids  = Object.keys(data);
     if (ids.length === 0) return;
 
     lastDataTime = Date.now();
@@ -844,102 +558,266 @@ async function loadPositions() {
       const pos    = data[id];
       const latlng = [pos.lat, pos.lon];
 
-      // Trail
       if (!trails[id]) {
         trails[id] = L.polyline([], {
-          color: id === 'TEAMAUTO' ? '#e53935' : '#3388ff',
-          weight: 3,
-          opacity: 0.6
+          color: id === 'TEAMAUTO' ? '#e53935' : '#3388ff', weight: 3, opacity: 0.6
         }).addTo(map);
       }
 
-      // Marker
       if (!markers[id]) {
         const icon = id === 'TEAMAUTO' ? teamCarIcon : L.icon({
           iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
           shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
-
-        const marker = L.marker(latlng, { icon })
-          .addTo(map)
+        const marker = L.marker(latlng, { icon }).addTo(map)
           .bindTooltip(id, { permanent: true, direction: 'top' });
-
         if (id !== 'TEAMAUTO') {
-          marker.on('contextmenu', (e) => {
-            L.DomEvent.stop(e);
-            showMarkerMenu(e.originalEvent, id);
-          });
+          marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
         }
-
         markers[id] = marker;
         lastPositions[id] = latlng;
-
-        if (firstDevice) {
-          map.setView(latlng, 15);
-          firstDevice = false;
-        }
+        if (firstDevice) { map.setView(latlng, 15); firstDevice = false; }
       } else {
         animateMarker(markers[id], lastPositions[id], latlng);
-
         const prev  = lastPositions[id];
-        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 ||
-                      Math.abs(prev[1] - latlng[1]) > 0.000005;
+        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
         if (moved) trails[id].addLatLng(latlng);
-
         lastPositions[id] = latlng;
       }
-
       map.panTo(latlng, { animate: true, duration: 0.6 });
     });
-
-  } catch (err) {
-    console.error("💥 Fetch Error:", err);
-  }
+  } catch (err) { console.error("Fetch Error:", err); }
 }
 
 // =======================
-// RESET / CLEAR
+// RESET
 // =======================
 async function clearMap() {
-  if (!confirm('🚨 Wirklich ALLE Positionen löschen? Das kann nicht rückgängig gemacht werden.')) {
+  if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
+  try {
+    await fetch('https://livetracking-fq4l.onrender.com/positions', {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
+    Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
+    Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
+    lastDataTime = null; firstDevice = true; updateStatus();
+  } catch (err) { alert('❌ Fehler: ' + err.message); }
+}
+document.getElementById("resetBtn").addEventListener("click", clearMap);
+
+// =======================
+// 🌧️ REGEN-RADAR (RainViewer)
+// =======================
+const RAINVIEWER_API = 'https://api.rainviewer.com/public/weather-maps.json';
+const TILE_SIZE      = 256;
+const COLOR_SCHEME   = 2;
+const SMOOTH         = 1;
+const SNOW           = 1;
+
+let rainFrames   = [];
+let currentFrame = -1;
+let rainLayerA   = null;
+let baseLayer    = null;
+let rainVisible  = false;
+let rainOpacity  = 0.60;
+
+const rainPanel      = document.getElementById('rainPanel');
+const rainTimeline   = document.getElementById('rainTimeline');
+const rainTimeLabel  = document.getElementById('rainTimeLabel');
+const opacitySlider  = document.getElementById('opacitySlider');
+const rainToggleBtn  = document.getElementById('rainToggleBtn');
+
+function formatTime(unixTs) {
+  return new Date(unixTs * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+function buildTileUrl(host, path) {
+  return `${host}${path}/${TILE_SIZE}/{z}/{x}/{y}/${COLOR_SCHEME}/${SMOOTH}_${SNOW}.png`;
+}
+
+function makeTileLayer(host, path, opacity, zIndex) {
+  const layer = L.tileLayer(buildTileUrl(host, path), {
+    opacity, zIndex, attribution: '© RainViewer', maxNativeZoom: 4, maxZoom: 19
+  }).addTo(map);
+  layer.on('tileerror', e => { e.tile.style.display = 'none'; });
+  return layer;
+}
+
+// Smooth fade helper
+function fadeLayer(layer, from, to, duration, onDone) {
+  const start = performance.now();
+  function step(now) {
+    const t    = Math.min((now - start) / duration, 1);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    layer.setOpacity(from + (to - from) * ease);
+    if (t < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+async function fetchRainFrames() {
+  rainTimeLabel.textContent = 'Lade…';
+  try {
+    const res  = await fetch(RAINVIEWER_API);
+    const data = await res.json();
+    const host = data.host || 'https://tilecache.rainviewer.com';
+
+    // Basis-Layer: neuester Past-Frame (immer sichtbar, kein Button)
+    const latestPast = (data.radar?.past || []).slice(-1)[0];
+    if (baseLayer) { map.removeLayer(baseLayer); baseLayer = null; }
+    if (latestPast) baseLayer = makeTileLayer(host, latestPast.path, rainOpacity, 499);
+
+    // Nowcast-Frames für die Timeline
+    const nowcast = data.radar?.nowcast || [];
+    rainFrames = nowcast.map(f => ({ time: f.time, path: f.path, host }));
+
+    buildTimeline();
+
+    if (nowcast.length === 0) {
+      rainTimeLabel.textContent = '☀️ Kein Niederschlag – aktuelle Radarlage';
+    } else {
+      showFrame(0);
+    }
+  } catch (err) {
+    console.error('RainViewer Fehler:', err);
+    rainTimeLabel.textContent = 'Fehler beim Laden';
+  }
+}
+
+function buildTimeline() {
+  rainTimeline.innerHTML = '';
+  rainFrames.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.className   = 'rain-frame-btn';
+    btn.textContent = formatTime(f.time);
+    btn.title       = 'Vorhersage ' + formatTime(f.time);
+    btn.addEventListener('click', () => showFrame(i));
+    rainTimeline.appendChild(btn);
+  });
+}
+
+function showFrame(index) {
+  if (index < 0 || index >= rainFrames.length) return;
+  currentFrame = index;
+  const frame  = rainFrames[index];
+
+  const newLayer = makeTileLayer(frame.host, frame.path, 0, 500);
+  const oldLayer = rainLayerA;
+  if (oldLayer) fadeLayer(oldLayer, rainOpacity, 0, 350, () => map.removeLayer(oldLayer));
+  fadeLayer(newLayer, 0, rainOpacity, 350);
+  rainLayerA = newLayer;
+
+  document.querySelectorAll('.rain-frame-btn').forEach((btn, i) => btn.classList.toggle('active', i === index));
+  rainTimeLabel.textContent = '🔮 ' + formatTime(frame.time);
+}
+
+opacitySlider.addEventListener('input', function () {
+  rainOpacity = this.value / 100;
+  if (rainLayerA) rainLayerA.setOpacity(rainOpacity);
+  if (baseLayer)  baseLayer.setOpacity(rainOpacity);
+});
+
+// Alle 5 Min aktualisieren
+setInterval(() => { if (rainVisible) fetchRainFrames(); }, 5 * 60 * 1000);
+
+rainToggleBtn.addEventListener('click', () => {
+  rainVisible = !rainVisible;
+  rainToggleBtn.classList.toggle('rain-active', rainVisible);
+  rainPanel.classList.toggle('hidden', !rainVisible);
+
+  if (rainVisible) {
+    fetchRainFrames();
+  } else {
+    if (rainLayerA) { map.removeLayer(rainLayerA); rainLayerA = null; }
+    if (baseLayer)  { map.removeLayer(baseLayer);  baseLayer  = null; }
+    rainFrames = []; currentFrame = -1;
+  }
+  // Menü offen lassen damit man Deckkraft etc. sieht
+});
+
+// =======================
+// 📂 GPX TRACKS
+// =======================
+let gpxLayer = null;
+
+document.getElementById('gpxBtn').addEventListener('click', () => {
+  document.getElementById('gpxFileInput').click();
+});
+
+document.getElementById('gpxFileInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      loadGpx(e.target.result, file.name);
+    } catch (err) {
+      alert('❌ GPX konnte nicht geladen werden: ' + err.message);
+    }
+    this.value = ''; // Reset damit dieselbe Datei nochmal geladen werden kann
+  };
+  reader.readAsText(file);
+});
+
+function loadGpx(xmlText, filename) {
+  // Alten GPX-Layer entfernen
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+
+  const parser = new DOMParser();
+  const xml    = parser.parseFromString(xmlText, 'application/xml');
+
+  if (xml.querySelector('parsererror')) {
+    throw new Error('Ungültige GPX-Datei');
+  }
+
+  const coords = [];
+
+  // Track-Punkte aus allen <trk>/<trkseg>/<trkpt>
+  xml.querySelectorAll('trkpt').forEach(pt => {
+    const lat = parseFloat(pt.getAttribute('lat'));
+    const lon = parseFloat(pt.getAttribute('lon'));
+    if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+  });
+
+  // Fallback: Route-Punkte <rtept>
+  if (coords.length === 0) {
+    xml.querySelectorAll('rtept').forEach(pt => {
+      const lat = parseFloat(pt.getAttribute('lat'));
+      const lon = parseFloat(pt.getAttribute('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+    });
+  }
+
+  if (coords.length === 0) {
+    alert('❌ Keine Track-Punkte in der GPX-Datei gefunden.');
     return;
   }
 
-  try {
-    await fetch('https://livetracking-fq4l.onrender.com/positions', {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authToken}` }
-    });
+  gpxLayer = L.polyline(coords, {
+    color:   '#e65100',
+    weight:  4,
+    opacity: 0.8,
+    lineJoin: 'round',
+    lineCap:  'round'
+  }).addTo(map);
 
-    Object.keys(markers).forEach(id => {
-      map.removeLayer(markers[id]);
-      delete markers[id];
-    });
+  // Karte auf Track zoomen
+  map.fitBounds(gpxLayer.getBounds(), { padding: [40, 40] });
 
-    Object.keys(trails).forEach(id => {
-      map.removeLayer(trails[id]);
-      delete trails[id];
-    });
+  // "Entfernen"-Button einblenden
+  document.getElementById('gpxRemoveBtn').classList.remove('hidden');
 
-    Object.keys(lastPositions).forEach(id => {
-      delete lastPositions[id];
-    });
-
-    lastDataTime = null;
-    firstDevice  = true;
-    updateStatus();
-
-    console.log("✅ Karte geleert");
-  } catch (err) {
-    alert('❌ Fehler: ' + err.message);
-  }
+  console.log(`📂 GPX geladen: ${filename} (${coords.length} Punkte)`);
 }
 
-document.getElementById("resetBtn").addEventListener("click", clearMap);
+document.getElementById('gpxRemoveBtn').addEventListener('click', () => {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  document.getElementById('gpxRemoveBtn').classList.add('hidden');
+});
 
 // =======================
 // MAIN LOOP
