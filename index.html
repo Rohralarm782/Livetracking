@@ -453,24 +453,25 @@ document.getElementById("resetBtn").addEventListener("click", clearMap);
 // =======================
 const RAINVIEWER_API = 'https://api.rainviewer.com/public/weather-maps.json';
 const TILE_SIZE      = 256;
-const COLOR_SCHEME   = 2;   // Standard-Radarfarben
+const COLOR_SCHEME   = 2;
 const SMOOTH         = 1;
-const SNOW           = 1;   // Schnee einblenden
+const SNOW           = 1;
 
-let rainFrames      = [];   // { time, path, isForecast }
-let currentFrame    = -1;
-let rainLayer       = null;
-let rainVisible     = false;
-let isPlaying       = false;
-let playInterval    = null;
-let rainOpacity     = 0.60;
+let rainFrames    = [];
+let currentFrame  = -1;
+let rainLayerA    = null;   // aktiver Layer
+let rainLayerB    = null;   // auslaufender Layer (Crossfade)
+let rainVisible   = false;
+let isPlaying     = false;
+let playInterval  = null;
+let rainOpacity   = 0.60;
 
-const rainPanel      = document.getElementById('rainPanel');
-const rainTimeline   = document.getElementById('rainTimeline');
-const rainTimeLabel  = document.getElementById('rainTimeLabel');
-const playBtn        = document.getElementById('playBtn');
-const opacitySlider  = document.getElementById('opacitySlider');
-const rainToggleBtn  = document.getElementById('rainToggleBtn');
+const rainPanel     = document.getElementById('rainPanel');
+const rainTimeline  = document.getElementById('rainTimeline');
+const rainTimeLabel = document.getElementById('rainTimeLabel');
+const playBtn       = document.getElementById('playBtn');
+const opacitySlider = document.getElementById('opacitySlider');
+const rainToggleBtn = document.getElementById('rainToggleBtn');
 
 function formatTime(unixTs) {
   const d = new Date(unixTs * 1000);
@@ -481,114 +482,149 @@ function buildTileUrl(host, path) {
   return `${host}${path}/${TILE_SIZE}/{z}/{x}/{y}/${COLOR_SCHEME}/${SMOOTH}_${SNOW}.png`;
 }
 
+// =======================
+// FADE HELPER
+// =======================
+function fadeLayer(layer, from, to, duration, onDone) {
+  const start = performance.now();
+  function step(now) {
+    const t    = Math.min((now - start) / duration, 1);
+    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    layer.setOpacity(from + (to - from) * ease);
+    if (t < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+// =======================
+// FETCH
+// =======================
 async function fetchRainFrames() {
   try {
     const res  = await fetch(RAINVIEWER_API);
     const data = await res.json();
 
-    const host = data.host || 'https://tilecache.rainviewer.com';
-    rainFrames = [];
-
+    const host    = data.host || 'https://tilecache.rainviewer.com';
     const nowcast = data.radar?.nowcast || [];
-    const past    = data.radar?.past    || [];
 
-    if (nowcast.length > 0) {
-      // Vorhersage vorhanden → nur Nowcast zeigen
-      nowcast.forEach(f => rainFrames.push({ time: f.time, path: f.path, host, isForecast: true }));
-    } else if (past.length > 0) {
-      // Kein Niederschlag aktuell → letzte 3 Radar-Frames als "aktuelle Lage"
-      past.slice(-3).forEach(f => rainFrames.push({ time: f.time, path: f.path, host, isForecast: false }));
-    }
+    console.log(`🌧️ RainViewer: ${nowcast.length} nowcast-Frames`);
 
-    console.log(`🌧️ RainViewer: ${nowcast.length} nowcast, ${past.length} past → zeige ${rainFrames.length} frames`);
-
-    if (rainFrames.length === 0) {
-      rainTimeLabel.textContent = 'Keine Radardaten verfügbar';
+    if (nowcast.length === 0) {
+      rainTimeLabel.textContent = '☀️ Aktuell kein Niederschlag — keine Vorhersage verfügbar';
       return;
     }
 
+    rainFrames = nowcast.map(f => ({ time: f.time, path: f.path, host }));
+
     buildTimeline();
     showFrame(0);
+    startPlay();   // direkt abspielen
 
   } catch (err) {
-    console.error("🌧️ RainViewer Fehler:", err);
+    console.error('🌧️ RainViewer Fehler:', err);
     rainTimeLabel.textContent = 'Fehler beim Laden der Radardaten';
   }
 }
 
+// =======================
+// TIMELINE
+// =======================
 function buildTimeline() {
   rainTimeline.innerHTML = '';
   rainFrames.forEach((f, i) => {
     const btn = document.createElement('button');
-    btn.className = 'rain-frame-btn' + (f.isForecast ? ' forecast' : '');
+    btn.className = 'rain-frame-btn forecast';
     btn.textContent = formatTime(f.time);
-    btn.title = (f.isForecast ? 'Vorhersage ' : 'Radar ') + formatTime(f.time);
+    btn.title = 'Vorhersage ' + formatTime(f.time);
     btn.addEventListener('click', () => { stopPlay(); showFrame(i); });
     rainTimeline.appendChild(btn);
   });
 }
 
+// =======================
+// SHOW FRAME (mit Crossfade)
+// =======================
 function showFrame(index) {
   if (index < 0 || index >= rainFrames.length) return;
-
-  if (rainLayer) { map.removeLayer(rainLayer); rainLayer = null; }
 
   currentFrame = index;
   const frame  = rainFrames[index];
 
-  rainLayer = L.tileLayer(buildTileUrl(frame.host, frame.path), {
-    opacity:       rainOpacity,
+  // Neuen Layer bei Opacity 0 einblenden
+  const newLayer = L.tileLayer(buildTileUrl(frame.host, frame.path), {
+    opacity:       0,
     zIndex:        500,
     attribution:   '© RainViewer',
-    maxNativeZoom: 3,
+    maxNativeZoom: 4,
     maxZoom:       19
   }).addTo(map);
 
-  // Falls RainViewer trotzdem ein Error-Bild schickt: Tile ausblenden
-  rainLayer.on('tileerror', function(e) {
-    e.tile.style.display = 'none';
-  });
+  newLayer.on('tileerror', e => { e.tile.style.display = 'none'; });
 
+  // Alten Layer ausblenden + entfernen
+  const oldLayer = rainLayerA;
+  if (oldLayer) {
+    fadeLayer(oldLayer, rainOpacity, 0, 400, () => map.removeLayer(oldLayer));
+  }
+
+  // Neuen Layer einblenden
+  fadeLayer(newLayer, 0, rainOpacity, 400);
+  rainLayerA = newLayer;
+
+  // Timeline aktiv markieren
   document.querySelectorAll('.rain-frame-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === index);
   });
 
-  const prefix = frame.isForecast ? '🔮 Vorhersage' : '📡 Aktuell';
-  rainTimeLabel.textContent = `${prefix} ${formatTime(frame.time)}`;
+  rainTimeLabel.textContent = `🔮 Vorhersage ${formatTime(frame.time)}`;
 }
 
+// =======================
+// PLAY / PAUSE  (stoppt am letzten Frame)
+// =======================
 function nextFrame() {
   if (rainFrames.length === 0) return;
-  const next = (currentFrame + 1) % rainFrames.length;
+  const next = currentFrame + 1;
+  if (next >= rainFrames.length) {
+    stopPlay();   // am Ende stoppen statt loopen
+    return;
+  }
   showFrame(next);
 }
 
 function startPlay() {
-  isPlaying    = true;
+  if (rainFrames.length === 0) return;
+  isPlaying           = true;
   playBtn.textContent = '⏸';
-  playInterval = setInterval(nextFrame, 700);
+  playInterval        = setInterval(nextFrame, 900);
 }
 
 function stopPlay() {
-  isPlaying    = false;
+  isPlaying           = false;
   playBtn.textContent = '▶';
   clearInterval(playInterval);
-  playInterval = null;
+  playInterval        = null;
 }
 
 playBtn.addEventListener('click', () => {
-  if (isPlaying) stopPlay(); else startPlay();
+  if (isPlaying) stopPlay();
+  else {
+    // Am Ende → von vorne starten
+    if (currentFrame >= rainFrames.length - 1) showFrame(0);
+    startPlay();
+  }
 });
 
 opacitySlider.addEventListener('input', function () {
   rainOpacity = this.value / 100;
-  if (rainLayer) rainLayer.setOpacity(rainOpacity);
+  if (rainLayerA) rainLayerA.setOpacity(rainOpacity);
 });
 
-// Radar alle 5 Min aktualisieren
+// Alle 5 Min neu laden
 setInterval(() => { if (rainVisible) fetchRainFrames(); }, 5 * 60 * 1000);
 
-// Toggle-Button
+// Toggle
 rainToggleBtn.addEventListener('click', () => {
   rainVisible = !rainVisible;
 
@@ -600,10 +636,12 @@ rainToggleBtn.addEventListener('click', () => {
     rainToggleBtn.classList.remove('active');
     rainPanel.classList.remove('visible');
     stopPlay();
-    if (rainLayer) { map.removeLayer(rainLayer); rainLayer = null; }
+    if (rainLayerA) { map.removeLayer(rainLayerA); rainLayerA = null; }
+    if (rainLayerB) { map.removeLayer(rainLayerB); rainLayerB = null; }
+    rainFrames   = [];
+    currentFrame = -1;
   }
 });
-
 
 // =======================
 // LOOP
