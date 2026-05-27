@@ -141,22 +141,6 @@
       font-size: 12px;
     }
 
-    #playBtn {
-      background: #1565c0;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      font-size: 13px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #playBtn:hover { background: #0d47a1; }
 
     #rainTimeLabel {
       flex: 1;
@@ -234,7 +218,6 @@
   <div id="rainTimeline"></div>
 
   <div id="rainControls">
-    <button id="playBtn" title="Play/Pause">▶</button>
     <span id="rainTimeLabel">–</span>
     <label id="rainOpacityLabel">
       Deckkraft&nbsp;<input type="range" id="opacitySlider" min="10" max="100" value="60">
@@ -467,14 +450,11 @@ let currentFrame  = -1;
 let rainLayerA    = null;   // aktiver Layer
 let rainLayerB    = null;   // auslaufender Layer (Crossfade)
 let rainVisible   = false;
-let isPlaying     = false;
-let playInterval  = null;
 let rainOpacity   = 0.60;
 
 const rainPanel     = document.getElementById('rainPanel');
 const rainTimeline  = document.getElementById('rainTimeline');
 const rainTimeLabel = document.getElementById('rainTimeLabel');
-const playBtn       = document.getElementById('playBtn');
 const opacitySlider = document.getElementById('opacitySlider');
 const rainToggleBtn = document.getElementById('rainToggleBtn');
 
@@ -521,16 +501,15 @@ async function fetchRainFrames() {
       return;
     }
 
-    rainFrames = [
-      ...past.map(f    => ({ time: f.time, path: f.path, host, type: 'past' })),
-      ...nowcast.map(f => ({ time: f.time, path: f.path, host, type: 'forecast' }))
-    ];
+    if (nowcast.length === 0) {
+      rainTimeLabel.textContent = '☀️ Aktuell kein Niederschlag — keine Vorhersage verfügbar';
+      return;
+    }
+
+    rainFrames = nowcast.map(f => ({ time: f.time, path: f.path, host, type: 'forecast' }));
 
     buildTimeline();
-    // Auf letzten Past-Frame springen (= aktuellste Lage), dann abspielen
-    const startIdx = past.length > 0 ? past.length - 1 : 0;
-    showFrame(startIdx);
-    startPlay();
+    showFrame(0);
 
   } catch (err) {
     console.error('🌧️ RainViewer Fehler:', err);
@@ -548,7 +527,7 @@ function buildTimeline() {
     btn.className = 'rain-frame-btn ' + (f.type === 'forecast' ? 'forecast' : 'past');
     btn.textContent = formatTime(f.time);
     btn.title = (f.type === 'forecast' ? '🔮 Vorhersage ' : '📡 Aktuell ') + formatTime(f.time);
-    btn.addEventListener('click', () => { stopPlay(); showFrame(i); });
+    btn.addEventListener('click', () => { showFrame(i); });
     rainTimeline.appendChild(btn);
   });
 }
@@ -592,42 +571,6 @@ function showFrame(index) {
   rainTimeLabel.textContent = `${prefix} ${formatTime(frame.time)}`;
 }
 
-// =======================
-// PLAY / PAUSE  (stoppt am letzten Frame)
-// =======================
-function nextFrame() {
-  if (rainFrames.length === 0) return;
-  const next = currentFrame + 1;
-  if (next >= rainFrames.length) {
-    stopPlay();   // am Ende stoppen statt loopen
-    return;
-  }
-  showFrame(next);
-}
-
-function startPlay() {
-  if (rainFrames.length === 0) return;
-  isPlaying           = true;
-  playBtn.textContent = '⏸';
-  playInterval        = setInterval(nextFrame, 900);
-}
-
-function stopPlay() {
-  isPlaying           = false;
-  playBtn.textContent = '▶';
-  clearInterval(playInterval);
-  playInterval        = null;
-}
-
-playBtn.addEventListener('click', () => {
-  if (isPlaying) stopPlay();
-  else {
-    // Am Ende → von vorne starten
-    if (currentFrame >= rainFrames.length - 1) showFrame(0);
-    startPlay();
-  }
-});
-
 opacitySlider.addEventListener('input', function () {
   rainOpacity = this.value / 100;
   if (rainLayerA) rainLayerA.setOpacity(rainOpacity);
@@ -647,7 +590,6 @@ rainToggleBtn.addEventListener('click', () => {
   } else {
     rainToggleBtn.classList.remove('active');
     rainPanel.classList.remove('visible');
-    stopPlay();
     if (rainLayerA) { map.removeLayer(rainLayerA); rainLayerA = null; }
     if (rainLayerB) { map.removeLayer(rainLayerB); rainLayerB = null; }
     rainFrames   = [];
