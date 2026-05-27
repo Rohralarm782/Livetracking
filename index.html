@@ -119,6 +119,11 @@
       overflow: hidden;
     }
 
+    .rain-frame-btn.past {
+      background: #e8eaf6;
+      color: #3949ab;
+    }
+
     .rain-frame-btn.forecast {
       background: #fff3e0;
       color: #e65100;
@@ -506,20 +511,26 @@ async function fetchRainFrames() {
     const data = await res.json();
 
     const host    = data.host || 'https://tilecache.rainviewer.com';
+    const past    = (data.radar?.past    || []).slice(-3);  // letzte 3 = ~30 Min
     const nowcast = data.radar?.nowcast || [];
 
-    console.log(`🌧️ RainViewer: ${nowcast.length} nowcast-Frames`);
+    console.log(`🌧️ RainViewer: ${past.length} past, ${nowcast.length} nowcast`);
 
-    if (nowcast.length === 0) {
-      rainTimeLabel.textContent = '☀️ Aktuell kein Niederschlag — keine Vorhersage verfügbar';
+    if (past.length === 0 && nowcast.length === 0) {
+      rainTimeLabel.textContent = 'Keine Radardaten verfügbar';
       return;
     }
 
-    rainFrames = nowcast.map(f => ({ time: f.time, path: f.path, host }));
+    rainFrames = [
+      ...past.map(f    => ({ time: f.time, path: f.path, host, type: 'past' })),
+      ...nowcast.map(f => ({ time: f.time, path: f.path, host, type: 'forecast' }))
+    ];
 
     buildTimeline();
-    showFrame(0);
-    startPlay();   // direkt abspielen
+    // Auf letzten Past-Frame springen (= aktuellste Lage), dann abspielen
+    const startIdx = past.length > 0 ? past.length - 1 : 0;
+    showFrame(startIdx);
+    startPlay();
 
   } catch (err) {
     console.error('🌧️ RainViewer Fehler:', err);
@@ -534,9 +545,9 @@ function buildTimeline() {
   rainTimeline.innerHTML = '';
   rainFrames.forEach((f, i) => {
     const btn = document.createElement('button');
-    btn.className = 'rain-frame-btn forecast';
+    btn.className = 'rain-frame-btn ' + (f.type === 'forecast' ? 'forecast' : 'past');
     btn.textContent = formatTime(f.time);
-    btn.title = 'Vorhersage ' + formatTime(f.time);
+    btn.title = (f.type === 'forecast' ? '🔮 Vorhersage ' : '📡 Aktuell ') + formatTime(f.time);
     btn.addEventListener('click', () => { stopPlay(); showFrame(i); });
     rainTimeline.appendChild(btn);
   });
@@ -577,7 +588,8 @@ function showFrame(index) {
     btn.classList.toggle('active', i === index);
   });
 
-  rainTimeLabel.textContent = `🔮 Vorhersage ${formatTime(frame.time)}`;
+  const prefix = frame.type === 'forecast' ? '🔮 Vorhersage' : '📡 Aktuell';
+  rainTimeLabel.textContent = `${prefix} ${formatTime(frame.time)}`;
 }
 
 // =======================
