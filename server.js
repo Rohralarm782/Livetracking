@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto');
 
 const app = express();
 
@@ -8,7 +7,7 @@ const app = express();
 // MIDDLEWARE
 // =======================
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2mb' })); // GPX-Tracks können größer sein
 
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.url}`);
@@ -21,57 +20,28 @@ app.use((req, res, next) => {
 app.use(express.static(__dirname));
 
 // =======================
-// CONFIG
-// =======================
-const ADMIN_PASSWORD = 'admin123'; // ⚠️ ÄNDERN SIE DAS!
-const TOKENS = new Set();
-
-// =======================
 // STATE
 // =======================
 let positions = Object.create(null);
-let trackerNames = Object.create(null); // { deviceId: "Custom Name" }
-let teamPosition = null; // { lat, lon, timestamp }
+let gpxTrack  = null;   // { coords: [[lat,lon], ...], name: string }
 
 // =======================
-// AUTH MIDDLEWARE
+// SIMPLE AUTH (Token-basiert)
 // =======================
-function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token || !TOKENS.has(token)) {
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const tokens = new Set();
+
+function requireAuth(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  
+  const token = auth.slice(7);
+  if (!tokens.has(token)) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
   next();
 }
-
-// =======================
-// LOGIN
-// =======================
-app.post('/login', (req, res) => {
-  const { password } = req.body;
-
-  if (!password || password !== ADMIN_PASSWORD) {
-    return res.status(403).json({ error: 'Wrong password' });
-  }
-
-  const token = crypto.randomBytes(32).toString('hex');
-  TOKENS.add(token);
-
-  console.log('🔓 Login erfolgreich, Token:', token.substring(0, 8) + '...');
-
-  res.json({ ok: true, token });
-});
-
-// =======================
-// LOGOUT
-// =======================
-app.post('/logout', authMiddleware, (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (token) TOKENS.delete(token);
-  res.json({ ok: true });
-});
 
 // =======================
 // HEALTH CHECK
@@ -81,141 +51,98 @@ app.get('/health', (req, res) => {
 });
 
 // =======================
-// POSITIONEN SPEICHERN (geräte-seitig)
+// AUTH ENDPOINTS
+// =======================
+app.post('/login', (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Wrong password' });
+  }
+  const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  tokens.add(token);
+  res.json({ token });
+});
+
+app.post('/logout', requireAuth, (req, res) => {
+  const token = req.headers['authorization'].slice(7);
+  tokens.delete(token);
+  res.json({ ok: true });
+});
+
+// =======================
+// POSITIONEN
 // =======================
 app.post('/positions', (req, res) => {
   const { id, lat, lon } = req.body;
-
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
-    return res.status(400).json({
-      error: 'id (string), lat (number), lon (number) required'
-    });
+    return res.status(400).json({ error: 'id, lat, lon required' });
   }
-
-  // Validierung
-  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-    return res.status(400).json({ error: 'Invalid coordinates' });
-  }
-
-  positions[id] = {
-    lat,
-    lon,
-    timestamp: Date.now()
-  };
-
-  console.log("📍 gespeichert:", id, positions[id]);
-
+  positions[id] = { lat, lon, timestamp: Date.now() };
   res.json({ ok: true });
 });
 
-// =======================
-// TEAMAUTO-POSITION (authentifiziert)
-// =======================
-app.post('/team-position', authMiddleware, (req, res) => {
-  const { lat, lon } = req.body;
-
-  if (typeof lat !== 'number' || typeof lon !== 'number') {
-    return res.status(400).json({
-      error: 'lat (number), lon (number) required'
-    });
-  }
-
-  // Validierung
-  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-    return res.status(400).json({ error: 'Invalid coordinates' });
-  }
-
-  teamPosition = {
-    lat,
-    lon,
-    timestamp: Date.now()
-  };
-
-  console.log("🚗 Teamauto-Position:", teamPosition);
-
-  res.json({ ok: true });
-});
-
-// =======================
-// POSITIONEN LADEN
-// =======================
 app.get('/positions', (req, res) => {
-  const response = Object.assign({}, positions);
-  
-  // Teamauto-Position mit spezieller ID hinzufügen
-  if (teamPosition) {
-    response['TEAMAUTO'] = teamPosition;
-  }
+  res.json(positions);
+});
 
-  // Tracker-Namen anwenden
-  const withNames = {};
-  for (const id in response) {
-    const displayName = trackerNames[id] || id;
-    withNames[displayName] = response[id];
-  }
-
-  res.json(withNames);
+app.delete('/positions', requireAuth, (req, res) => {
+  for (const key of Object.keys(positions)) delete positions[key];
+  console.log("🧹 Positionen gelöscht");
+  res.json({ ok: true });
 });
 
 // =======================
-// TRACKER UMBENENNEN (authentifiziert)
+// TEAM-POSITION
 // =======================
-app.post('/rename-tracker', authMiddleware, (req, res) => {
-  const { oldName, newName } = req.body;
-
-  if (!oldName || !newName) {
-    return res.status(400).json({
-      error: 'oldName and newName required'
-    });
+app.post('/team-position', requireAuth, (req, res) => {
+  const { lat, lon } = req.body;
+  if (typeof lat !== 'number' || typeof lon !== 'number') {
+    return res.status(400).json({ error: 'lat, lon required' });
   }
+  positions['TEAMAUTO'] = { lat, lon, timestamp: Date.now() };
+  res.json({ ok: true });
+});
 
-  // Alte Position unter neuem Namen speichern
+// =======================
+// RENAME TRACKER
+// =======================
+app.post('/rename-tracker', requireAuth, (req, res) => {
+  const { oldName, newName } = req.body;
+  if (!oldName || !newName) return res.status(400).json({ error: 'oldName, newName required' });
   if (positions[oldName]) {
     positions[newName] = positions[oldName];
     delete positions[oldName];
   }
-
-  // Namen-Mapping speichern
-  if (oldName !== 'TEAMAUTO') {
-    trackerNames[newName] = newName;
-    if (oldName !== newName) {
-      delete trackerNames[oldName];
-    }
-  }
-
-  console.log(`✏️ Tracker umbenannt: "${oldName}" → "${newName}"`);
-
   res.json({ ok: true });
 });
 
 // =======================
-// 🧹 RESET (DELETE)
+// GPX TRACK
 // =======================
-app.delete('/positions', authMiddleware, (req, res) => {
-  const keys = Object.keys(positions);
+app.get('/gpx', (req, res) => {
+  res.json(gpxTrack || null);
+});
 
-  if (keys.length === 0 && !teamPosition) {
-    return res.json({ ok: true, message: "already empty" });
+app.post('/gpx', requireAuth, (req, res) => {
+  const { coords, name } = req.body;
+  if (!Array.isArray(coords) || coords.length === 0) {
+    return res.status(400).json({ error: 'coords array required' });
   }
+  gpxTrack = { coords, name: name || 'GPX Track' };
+  console.log(`📂 GPX gespeichert: ${name} (${coords.length} Punkte)`);
+  res.json({ ok: true });
+});
 
-  for (const key of keys) {
-    delete positions[key];
-  }
-
-  teamPosition = null;
-  trackerNames = Object.create(null);
-
-  console.log("🧹 ALLE POSITIONEN GELÖSCHT");
-
-  res.json({ ok: true, message: "cleared" });
+app.delete('/gpx', requireAuth, (req, res) => {
+  gpxTrack = null;
+  console.log("🗑️ GPX gelöscht");
+  res.json({ ok: true });
 });
 
 // =======================
-// START SERVER
+// START
 // =======================
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server läuft auf Port ${PORT}`);
-  console.log(`⚠️  Admin Password: ${ADMIN_PASSWORD}`);
 });
