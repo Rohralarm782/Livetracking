@@ -164,7 +164,7 @@
 <div id="optionsMenu" class="hidden">
   <button class="btn primary" id="loginBtnTop">🔓 Login</button>
   <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
-  <button class="btn" id="gpxBtn">📂 GPX laden</button>
+  <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
   <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
   <button class="btn reset hidden" id="resetBtn">🧹 Karte leeren</button>
   <label id="teamCarToggle" class="hidden">
@@ -194,6 +194,7 @@ function saveToken(token) {
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('resetBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
+  document.getElementById('gpxBtn').classList.remove('hidden');
   console.log("✅ Eingeloggt");
 }
 
@@ -204,6 +205,7 @@ function loadToken() {
     document.getElementById('logoutBtn').classList.remove('hidden');
     document.getElementById('resetBtn').classList.remove('hidden');
     document.getElementById('teamCarToggle').classList.remove('hidden');
+    document.getElementById('gpxBtn').classList.remove('hidden');
   }
 }
 
@@ -222,6 +224,8 @@ function logout() {
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('resetBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
+  document.getElementById('gpxBtn').classList.add('hidden');
+  document.getElementById('gpxRemoveBtn').classList.add('hidden');
   document.getElementById('loginModal').classList.add('hidden');
   console.log("🚪 Abgemeldet");
 }
@@ -549,7 +553,27 @@ document.getElementById("resetBtn").addEventListener("click", clearMap);
 // =======================
 // 📂 GPX TRACKS
 // =======================
+const SERVER = 'https://livetracking-fq4l.onrender.com';
 let gpxLayer = null;
+
+// Beim Laden: GPX vom Server holen (für alle sichtbar)
+async function fetchGpxTrack() {
+  try {
+    const res  = await fetch(`${SERVER}/gpx`);
+    const data = await res.json();
+    if (data && data.coords && data.coords.length > 0) {
+      drawGpxLayer(data.coords);
+    }
+  } catch (err) { console.error('GPX fetch:', err); }
+}
+
+function drawGpxLayer(coords) {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  gpxLayer = L.polyline(coords, {
+    color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
+  }).addTo(map);
+  if (authToken) document.getElementById('gpxRemoveBtn').classList.remove('hidden');
+}
 
 document.getElementById('gpxBtn').addEventListener('click', () => {
   setTimeout(() => optionsMenu.classList.add('hidden'), 50);
@@ -560,17 +584,24 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
   const file = this.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
-    try { loadGpx(e.target.result, file.name); }
-    catch (err) { alert('❌ GPX konnte nicht geladen werden: ' + err.message); }
+  reader.onload = async (e) => {
+    try {
+      const coords = parseGpx(e.target.result);
+      drawGpxLayer(coords);
+      // Global speichern
+      await fetch(`${SERVER}/gpx`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ coords, name: file.name })
+      });
+      console.log(`📂 GPX gespeichert: ${file.name} (${coords.length} Punkte)`);
+    } catch (err) { alert('❌ ' + err.message); }
     this.value = '';
   };
   reader.readAsText(file);
 });
 
-function loadGpx(xmlText, filename) {
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-
+function parseGpx(xmlText) {
   const parser = new DOMParser();
   const xml    = parser.parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
@@ -588,20 +619,19 @@ function loadGpx(xmlText, filename) {
       if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
     });
   }
-  if (coords.length === 0) { alert('❌ Keine Track-Punkte gefunden.'); return; }
-
-  gpxLayer = L.polyline(coords, {
-    color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
-  }).addTo(map);
-
-  map.fitBounds(gpxLayer.getBounds(), { padding: [40, 40] });
-  document.getElementById('gpxRemoveBtn').classList.remove('hidden');
-  console.log(`📂 GPX: ${filename} (${coords.length} Punkte)`);
+  if (coords.length === 0) throw new Error('Keine Track-Punkte gefunden');
+  return coords;
 }
 
-document.getElementById('gpxRemoveBtn').addEventListener('click', () => {
+document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
   if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
   document.getElementById('gpxRemoveBtn').classList.add('hidden');
+  try {
+    await fetch(`${SERVER}/gpx`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+  } catch (err) { console.error('GPX delete:', err); }
 });
 
 // =======================
@@ -609,6 +639,7 @@ document.getElementById('gpxRemoveBtn').addEventListener('click', () => {
 // =======================
 loadPositions();
 setInterval(loadPositions, 1000);
+fetchGpxTrack();
 
 </script>
 </body>
