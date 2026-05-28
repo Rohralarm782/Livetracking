@@ -166,6 +166,7 @@
   <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
   <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
   <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
+  <button class="btn" id="fitAllBtn">🔍 Alle anzeigen</button>
   <button class="btn reset hidden" id="resetBtn">🧹 Karte leeren</button>
   <label id="teamCarToggle" class="hidden">
     <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
@@ -322,6 +323,9 @@ document.addEventListener('visibilitychange', async () => {
 const map = L.map('map').setView([52.52, 13.405], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
+// Manuelle Interaktion erkennen → Auto-Fit pausieren
+map.on('movestart', (e) => { if (e.originalEvent) userInteracted = true; });
+
 // =======================
 // STATE
 // =======================
@@ -329,8 +333,9 @@ const markers       = {};
 const lastPositions = {};
 const trails        = {};
 let currentMarkerMenu = null;
-let firstDevice  = true;
-let lastDataTime = null;
+let firstDevice      = true;
+let lastDataTime     = null;
+let userInteracted   = false;
 
 // =======================
 // TEAMAUTO MARKER
@@ -528,8 +533,17 @@ async function loadPositions() {
         if (moved) trails[id].addLatLng(latlng);
         lastPositions[id] = latlng;
       }
-      map.panTo(latlng, { animate: true, duration: 0.6 });
     });
+
+    // Alle Tracker im Blick behalten (außer bei manueller Interaktion)
+    if (!userInteracted) {
+      const allLatLngs = Object.values(lastPositions);
+      if (allLatLngs.length === 1) {
+        map.setView(allLatLngs[0], map.getZoom() || 15, { animate: true });
+      } else if (allLatLngs.length > 1) {
+        map.fitBounds(L.latLngBounds(allLatLngs), { padding: [50, 50], maxZoom: 17, animate: true });
+      }
+    }
   } catch (err) { console.error("Fetch Error:", err); }
 }
 
@@ -549,6 +563,16 @@ async function clearMap() {
   } catch (err) { alert('❌ Fehler: ' + err.message); }
 }
 document.getElementById("resetBtn").addEventListener("click", clearMap);
+
+document.getElementById("fitAllBtn").addEventListener("click", () => {
+  userInteracted = false;
+  const allLatLngs = Object.values(lastPositions);
+  if (allLatLngs.length === 1) {
+    map.setView(allLatLngs[0], 15, { animate: true });
+  } else if (allLatLngs.length > 1) {
+    map.fitBounds(L.latLngBounds(allLatLngs), { padding: [50, 50], maxZoom: 17, animate: true });
+  }
+});
 
 // =======================
 // 📂 GPX TRACKS
