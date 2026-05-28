@@ -1,5 +1,3 @@
-//Update Fix?
-
 const express = require('express');
 const cors    = require('cors');
 const mqtt    = require('mqtt');
@@ -33,7 +31,7 @@ let positions = Object.create(null);
 // Server empfängt und speichert in positions{}
 // =======================
 const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
-const MQTT_TOPIC  = 'livetracking-fq4l/positions';
+const MQTT_TOPIC  = 'livetracking-fq4l/#';  // Wildcard: alle Subtopics empfangen
 
 const mqttClient = mqtt.connect(MQTT_BROKER, {
   clientId: 'livetracking-server-' + Math.random().toString(16).slice(2, 10),
@@ -50,6 +48,7 @@ mqttClient.on('connect', () => {
 });
 
 mqttClient.on('message', (topic, message) => {
+  console.log('📨 MQTT empfangen – Topic:', topic, '| Payload:', message.toString());
   try {
     const { id, lat, lon } = JSON.parse(message.toString());
     if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
