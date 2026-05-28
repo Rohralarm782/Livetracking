@@ -44,7 +44,8 @@
       border: none; border-radius: 6px; cursor: pointer;
       font-size: 16px; font-weight: bold; transition: background 0.3s;
     }
-    .loginBox button:hover { background: #1976D2; }
+    .loginBox button:hover:not(:disabled) { background: #1976D2; }
+    .loginBox button:disabled { background: #90CAF9; cursor: not-allowed; }
     .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
 
     /* BUTTONS */
@@ -166,7 +167,6 @@
   <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
   <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
   <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
-  <button class="btn" id="fitAllBtn">🔍 Alle anzeigen</button>
   <button class="btn reset hidden" id="resetBtn">🧹 Karte leeren</button>
   <label id="teamCarToggle" class="hidden">
     <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
@@ -174,13 +174,14 @@
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
-
 <input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
 <div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+
+const SERVER = 'https://livetracking-fq4l.onrender.com';
 
 // =======================
 // AUTH STATE
@@ -212,7 +213,7 @@ function loadToken() {
 
 function logout() {
   if (authToken) {
-    fetch('https://livetracking-fq4l.onrender.com/logout', {
+    fetch(`${SERVER}/logout`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${authToken}` }
     }).catch(console.error);
@@ -239,24 +240,61 @@ function showLoginModal(reason = '🔐 Admin-Login erforderlich') {
 
 document.getElementById('loginBtnTop').addEventListener('click', () => showLoginModal('🔐 Admin-Login erforderlich'));
 
+// =======================
+// LOGIN – robust gegen Cold Start
+// =======================
 document.getElementById('loginBtn').addEventListener('click', async () => {
-  const password = document.getElementById('passwordInput').value;
-  const errorEl  = document.getElementById('loginError');
+  const password  = document.getElementById('passwordInput').value;
+  const errorEl   = document.getElementById('loginError');
+  const loginBtn  = document.getElementById('loginBtn');
+
   if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
+
+  errorEl.textContent    = '⏳ Verbinde…';
+  errorEl.style.color    = '#666';
+  loginBtn.disabled      = true;
+  loginBtn.textContent   = 'Bitte warten…';
+
   try {
-    const res  = await fetch('https://livetracking-fq4l.onrender.com/login', {
+    const res = await fetch(`${SERVER}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
-    const data = await res.json();
-    if (!res.ok) { errorEl.textContent = '❌ Falsches Passwort'; return; }
+
+    // Erst als Text lesen – sicherer bei Cold Starts wo kein JSON kommt
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      errorEl.style.color    = '#d32f2f';
+      errorEl.textContent    = '❌ Server startet noch (Cold Start). Bitte in 5 Sek. nochmal versuchen.';
+      loginBtn.disabled      = false;
+      loginBtn.textContent   = 'Login';
+      return;
+    }
+
+    if (!res.ok) {
+      errorEl.style.color    = '#d32f2f';
+      errorEl.textContent    = '❌ Falsches Passwort';
+      loginBtn.disabled      = false;
+      loginBtn.textContent   = 'Login';
+      return;
+    }
+
     saveToken(data.token);
     document.getElementById('passwordInput').value = '';
-    errorEl.textContent = '';
+    errorEl.textContent  = '';
+    errorEl.style.color  = '#d32f2f';
+
   } catch (err) {
-    errorEl.textContent = '❌ Fehler: ' + err.message;
+    errorEl.style.color  = '#d32f2f';
+    errorEl.textContent  = '❌ Netzwerkfehler: ' + err.message;
   }
+
+  loginBtn.disabled    = false;
+  loginBtn.textContent = 'Login';
 });
 
 document.getElementById('passwordInput').addEventListener('keypress', e => {
@@ -323,9 +361,6 @@ document.addEventListener('visibilitychange', async () => {
 const map = L.map('map').setView([52.52, 13.405], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-// Manuelle Interaktion erkennen → Auto-Fit pausieren
-map.on('movestart', (e) => { if (e.originalEvent) userInteracted = true; });
-
 // =======================
 // STATE
 // =======================
@@ -333,9 +368,8 @@ const markers       = {};
 const lastPositions = {};
 const trails        = {};
 let currentMarkerMenu = null;
-let firstDevice      = true;
-let lastDataTime     = null;
-let userInteracted   = false;
+let firstDevice  = true;
+let lastDataTime = null;
 
 // =======================
 // TEAMAUTO MARKER
@@ -366,7 +400,7 @@ function startTeamCarTracking() {
       const latlng   = [pos.coords.latitude, pos.coords.longitude];
       const accuracy = pos.coords.accuracy;
       try {
-        await fetch('https://livetracking-fq4l.onrender.com/team-position', {
+        await fetch(`${SERVER}/team-position`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
@@ -466,7 +500,7 @@ function showMarkerMenu(e, markerId) {
     const newName = input.value.trim();
     if (!newName || newName === markerId) { container.remove(); return; }
     try {
-      const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
+      const res = await fetch(`${SERVER}/rename-tracker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ oldName: markerId, newName })
@@ -482,11 +516,26 @@ function showMarkerMenu(e, markerId) {
     } catch (err) { alert('❌ Fehler: ' + err.message); }
   });
 
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✖️ Schließen';
+  closeBtn.addEventListener('click', () => container.remove());
+
   container.appendChild(input);
   container.appendChild(renameBtn);
+  container.appendChild(closeBtn);
   document.body.appendChild(container);
   currentMarkerMenu = container;
   input.focus(); input.select();
+
+  // Schließen bei Klick außerhalb
+  setTimeout(() => {
+    document.addEventListener('click', function handler(ev) {
+      if (!container.contains(ev.target)) {
+        container.remove();
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 10);
 }
 
 // =======================
@@ -494,8 +543,11 @@ function showMarkerMenu(e, markerId) {
 // =======================
 async function loadPositions() {
   try {
-    const res  = await fetch('https://livetracking-fq4l.onrender.com/positions');
-    const data = await res.json();
+    const res  = await fetch(`${SERVER}/positions`);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { return; } // Server noch nicht bereit
+
     const ids  = Object.keys(data);
     if (ids.length === 0) return;
 
@@ -533,17 +585,8 @@ async function loadPositions() {
         if (moved) trails[id].addLatLng(latlng);
         lastPositions[id] = latlng;
       }
+      map.panTo(latlng, { animate: true, duration: 0.6 });
     });
-
-    // Alle Tracker im Blick behalten (außer bei manueller Interaktion)
-    if (!userInteracted) {
-      const allLatLngs = Object.values(lastPositions);
-      if (allLatLngs.length === 1) {
-        map.setView(allLatLngs[0], map.getZoom() || 15, { animate: true });
-      } else if (allLatLngs.length > 1) {
-        map.fitBounds(L.latLngBounds(allLatLngs), { padding: [50, 50], maxZoom: 17, animate: true });
-      }
-    }
   } catch (err) { console.error("Fetch Error:", err); }
 }
 
@@ -553,7 +596,7 @@ async function loadPositions() {
 async function clearMap() {
   if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
   try {
-    await fetch('https://livetracking-fq4l.onrender.com/positions', {
+    await fetch(`${SERVER}/positions`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
     });
     Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
@@ -564,27 +607,17 @@ async function clearMap() {
 }
 document.getElementById("resetBtn").addEventListener("click", clearMap);
 
-document.getElementById("fitAllBtn").addEventListener("click", () => {
-  userInteracted = false;
-  const allLatLngs = Object.values(lastPositions);
-  if (allLatLngs.length === 1) {
-    map.setView(allLatLngs[0], 15, { animate: true });
-  } else if (allLatLngs.length > 1) {
-    map.fitBounds(L.latLngBounds(allLatLngs), { padding: [50, 50], maxZoom: 17, animate: true });
-  }
-});
-
 // =======================
-// 📂 GPX TRACKS
+// GPX TRACKS
 // =======================
-const SERVER = 'https://livetracking-fq4l.onrender.com';
 let gpxLayer = null;
 
-// Beim Laden: GPX vom Server holen (für alle sichtbar)
 async function fetchGpxTrack() {
   try {
     const res  = await fetch(`${SERVER}/gpx`);
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { return; }
     if (data && data.coords && data.coords.length > 0) {
       drawGpxLayer(data.coords);
     }
@@ -612,7 +645,6 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
     try {
       const coords = parseGpx(e.target.result);
       drawGpxLayer(coords);
-      // Global speichern
       await fetch(`${SERVER}/gpx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
