@@ -49,7 +49,6 @@
     .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
 
     /* BUTTONS */
-    .btnGroup { display: none; }
     .btn {
       padding: 10px 14px; background: white; border: 1px solid #ccc;
       border-radius: 6px; cursor: pointer; font-size: 13px;
@@ -65,7 +64,6 @@
     .btn.wakeLock { color: #333; }
     .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
     .btn.hidden { display: none; }
-    .btn.rain-active { border-color: #1565c0; color: #0d47a1; background: #e3f2fd; }
 
     /* OPTIONS MENU */
     #optionsBtn {
@@ -143,7 +141,6 @@
       font-size: 13px; font-family: sans-serif;
     }
     .markerMenu input:focus { outline: none; background: #f9f9f9; }
-
   </style>
 </head>
 <body>
@@ -182,6 +179,23 @@
 <script>
 
 const SERVER = 'https://livetracking-fq4l.onrender.com';
+
+// =======================
+// SAFE FETCH JSON
+// Liest erst als Text, dann JSON.parse –
+// kein Crash bei Render Cold Start (HTML statt JSON)
+// =======================
+async function safeFetchJson(url, options = {}) {
+  const res  = await fetch(url, options);
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('SERVER_NOT_READY');
+  }
+  return { res, data };
+}
 
 // =======================
 // AUTH STATE
@@ -244,53 +258,39 @@ document.getElementById('loginBtnTop').addEventListener('click', () => showLogin
 // LOGIN – robust gegen Cold Start
 // =======================
 document.getElementById('loginBtn').addEventListener('click', async () => {
-  const password  = document.getElementById('passwordInput').value;
-  const errorEl   = document.getElementById('loginError');
-  const loginBtn  = document.getElementById('loginBtn');
+  const password = document.getElementById('passwordInput').value;
+  const errorEl  = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
 
   if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
 
-  errorEl.textContent    = '⏳ Verbinde…';
-  errorEl.style.color    = '#666';
-  loginBtn.disabled      = true;
-  loginBtn.textContent   = 'Bitte warten…';
+  errorEl.style.color  = '#666';
+  errorEl.textContent  = '⏳ Verbinde…';
+  loginBtn.disabled    = true;
+  loginBtn.textContent = 'Bitte warten…';
 
   try {
-    const res = await fetch(`${SERVER}/login`, {
+    const { res, data } = await safeFetchJson(`${SERVER}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
 
-    // Erst als Text lesen – sicherer bei Cold Starts wo kein JSON kommt
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      errorEl.style.color    = '#d32f2f';
-      errorEl.textContent    = '❌ Server startet noch (Cold Start). Bitte in 5 Sek. nochmal versuchen.';
-      loginBtn.disabled      = false;
-      loginBtn.textContent   = 'Login';
-      return;
-    }
-
     if (!res.ok) {
-      errorEl.style.color    = '#d32f2f';
-      errorEl.textContent    = '❌ Falsches Passwort';
-      loginBtn.disabled      = false;
-      loginBtn.textContent   = 'Login';
-      return;
+      errorEl.style.color  = '#d32f2f';
+      errorEl.textContent  = '❌ Falsches Passwort';
+    } else {
+      saveToken(data.token);
+      document.getElementById('passwordInput').value = '';
+      errorEl.textContent = '';
     }
-
-    saveToken(data.token);
-    document.getElementById('passwordInput').value = '';
-    errorEl.textContent  = '';
-    errorEl.style.color  = '#d32f2f';
-
   } catch (err) {
-    errorEl.style.color  = '#d32f2f';
-    errorEl.textContent  = '❌ Netzwerkfehler: ' + err.message;
+    errorEl.style.color = '#d32f2f';
+    if (err.message === 'SERVER_NOT_READY') {
+      errorEl.textContent = '❌ Server startet noch (Cold Start) – bitte in ~10 Sek. nochmal versuchen.';
+    } else {
+      errorEl.textContent = '❌ Netzwerkfehler: ' + err.message;
+    }
   }
 
   loginBtn.disabled    = false;
@@ -364,12 +364,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 
 // =======================
 // STATE
 // =======================
-const markers       = {};
-const lastPositions = {};
-const trails        = {};
+const markers         = {};
+const lastPositions   = {};
+const trails          = {};
 let currentMarkerMenu = null;
-let firstDevice  = true;
-let lastDataTime = null;
+let firstDevice       = true;
+let lastDataTime      = null;
 
 // =======================
 // TEAMAUTO MARKER
@@ -484,10 +484,10 @@ function animateMarker(marker, from, to, duration = 800) {
 // =======================
 function showMarkerMenu(e, markerId) {
   if (!authToken) { showLoginModal('✏️ Zum Umbenennen anmelden'); return; }
-  if (currentMarkerMenu) currentMarkerMenu.remove();
+  if (currentMarkerMenu) { currentMarkerMenu.remove(); currentMarkerMenu = null; }
 
   const container = document.createElement('div');
-  container.className = 'markerMenu';
+  container.className  = 'markerMenu';
   container.style.left = e.pageX + 'px';
   container.style.top  = e.pageY + 'px';
 
@@ -513,12 +513,13 @@ function showMarkerMenu(e, markerId) {
         markers[newName].setTooltipContent(newName);
       }
       container.remove();
+      currentMarkerMenu = null;
     } catch (err) { alert('❌ Fehler: ' + err.message); }
   });
 
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✖️ Schließen';
-  closeBtn.addEventListener('click', () => container.remove());
+  closeBtn.addEventListener('click', () => { container.remove(); currentMarkerMenu = null; });
 
   container.appendChild(input);
   container.appendChild(renameBtn);
@@ -527,11 +528,11 @@ function showMarkerMenu(e, markerId) {
   currentMarkerMenu = container;
   input.focus(); input.select();
 
-  // Schließen bei Klick außerhalb
   setTimeout(() => {
     document.addEventListener('click', function handler(ev) {
       if (!container.contains(ev.target)) {
         container.remove();
+        currentMarkerMenu = null;
         document.removeEventListener('click', handler);
       }
     });
@@ -543,12 +544,8 @@ function showMarkerMenu(e, markerId) {
 // =======================
 async function loadPositions() {
   try {
-    const res  = await fetch(`${SERVER}/positions`);
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch { return; } // Server noch nicht bereit
-
-    const ids  = Object.keys(data);
+    const { data } = await safeFetchJson(`${SERVER}/positions`);
+    const ids = Object.keys(data);
     if (ids.length === 0) return;
 
     lastDataTime = Date.now();
@@ -587,7 +584,9 @@ async function loadPositions() {
       }
       map.panTo(latlng, { animate: true, duration: 0.6 });
     });
-  } catch (err) { console.error("Fetch Error:", err); }
+  } catch (err) {
+    if (err.message !== 'SERVER_NOT_READY') console.error("Fetch Error:", err);
+  }
 }
 
 // =======================
@@ -614,14 +613,13 @@ let gpxLayer = null;
 
 async function fetchGpxTrack() {
   try {
-    const res  = await fetch(`${SERVER}/gpx`);
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch { return; }
+    const { data } = await safeFetchJson(`${SERVER}/gpx`);
     if (data && data.coords && data.coords.length > 0) {
       drawGpxLayer(data.coords);
     }
-  } catch (err) { console.error('GPX fetch:', err); }
+  } catch (err) {
+    if (err.message !== 'SERVER_NOT_READY') console.error('GPX fetch:', err);
+  }
 }
 
 function drawGpxLayer(coords) {
@@ -661,7 +659,6 @@ function parseGpx(xmlText) {
   const parser = new DOMParser();
   const xml    = parser.parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
-
   const coords = [];
   xml.querySelectorAll('trkpt').forEach(pt => {
     const lat = parseFloat(pt.getAttribute('lat'));
