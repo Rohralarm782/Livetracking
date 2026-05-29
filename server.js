@@ -1,6 +1,5 @@
 const express = require('express');
-const cors    = require('cors');
-const mqtt    = require('mqtt');
+const cors = require('cors');
 
 const app = express();
 
@@ -8,7 +7,7 @@ const app = express();
 // MIDDLEWARE
 // =======================
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.url}`);
@@ -24,48 +23,25 @@ app.use(express.static(__dirname));
 // STATE
 // =======================
 let positions = Object.create(null);
+let gpxTrack  = null;
 
 // =======================
-// MQTT SUBSCRIBER
-// Tracker sendet per MQTT (plain TCP, kein SSL)
-// Server empfängt und speichert in positions{}
+// AUTH
 // =======================
-const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
-const MQTT_TOPIC  = 'livetracking-fq4l/#';  // Wildcard: alle Subtopics empfangen
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const tokens = new Set();
 
-const mqttClient = mqtt.connect(MQTT_BROKER, {
-  clientId: 'livetracking-server-' + Math.random().toString(16).slice(2, 10),
-  clean: true,
-  reconnectPeriod: 5000
-});
-
-mqttClient.on('connect', () => {
-  console.log('📡 MQTT verbunden mit broker.emqx.io');
-  mqttClient.subscribe(MQTT_TOPIC, (err) => {
-    if (err) console.error('❌ MQTT subscribe Fehler:', err);
-    else     console.log('✅ Abonniert:', MQTT_TOPIC);
-  });
-});
-
-mqttClient.on('message', (topic, message) => {
-  console.log('📨 MQTT empfangen – Topic:', topic, '| Payload:', message.toString());
-  try {
-    const { id, lat, lon } = JSON.parse(message.toString());
-    if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
-    positions[id] = { lat, lon, timestamp: Date.now() };
-    console.log('📍 MQTT Position:', id, positions[id]);
-  } catch (e) {
-    console.error('❌ MQTT parse Fehler:', e.message);
+function requireAuth(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-});
-
-mqttClient.on('error', (err) => {
-  console.error('❌ MQTT Fehler:', err.message);
-});
-
-mqttClient.on('reconnect', () => {
-  console.log('🔄 MQTT reconnect...');
-});
+  const token = auth.slice(7);
+  if (!tokens.has(token)) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  next();
+}
 
 // =======================
 // HEALTH CHECK
@@ -75,40 +51,97 @@ app.get('/health', (req, res) => {
 });
 
 // =======================
-// POSITIONEN SPEICHERN (HTTP – bleibt als Fallback)
+// AUTH ENDPOINTS
 // =======================
-app.post('/positions', (req, res) => {
-  const { id, lat, lon } = req.body;
-
-  if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
-    return res.status(400).json({ error: 'id, lat, lon required' });
+app.post('/login', (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Wrong password' });
   }
+  const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  tokens.add(token);
+  res.json({ token });
+});
 
-  positions[id] = { lat, lon, timestamp: Date.now() };
-  console.log("📍 HTTP Position:", id, positions[id]);
+app.post('/logout', requireAuth, (req, res) => {
+  const token = req.headers['authorization'].slice(7);
+  tokens.delete(token);
   res.json({ ok: true });
 });
 
 // =======================
-// POSITIONEN LADEN
+// POSITIONEN
 // =======================
+app.post('/positions', (req, res) => {
+  const { id, lat, lon } = req.body;
+  if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
+    return res.status(400).json({ error: 'id, lat, lon required' });
+  }
+  positions[id] = { lat, lon, timestamp: Date.now() };
+  console.log("📍 Position:", id, positions[id]);
+  res.json({ ok: true });
+});
+
 app.get('/positions', (req, res) => {
   res.json(positions);
 });
 
-// =======================
-// RESET
-// =======================
-app.delete('/positions', (req, res) => {
-  const keys = Object.keys(positions);
-  if (keys.length === 0) return res.json({ ok: true, message: "already empty" });
-  keys.forEach(k => delete positions[k]);
-  console.log("🧹 ALLE POSITIONEN GELÖSCHT");
-  res.json({ ok: true, message: "cleared" });
+app.delete('/positions', requireAuth, (req, res) => {
+  for (const key of Object.keys(positions)) delete positions[key];
+  console.log("🧹 Positionen gelöscht");
+  res.json({ ok: true });
 });
 
 // =======================
-// START SERVER
+// TEAM-POSITION
+// =======================
+app.post('/team-position', requireAuth, (req, res) => {
+  const { lat, lon } = req.body;
+  if (typeof lat !== 'number' || typeof lon !== 'number') {
+    return res.status(400).json({ error: 'lat, lon required' });
+  }
+  positions['TEAMAUTO'] = { lat, lon, timestamp: Date.now() };
+  res.json({ ok: true });
+});
+
+// =======================
+// RENAME TRACKER
+// =======================
+app.post('/rename-tracker', requireAuth, (req, res) => {
+  const { oldName, newName } = req.body;
+  if (!oldName || !newName) return res.status(400).json({ error: 'oldName, newName required' });
+  if (positions[oldName]) {
+    positions[newName] = positions[oldName];
+    delete positions[oldName];
+  }
+  res.json({ ok: true });
+});
+
+// =======================
+// GPX TRACK
+// =======================
+app.get('/gpx', (req, res) => {
+  res.json(gpxTrack || null);
+});
+
+app.post('/gpx', requireAuth, (req, res) => {
+  const { coords, name } = req.body;
+  if (!Array.isArray(coords) || coords.length === 0) {
+    return res.status(400).json({ error: 'coords array required' });
+  }
+  gpxTrack = { coords, name: name || 'GPX Track' };
+  console.log(`📂 GPX gespeichert: ${name} (${coords.length} Punkte)`);
+  res.json({ ok: true });
+});
+
+app.delete('/gpx', requireAuth, (req, res) => {
+  gpxTrack = null;
+  console.log("🗑️ GPX gelöscht");
+  res.json({ ok: true });
+});
+
+// =======================
+// START
 // =======================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
