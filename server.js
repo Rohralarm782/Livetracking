@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-
+const mqtt = require('mqtt');
 const app = express();
 
 // =======================
@@ -8,7 +8,6 @@ const app = express();
 // =======================
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
-
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.url}`);
   next();
@@ -26,11 +25,48 @@ let positions = Object.create(null);
 let gpxTrack  = null;
 
 // =======================
+// MQTT-BRIDGE  (Tracker -> positions)
+// =======================
+const MQTT_URL   = process.env.MQTT_URL   || 'mqtt://broker.emqx.io:1883';
+const MQTT_TOPIC = process.env.MQTT_TOPIC || 'livetracking-fq4l/positions';
+
+const mqttClient = mqtt.connect(MQTT_URL, {
+  reconnectPeriod: 5000,
+  connectTimeout: 30000,
+});
+
+mqttClient.on('connect', () => {
+  console.log('🔌 MQTT verbunden mit', MQTT_URL);
+  mqttClient.subscribe(MQTT_TOPIC, (err) => {
+    if (err) console.error('❌ MQTT subscribe Fehler:', err.message);
+    else     console.log('📡 Abonniert:', MQTT_TOPIC);
+  });
+});
+
+mqttClient.on('message', (topic, payload) => {
+  const raw = payload.toString();
+  try {
+    const { id, lat, lon } = JSON.parse(raw);
+    if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
+      console.warn('⚠️ MQTT ungültige Nachricht:', raw);
+      return;
+    }
+    positions[id] = { lat, lon, timestamp: Date.now() };
+    console.log('📍 MQTT Position:', id, positions[id]);
+  } catch (e) {
+    console.error('💥 MQTT Parse-Fehler:', e.message, '|', raw);
+  }
+});
+
+mqttClient.on('reconnect', () => console.log('🔄 MQTT reconnect...'));
+mqttClient.on('offline',   () => console.log('📴 MQTT offline'));
+mqttClient.on('error',     (err) => console.error('💥 MQTT Fehler:', err.message));
+
+// =======================
 // AUTH
 // =======================
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const tokens = new Set();
-
 function requireAuth(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) {
