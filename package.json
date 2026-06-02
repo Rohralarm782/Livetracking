@@ -14,7 +14,7 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "mqtt": "^5.3.6",
+    "mqtt": "^5.10.1",
     "node-fetch": "^3.3.2"
   }
 }
