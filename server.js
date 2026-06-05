@@ -1,13 +1,14 @@
 const express = require('express');
 const cors = require('cors');
-const mqtt = require('mqtt');
+
 const app = express();
 
 // =======================
 // MIDDLEWARE
 // =======================
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '2mb' })); // GPX-Tracks können größer sein
+
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.url}`);
   next();
@@ -22,51 +23,15 @@ app.use(express.static(__dirname));
 // STATE
 // =======================
 let positions = Object.create(null);
-let gpxTrack  = null;
+let gpxTrack  = null;   // { coords: [[lat,lon], ...], name: string }
+const trackerDisplayNames = Object.create(null); // hardwareId → Anzeigename (bleibt bei Reset erhalten)
 
 // =======================
-// MQTT-BRIDGE  (Tracker -> positions)
-// =======================
-const MQTT_URL   = process.env.MQTT_URL   || 'mqtt://broker.emqx.io:1883';
-const MQTT_TOPIC = process.env.MQTT_TOPIC || 'livetracking-fq4l/positions';
-
-const mqttClient = mqtt.connect(MQTT_URL, {
-  reconnectPeriod: 5000,
-  connectTimeout: 30000,
-});
-
-mqttClient.on('connect', () => {
-  console.log('🔌 MQTT verbunden mit', MQTT_URL);
-  mqttClient.subscribe(MQTT_TOPIC, (err) => {
-    if (err) console.error('❌ MQTT subscribe Fehler:', err.message);
-    else     console.log('📡 Abonniert:', MQTT_TOPIC);
-  });
-});
-
-mqttClient.on('message', (topic, payload) => {
-  const raw = payload.toString();
-  try {
-    const { id, lat, lon } = JSON.parse(raw);
-    if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
-      console.warn('⚠️ MQTT ungültige Nachricht:', raw);
-      return;
-    }
-    positions[id] = { lat, lon, timestamp: Date.now() };
-    console.log('📍 MQTT Position:', id, positions[id]);
-  } catch (e) {
-    console.error('💥 MQTT Parse-Fehler:', e.message, '|', raw);
-  }
-});
-
-mqttClient.on('reconnect', () => console.log('🔄 MQTT reconnect...'));
-mqttClient.on('offline',   () => console.log('📴 MQTT offline'));
-mqttClient.on('error',     (err) => console.error('💥 MQTT Fehler:', err.message));
-
-// =======================
-// AUTH
+// SIMPLE AUTH (Token-basiert)
 // =======================
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const tokens = new Set();
+
 function requireAuth(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) {
@@ -113,17 +78,25 @@ app.post('/positions', (req, res) => {
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({ error: 'id, lat, lon required' });
   }
+  // Hardware-ID bleibt immer der Key – displayName ist davon unabhängig
   positions[id] = { lat, lon, timestamp: Date.now() };
-  console.log("📍 Position:", id, positions[id]);
   res.json({ ok: true });
 });
 
 app.get('/positions', (req, res) => {
-  res.json(positions);
+  // displayName wird on-the-fly ergänzt, ohne den Key zu verändern
+  const result = Object.create(null);
+  for (const id of Object.keys(positions)) {
+    result[id] = Object.assign({}, positions[id], {
+      displayName: trackerDisplayNames[id] || null
+    });
+  }
+  res.json(result);
 });
 
 app.delete('/positions', requireAuth, (req, res) => {
   for (const key of Object.keys(positions)) delete positions[key];
+  // trackerDisplayNames bewusst NICHT löschen – Umbenennung bleibt nach Reset erhalten
   console.log("🧹 Positionen gelöscht");
   res.json({ ok: true });
 });
@@ -144,12 +117,11 @@ app.post('/team-position', requireAuth, (req, res) => {
 // RENAME TRACKER
 // =======================
 app.post('/rename-tracker', requireAuth, (req, res) => {
-  const { oldName, newName } = req.body;
-  if (!oldName || !newName) return res.status(400).json({ error: 'oldName, newName required' });
-  if (positions[oldName]) {
-    positions[newName] = positions[oldName];
-    delete positions[oldName];
-  }
+  const { trackerId, newName } = req.body;
+  if (!trackerId || !newName) return res.status(400).json({ error: 'trackerId, newName required' });
+  // Nur den Anzeigenamen setzen – Hardware-ID und positions-Key bleiben unverändert
+  trackerDisplayNames[trackerId] = newName.trim();
+  console.log(`✏️ Tracker "${trackerId}" → "${newName}"`);
   res.json({ ok: true });
 });
 
