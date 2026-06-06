@@ -149,6 +149,48 @@ app.delete('/gpx', requireAuth, (req, res) => {
 });
 
 // =======================
+// MQTT BRIDGE
+// =======================
+const mqtt = require('mqtt');
+
+const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
+const MQTT_TOPIC  = 'livetracking-fq4l/positions';
+
+function connectMqtt() {
+  const client = mqtt.connect(MQTT_BROKER, {
+    clientId: 'render-server-' + Math.random().toString(36).slice(2),
+    clean: true,
+    reconnectPeriod: 5000,
+  });
+
+  client.on('connect', () => {
+    console.log('✅ MQTT verbunden mit broker.emqx.io');
+    client.subscribe(MQTT_TOPIC, (err) => {
+      if (err) console.error('❌ MQTT Subscribe Fehler:', err);
+      else      console.log(`📡 MQTT subscribed: ${MQTT_TOPIC}`);
+    });
+  });
+
+  client.on('message', (topic, message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      const { id, lat, lon } = data;
+      if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
+      positions[id] = { lat, lon, timestamp: Date.now() };
+      console.log(`📍 MQTT: ${id} → ${lat}, ${lon}`);
+    } catch (e) {
+      console.error('❌ MQTT Nachricht ungültig:', e.message);
+    }
+  });
+
+  client.on('error',      (err) => console.error('❌ MQTT Fehler:', err.message));
+  client.on('reconnect',  ()    => console.log('🔄 MQTT reconnect…'));
+  client.on('disconnect', ()    => console.log('⚠️ MQTT getrennt'));
+}
+
+connectMqtt();
+
+// =======================
 // START
 // =======================
 const PORT = process.env.PORT || 3000;
