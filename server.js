@@ -1,688 +1,230 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Tracking</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; font-family: sans-serif; }
-    #map { height: 100%; }
+const express = require('express');
+const cors    = require('cors');
+const mqtt    = require('mqtt');
 
-    /* LOGIN MODAL */
-    #loginModal {
-      display: flex; position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 10000; background: rgba(0,0,0,0.6);
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    #loginModal.hidden { display: none !important; }
-    .loginBox {
-      background: white; padding: 40px; border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      width: 100%; max-width: 380px; text-align: center;
-    }
-    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
-    .loginBox p  { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
-    .loginBox input {
-      width: 100%; padding: 12px; margin-bottom: 15px;
-      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
-      transition: border-color 0.3s;
-    }
-    .loginBox input:focus { outline: none; border-color: #2196F3; }
-    .loginBox button {
-      width: 100%; padding: 12px; background: #2196F3; color: white;
-      border: none; border-radius: 6px; cursor: pointer;
-      font-size: 16px; font-weight: bold; transition: background 0.3s;
-    }
-    .loginBox button:hover { background: #1976D2; }
-    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
-
-    /* BUTTONS */
-    .btn {
-      padding: 10px 14px; background: white; border: 1px solid #ccc;
-      border-radius: 6px; cursor: pointer; font-size: 13px;
-      font-family: sans-serif; transition: all 0.2s;
-      white-space: nowrap; flex: 1; min-width: 120px;
-    }
-    .btn:hover { background: #f5f5f5; }
-    .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
-    .btn.primary:hover { background: #1976D2; }
-    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
-    .btn.logout:hover { background: #d32f2f; }
-    .btn.reset { color: #f44336; }
-    .btn.wakeLock { color: #333; }
-    .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
-    .btn.hidden { display: none; }
-
-    /* Modus-Button */
-    #modeBtn.mode-race     { border-color: #e53935; color: #c62828; background: #ffebee; }
-    #modeBtn.mode-training { border-color: #1976D2; color: #1565c0; background: #e3f2fd; }
-    #modeBtn.mode-race:hover     { background: #ffcdd2; }
-    #modeBtn.mode-training:hover { background: #bbdefb; }
-
-    /* OPTIONS MENU */
-    #optionsBtn {
-      position: absolute; bottom: 10px; left: 10px; right: 10px;
-      z-index: 999; padding: 10px 14px; background: white;
-      border: 1px solid #ccc; border-radius: 6px;
-      cursor: pointer; font-size: 13px; font-family: sans-serif;
-      transition: all 0.2s; width: 100%;
-    }
-    #optionsBtn:hover { background: #f5f5f5; }
-    #optionsMenu {
-      position: absolute; bottom: 50px; left: 10px; right: 10px;
-      z-index: 999; background: white; border: 1px solid #ccc;
-      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      overflow: hidden; display: flex; flex-direction: column;
-    }
-    #optionsMenu.hidden { display: none; }
-    #optionsMenu .btn {
-      width: 100%; border: none; border-bottom: 1px solid #eee;
-      border-radius: 0; flex: 0; min-width: unset; margin: 0;
-    }
-    #optionsMenu .btn:last-child { border-bottom: none; }
-    #optionsMenu .btn:hover { background: #f5f5f5; }
-
-    @media (min-width: 768px) {
-      #optionsBtn  { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; width: auto; }
-      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
-      #status      { right: auto; left: 10px; width: fit-content; }
-    }
-
-    #teamCarToggle {
-      display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-      padding: 10px 14px; background: white;
-      border: none; border-bottom: 1px solid #eee;
-      width: 100%; font-size: 13px; font-family: sans-serif;
-      color: #666; transition: all 0.2s;
-    }
-    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
-    #teamCarToggle.hidden { display: none; }
-    #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
-    #teamCarToggle.active { background: #fff3e0; color: #c62828; }
-    #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
-
-    #status {
-      position: absolute; top: 10px; right: 10px;
-      z-index: 999; padding: 8px 14px; border-radius: 6px;
-      font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
-    }
-    #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
-    #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
-
-    /* MARKER CONTEXT MENU */
-    .markerMenu {
-      background: white; border: 1px solid #ddd; border-radius: 6px;
-      padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      position: absolute; z-index: 9500; min-width: 200px; overflow: hidden;
-    }
-    .markerMenu button {
-      display: block; width: 100%; padding: 10px 14px;
-      background: none; border: none; text-align: left; cursor: pointer;
-      font-size: 13px; font-family: sans-serif; color: #666;
-      transition: background 0.2s; border-bottom: 1px solid #f0f0f0;
-    }
-    .markerMenu button:last-child { border-bottom: none; }
-    .markerMenu button:hover { background: #f5f5f5; color: #333; }
-    .markerMenu input {
-      display: block; width: 100%; padding: 10px 14px;
-      border: none; border-bottom: 1px solid #f0f0f0;
-      font-size: 13px; font-family: sans-serif;
-    }
-    .markerMenu input:focus { outline: none; background: #f9f9f9; }
-  </style>
-</head>
-<body>
-
-<!-- LOGIN MODAL -->
-<div id="loginModal" class="hidden">
-  <div class="loginBox">
-    <h2>🔐 Admin Login</h2>
-    <p id="loginReason">Um diese Funktion zu nutzen</p>
-    <input type="password" id="passwordInput" placeholder="Passwort eingeben">
-    <button id="loginBtn">Login</button>
-    <div id="loginError" class="error"></div>
-  </div>
-</div>
-
-<!-- OPTIONS BUTTON & MENU -->
-<button id="optionsBtn">⚙️ Optionen</button>
-
-<div id="optionsMenu" class="hidden">
-  <button class="btn primary" id="loginBtnTop">🔓 Login</button>
-  <button class="btn wakeLock"        id="wakeLockBtn">💡 Bildschirm aktiv</button>
-  <button class="btn hidden"          id="modeBtn">🏁 Renn-Modus</button>
-  <button class="btn hidden"          id="gpxBtn">📂 GPX laden</button>
-  <button class="btn reset hidden"    id="gpxRemoveBtn">🗑️ GPX entfernen</button>
-  <button class="btn reset hidden"    id="resetBtn">🧹 Karte leeren</button>
-  <label  id="teamCarToggle" class="hidden">
-    <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
-  </label>
-  <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
-</div>
-
-<input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
-<div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
-<div id="map"></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-
-const SERVER = 'https://livetracking-fq4l.onrender.com';
+const app = express();
 
 // =======================
-// AUTH STATE
+// MIDDLEWARE
 // =======================
-let authToken   = null;
-let currentMode = 'race';
+app.use(cors());
+app.use(express.json({ limit: '2mb' }));
 
-function saveToken(token) {
-  authToken = token;
-  localStorage.setItem('authToken', token);
-  document.getElementById('loginModal').classList.add('hidden');
-  document.getElementById('loginBtnTop').classList.add('hidden');
-  document.getElementById('logoutBtn').classList.remove('hidden');
-  document.getElementById('resetBtn').classList.remove('hidden');
-  document.getElementById('teamCarToggle').classList.remove('hidden');
-  document.getElementById('gpxBtn').classList.remove('hidden');
-  document.getElementById('modeBtn').classList.remove('hidden');
-  console.log("✅ Eingeloggt");
-}
-
-function loadToken() {
-  authToken = localStorage.getItem('authToken');
-  if (authToken) {
-    document.getElementById('loginBtnTop').classList.add('hidden');
-    document.getElementById('logoutBtn').classList.remove('hidden');
-    document.getElementById('resetBtn').classList.remove('hidden');
-    document.getElementById('teamCarToggle').classList.remove('hidden');
-    document.getElementById('gpxBtn').classList.remove('hidden');
-    document.getElementById('modeBtn').classList.remove('hidden');
-  }
-}
-
-function logout() {
-  if (authToken) {
-    fetch(`${SERVER}/logout`, {
-      method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }
-    }).catch(console.error);
-  }
-  authToken = null;
-  localStorage.removeItem('authToken');
-  stopTeamCarTracking();
-  document.getElementById('teamCarCheckbox').checked = false;
-  document.getElementById('loginBtnTop').classList.remove('hidden');
-  document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('resetBtn').classList.add('hidden');
-  document.getElementById('teamCarToggle').classList.add('hidden');
-  document.getElementById('gpxBtn').classList.add('hidden');
-  document.getElementById('gpxRemoveBtn').classList.add('hidden');
-  document.getElementById('modeBtn').classList.add('hidden');
-  document.getElementById('loginModal').classList.add('hidden');
-  console.log("🚪 Abgemeldet");
-}
-
-function showLoginModal(reason = '🔐 Admin-Login erforderlich') {
-  document.getElementById('loginReason').textContent = reason;
-  document.getElementById('loginModal').classList.remove('hidden');
-  document.getElementById('passwordInput').focus();
-}
-
-document.getElementById('loginBtnTop').addEventListener('click', () => showLoginModal('🔐 Admin-Login erforderlich'));
-
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const password = document.getElementById('passwordInput').value;
-  const errorEl  = document.getElementById('loginError');
-  if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
-  try {
-    const res  = await fetch(`${SERVER}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
-    const data = await res.json();
-    if (!res.ok) { errorEl.textContent = '❌ Falsches Passwort'; return; }
-    saveToken(data.token);
-    document.getElementById('passwordInput').value = '';
-    errorEl.textContent = '';
-  } catch (err) { errorEl.textContent = '❌ Fehler: ' + err.message; }
-});
-
-document.getElementById('passwordInput').addEventListener('keypress', e => {
-  if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
-
-document.getElementById('logoutBtn').addEventListener('click', logout);
-loadToken();
-
-// =======================
-// MODUS
-// =======================
-function applyMode(mode) {
-  currentMode = mode;
-  const btn = document.getElementById('modeBtn');
-  if (mode === 'race') {
-    btn.textContent = '🏁 Renn-Modus aktiv';
-    btn.className   = 'btn mode-race';
-  } else {
-    btn.textContent = '🏋️ Training-Modus aktiv';
-    btn.className   = 'btn mode-training';
-  }
-  if (!authToken) btn.classList.add('hidden');
-}
-
-async function loadMode() {
-  try {
-    const res  = await fetch(`${SERVER}/mode`);
-    const data = await res.json();
-    applyMode(data.mode);
-  } catch (err) { console.error('Mode fetch:', err); }
-}
-
-document.getElementById('modeBtn').addEventListener('click', async () => {
-  if (!authToken) return;
-  const newMode = currentMode === 'race' ? 'training' : 'race';
-  try {
-    const res = await fetch(`${SERVER}/mode`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-      body: JSON.stringify({ mode: newMode })
-    });
-    const data = await res.json();
-    if (res.ok) applyMode(data.mode);
-  } catch (err) { console.error('Mode switch:', err); }
-  optionsMenu.classList.add('hidden');
+app.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.url}`);
+  next();
 });
 
 // =======================
-// OPTIONS MENU
+// FRONTEND
 // =======================
-const optionsBtn  = document.getElementById('optionsBtn');
-const optionsMenu = document.getElementById('optionsMenu');
-
-optionsBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  optionsMenu.classList.toggle('hidden');
-});
-
-document.addEventListener('click', e => {
-  if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
-    optionsMenu.classList.add('hidden');
-  }
-});
-
-optionsMenu.querySelectorAll('.btn').forEach(btn => {
-  if (btn.id !== 'modeBtn') // modeBtn schließt selbst
-    btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
-});
-
-document.getElementById('teamCarToggle').addEventListener('change', () => {
-  optionsMenu.classList.add('hidden');
-});
-
-// =======================
-// WAKE LOCK
-// =======================
-let wakeLock = null;
-
-async function toggleWakeLock() {
-  try {
-    if (!wakeLock) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      document.getElementById('wakeLockBtn').classList.add('active');
-    } else {
-      await wakeLock.release();
-      wakeLock = null;
-      document.getElementById('wakeLockBtn').classList.remove('active');
-    }
-  } catch (err) { console.error('Wake Lock:', err); }
-}
-
-document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
-
-document.addEventListener('visibilitychange', async () => {
-  if (!document.hidden && wakeLock) {
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
-  }
-});
-
-// =======================
-// MAP
-// =======================
-const map = L.map('map').setView([52.52, 13.405], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+app.use(express.static(__dirname));
 
 // =======================
 // STATE
 // =======================
-const markers       = {};
-const lastPositions = {};
-const trails        = {};
-let currentMarkerMenu = null;
-let firstDevice  = true;
-let lastDataTime = null;
+let positions = Object.create(null);
+let gpxTrack  = null;
+let currentMode = 'race'; // 'race' | 'training'
+
+// Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
+const trackerDisplayNames = Object.create(null);
 
 // =======================
-// TEAMAUTO MARKER
+// SIMPLE AUTH
 // =======================
-const teamCarIcon = L.divIcon({
-  className: '',
-  html: `<div style="background:#e53935;border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
-  iconSize: [28, 28], iconAnchor: [14, 28], tooltipAnchor: [0, -28]
-});
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const tokens = new Set();
 
-let teamCarMarker    = null;
-let teamCarWatchId   = null;
-let teamCarAccCircle = null;
-
-function startTeamCarTracking() {
-  if (!authToken) {
-    showLoginModal('🚗 Zum Aktivieren des Teamauto-Trackings');
-    document.getElementById('teamCarCheckbox').checked = false;
-    return;
+function requireAuth(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-  if (!navigator.geolocation) {
-    alert("GPS wird von diesem Browser nicht unterstützt.");
-    document.getElementById('teamCarCheckbox').checked = false;
-    return;
+  const token = auth.slice(7);
+  if (!tokens.has(token)) {
+    return res.status(401).json({ error: 'Invalid token' });
   }
-  teamCarWatchId = navigator.geolocation.watchPosition(
-    async (pos) => {
-      const latlng   = [pos.coords.latitude, pos.coords.longitude];
-      const accuracy = pos.coords.accuracy;
-      try {
-        await fetch(`${SERVER}/team-position`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
-        });
-      } catch (err) { console.error("Fehler beim Senden:", err); }
-      if (!teamCarMarker) {
-        teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
-          .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
-        teamCarAccCircle = L.circle(latlng, {
-          radius: accuracy, color: '#e53935', fillColor: '#e53935', fillOpacity: 0.08, weight: 1
-        }).addTo(map);
-      } else {
-        teamCarMarker.setLatLng(latlng);
-        teamCarAccCircle.setLatLng(latlng);
-        teamCarAccCircle.setRadius(accuracy);
-      }
-    },
-    (err) => {
-      console.error("Geolocation-Fehler:", err.message);
-      if (err.code === 1) {
-        alert("GPS-Zugriff verweigert.");
-        document.getElementById('teamCarCheckbox').checked = false;
-        document.getElementById('teamCarToggle').classList.remove('active');
-      }
-    },
-    { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
-  );
+  next();
 }
 
-function stopTeamCarTracking() {
-  if (teamCarWatchId !== null) { navigator.geolocation.clearWatch(teamCarWatchId); teamCarWatchId = null; }
-  if (teamCarMarker)    { map.removeLayer(teamCarMarker);    teamCarMarker    = null; }
-  if (teamCarAccCircle) { map.removeLayer(teamCarAccCircle); teamCarAccCircle = null; }
-}
-
-document.getElementById('teamCarCheckbox').addEventListener('change', function () {
-  document.getElementById('teamCarToggle').classList.toggle('active', this.checked);
-  if (this.checked) startTeamCarTracking(); else stopTeamCarTracking();
+// =======================
+// HEALTH CHECK
+// =======================
+app.get('/health', (req, res) => {
+  res.send('🚀 Tracking Server läuft');
 });
 
 // =======================
-// STATUS
+// AUTH
 // =======================
-const statusEl = document.getElementById('status');
-
-function updateStatus() {
-  if (!lastDataTime) {
-    statusEl.className   = 'warn';
-    statusEl.textContent = '⚪ Warte auf Daten…';
-    return;
+app.post('/login', (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Wrong password' });
   }
-  const ago = (Date.now() - lastDataTime) / 1000;
-  if (ago < 5) {
-    statusEl.className   = 'ok';
-    statusEl.textContent = '🟢 Verbunden';
-  } else {
-    statusEl.className   = 'warn';
-    statusEl.textContent = `🔴 Offline (${Math.round(ago)}s)`;
+  const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  tokens.add(token);
+  res.json({ token });
+});
+
+app.post('/logout', requireAuth, (req, res) => {
+  const token = req.headers['authorization'].slice(7);
+  tokens.delete(token);
+  res.json({ ok: true });
+});
+
+// =======================
+// POSITIONEN
+// =======================
+app.post('/positions', (req, res) => {
+  const { id, lat, lon, bat } = req.body;
+  if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
+    return res.status(400).json({ error: 'id, lat, lon required' });
   }
-}
-setInterval(updateStatus, 1000);
+  // Hardware-ID bleibt immer der Key
+  positions[id] = { lat, lon, timestamp: Date.now() };
+  if (typeof bat === 'number') positions[id].bat = bat;
+  res.json({ ok: true });
+});
 
-// =======================
-// SMOOTH MARKER ANIMATION
-// =======================
-function animateMarker(marker, from, to, duration = 800) {
-  const start = performance.now();
-  function step(time) {
-    const t   = Math.min((time - start) / duration, 1);
-    const lat = from[0] + (to[0] - from[0]) * t;
-    const lng = from[1] + (to[1] - from[1]) * t;
-    marker.setLatLng([lat, lng]);
-    if (t < 1) requestAnimationFrame(step);
+app.get('/positions', (req, res) => {
+  // displayName wird on-the-fly ergänzt, ohne den Key zu verändern
+  const result = Object.create(null);
+  for (const id of Object.keys(positions)) {
+    result[id] = Object.assign({}, positions[id], {
+      displayName: trackerDisplayNames[id] || null
+    });
   }
-  requestAnimationFrame(step);
-}
+  res.json(result);
+});
+
+app.delete('/positions', requireAuth, (req, res) => {
+  for (const key of Object.keys(positions)) delete positions[key];
+  // trackerDisplayNames bewusst NICHT löschen – Umbenennung bleibt nach Reset erhalten
+  console.log("🧹 Positionen gelöscht");
+  res.json({ ok: true });
+});
 
 // =======================
-// BATTERIE-ANZEIGE
+// TEAM-POSITION
 // =======================
-function batLabel(bat) {
-  if (typeof bat !== 'number') return '';
-  const color = bat >= 60 ? '#2e7d32' : bat >= 30 ? '#e65100' : '#c62828';
-  const icon  = bat >= 60 ? '🟢'      : bat >= 30 ? '🟡'      : '🔴';
-  return ` <span style="color:${color};font-size:11px">${icon} ${bat}%</span>`;
-}
-
-function tooltipContent(id, bat) {
-  return id + batLabel(bat);
-}
+app.post('/team-position', requireAuth, (req, res) => {
+  const { lat, lon } = req.body;
+  if (typeof lat !== 'number' || typeof lon !== 'number') {
+    return res.status(400).json({ error: 'lat, lon required' });
+  }
+  positions['TEAMAUTO'] = { lat, lon, timestamp: Date.now() };
+  res.json({ ok: true });
+});
 
 // =======================
-// CONTEXT MENU
+// RENAME TRACKER
 // =======================
-function showMarkerMenu(e, markerId) {
-  if (!authToken) { showLoginModal('✏️ Zum Umbenennen anmelden'); return; }
-  if (currentMarkerMenu) currentMarkerMenu.remove();
+app.post('/rename-tracker', requireAuth, (req, res) => {
+  const { trackerId, newName } = req.body;
+  if (!trackerId || !newName) return res.status(400).json({ error: 'trackerId, newName required' });
+  // Nur Anzeigename setzen – Hardware-ID und positions-Key bleiben unverändert
+  trackerDisplayNames[trackerId] = newName.trim();
+  console.log(`✏️ Tracker "${trackerId}" → "${newName}"`);
+  res.json({ ok: true });
+});
 
-  const container = document.createElement('div');
-  container.className = 'markerMenu';
-  container.style.left = e.pageX + 'px';
-  container.style.top  = e.pageY + 'px';
+// =======================
+// MODUS (training / race)
+// =======================
+app.get('/mode', (req, res) => {
+  res.json({ mode: currentMode });
+});
 
-  const input = document.createElement('input');
-  input.type = 'text'; input.placeholder = 'Neuer Name…'; input.value = markerId;
+app.post('/mode', requireAuth, (req, res) => {
+  const { mode } = req.body;
+  if (mode !== 'training' && mode !== 'race') {
+    return res.status(400).json({ error: 'mode must be "training" or "race"' });
+  }
+  currentMode = mode;
+  console.log(`🔄 Modus: ${mode}`);
+  // Retained MQTT-Nachricht → alle Firmware-Instanzen holen sich den neuen Modus
+  mqttClient.publish('livetracking-fq4l/config', mode, { retain: true, qos: 0 }, err => {
+    if (err) console.error('❌ MQTT config publish:', err.message);
+    else     console.log(`📡 MQTT config → "${mode}" (retained)`);
+  });
+  res.json({ ok: true, mode });
+});
 
-  const renameBtn = document.createElement('button');
-  renameBtn.textContent = '✏️ Umbenennen';
-  renameBtn.addEventListener('click', async () => {
-    const newName = input.value.trim();
-    if (!newName) { container.remove(); return; }
-    try {
-      const res = await fetch(`${SERVER}/rename-tracker`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body: JSON.stringify({ trackerId: markerId, newName })  // Hardware-ID bleibt Key
-      });
-      if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
-      // Lokaler Key bleibt "markerId" (Hardware-ID) – nur Tooltip aktualisieren
-      if (markers[markerId]) {
-        const lastBat = lastPositions[markerId] && lastPositions[markerId].bat;
-        markers[markerId].setTooltipContent(tooltipContent(newName, lastBat));
-      }
-      container.remove();
-    } catch (err) { alert('❌ Fehler: ' + err.message); }
+// =======================
+// GPX TRACK
+// =======================
+app.get('/gpx', (req, res) => {
+  res.json(gpxTrack || null);
+});
+
+app.post('/gpx', requireAuth, (req, res) => {
+  const { coords, name } = req.body;
+  if (!Array.isArray(coords) || coords.length === 0) {
+    return res.status(400).json({ error: 'coords array required' });
+  }
+  gpxTrack = { coords, name: name || 'GPX Track' };
+  console.log(`📂 GPX gespeichert: ${name} (${coords.length} Punkte)`);
+  res.json({ ok: true });
+});
+
+app.delete('/gpx', requireAuth, (req, res) => {
+  gpxTrack = null;
+  console.log("🗑️ GPX gelöscht");
+  res.json({ ok: true });
+});
+
+// =======================
+// MQTT BRIDGE
+// =======================
+const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
+const MQTT_TOPIC  = 'livetracking-fq4l/positions';
+
+let mqttClient = null; // modul-global → wird von /mode-Endpoint genutzt
+
+function connectMqtt() {
+  mqttClient = mqtt.connect(MQTT_BROKER, {
+    clientId:        'render-server-' + Math.random().toString(36).slice(2),
+    clean:           true,
+    reconnectPeriod: 5000,
+    connectTimeout:  15000
   });
 
-  container.appendChild(input);
-  container.appendChild(renameBtn);
-  document.body.appendChild(container);
-  currentMarkerMenu = container;
-  input.focus(); input.select();
-}
-
-// =======================
-// LOAD POSITIONS
-// =======================
-async function loadPositions() {
-  try {
-    const res  = await fetch(`${SERVER}/positions`);
-    const data = await res.json();
-    const ids  = Object.keys(data);
-    if (ids.length === 0) return;
-
-    lastDataTime = Date.now();
-    updateStatus();
-
-    ids.forEach(id => {
-      const pos         = data[id];
-      const latlng      = [pos.lat, pos.lon];
-      const bat         = pos.bat;
-      const displayName = pos.displayName || id; // Anzeigename vom Server, fallback Hardware-ID
-
-      if (!trails[id]) {
-        trails[id] = L.polyline([], {
-          color: id === 'TEAMAUTO' ? '#e53935' : '#3388ff', weight: 3, opacity: 0.6
-        }).addTo(map);
-      }
-
-      if (!markers[id]) {
-        const icon = id === 'TEAMAUTO' ? teamCarIcon : L.icon({
-          iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-          shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-        });
-        const marker = L.marker(latlng, { icon }).addTo(map)
-          .bindTooltip(tooltipContent(displayName, bat), { permanent: true, direction: 'top' });
-        if (id !== 'TEAMAUTO') {
-          marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
-        }
-        markers[id] = marker;
-        lastPositions[id] = latlng;
-        lastPositions[id].bat = bat;
-        if (firstDevice) { map.setView(latlng, 15); firstDevice = false; }
-      } else {
-        animateMarker(markers[id], lastPositions[id], latlng);
-        const prev  = lastPositions[id];
-        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
-        if (moved) trails[id].addLatLng(latlng);
-        lastPositions[id] = latlng;
-        lastPositions[id].bat = bat;
-        markers[id].setTooltipContent(tooltipContent(displayName, bat)); // immer aktuell
-      }
-      map.panTo(latlng, { animate: true, duration: 0.6 });
+  mqttClient.on('connect', () => {
+    console.log('✅ MQTT verbunden mit broker.emqx.io');
+    mqttClient.subscribe(MQTT_TOPIC, err => {
+      if (err) console.error('❌ MQTT Subscribe Fehler:', err.message);
+      else     console.log(`📡 MQTT subscribed: ${MQTT_TOPIC}`);
     });
-  } catch (err) { console.error("Fetch Error:", err); }
-}
-
-// =======================
-// RESET
-// =======================
-async function clearMap() {
-  if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
-  try {
-    await fetch(`${SERVER}/positions`, {
-      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
-    });
-    Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
-    Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
-    Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
-    lastDataTime = null; firstDevice = true; updateStatus();
-  } catch (err) { alert('❌ Fehler: ' + err.message); }
-}
-document.getElementById("resetBtn").addEventListener("click", clearMap);
-
-// =======================
-// GPX TRACKS
-// =======================
-let gpxLayer = null;
-
-async function fetchGpxTrack() {
-  try {
-    const res  = await fetch(`${SERVER}/gpx`);
-    const data = await res.json();
-    if (data && data.coords && data.coords.length > 0) drawGpxLayer(data.coords);
-  } catch (err) { console.error('GPX fetch:', err); }
-}
-
-function drawGpxLayer(coords) {
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-  gpxLayer = L.polyline(coords, {
-    color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
-  }).addTo(map);
-  if (authToken) document.getElementById('gpxRemoveBtn').classList.remove('hidden');
-}
-
-document.getElementById('gpxBtn').addEventListener('click', () => {
-  setTimeout(() => optionsMenu.classList.add('hidden'), 50);
-  document.getElementById('gpxFileInput').click();
-});
-
-document.getElementById('gpxFileInput').addEventListener('change', function () {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const coords = parseGpx(e.target.result);
-      drawGpxLayer(coords);
-      await fetch(`${SERVER}/gpx`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body: JSON.stringify({ coords, name: file.name })
-      });
-    } catch (err) { alert('❌ ' + err.message); }
-    this.value = '';
-  };
-  reader.readAsText(file);
-});
-
-function parseGpx(xmlText) {
-  const parser = new DOMParser();
-  const xml    = parser.parseFromString(xmlText, 'application/xml');
-  if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
-  const coords = [];
-  xml.querySelectorAll('trkpt').forEach(pt => {
-    const lat = parseFloat(pt.getAttribute('lat'));
-    const lon = parseFloat(pt.getAttribute('lon'));
-    if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+    // Retained config-Nachricht beim (Re-)Connect wiederherstellen
+    mqttClient.publish('livetracking-fq4l/config', currentMode, { retain: true, qos: 0 });
   });
-  if (coords.length === 0) {
-    xml.querySelectorAll('rtept').forEach(pt => {
-      const lat = parseFloat(pt.getAttribute('lat'));
-      const lon = parseFloat(pt.getAttribute('lon'));
-      if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
-    });
-  }
-  if (coords.length === 0) throw new Error('Keine Track-Punkte gefunden');
-  return coords;
+
+  mqttClient.on('message', (topic, message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      const { id, lat, lon, bat } = data;
+      if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
+      positions[id] = { lat, lon, timestamp: Date.now() };
+      if (typeof bat === 'number') positions[id].bat = bat;
+      console.log(`📍 MQTT: ${id} → ${lat}, ${lon}`);
+    } catch (e) {
+      console.error('❌ MQTT Nachricht ungültig:', e.message);
+    }
+  });
+
+  mqttClient.on('error',      err => console.error('❌ MQTT Fehler:', err.message));
+  mqttClient.on('reconnect',  ()  => console.log('🔄 MQTT reconnect…'));
+  mqttClient.on('disconnect', ()  => console.log('⚠️ MQTT getrennt'));
 }
 
-document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-  document.getElementById('gpxRemoveBtn').classList.add('hidden');
-  try {
-    await fetch(`${SERVER}/gpx`, {
-      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
-    });
-  } catch (err) { console.error('GPX delete:', err); }
+connectMqtt();
+
+// =======================
+// START
+// =======================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server läuft auf Port ${PORT}`);
 });
-
-// =======================
-// MAIN LOOP
-// =======================
-loadPositions();
-setInterval(loadPositions, 1000);
-fetchGpxTrack();
-loadMode();
-
-</script>
-</body>
-</html>
