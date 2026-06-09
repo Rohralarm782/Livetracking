@@ -12,27 +12,19 @@
 
     /* LOGIN MODAL */
     #loginModal {
-      display: flex;
-      position: fixed;
+      display: flex; position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 10000;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; padding: 20px;
     }
     #loginModal.hidden { display: none !important; }
     .loginBox {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
+      background: white; padding: 40px; border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
+      width: 100%; max-width: 380px; text-align: center;
     }
     .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
-    .loginBox p { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
+    .loginBox p  { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
     .loginBox input {
       width: 100%; padding: 12px; margin-bottom: 15px;
       border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
@@ -47,65 +39,7 @@
     .loginBox button:hover { background: #1976D2; }
     .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
 
-    /* TRACKER MODAL */
-    #trackerModal {
-      display: flex;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 10001;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    #trackerModal.hidden { display: none !important; }
-    .trackerBox {
-      background: white;
-      padding: 28px 28px 24px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      width: 100%;
-      max-width: 360px;
-    }
-    .trackerBox h3 { margin: 0 0 4px 0; color: #333; font-size: 18px; }
-    .trackerBox .trackerSubtitle { color: #999; font-size: 12px; margin: 0 0 16px 0; }
-    #trackerListItems { min-height: 44px; }
-    .trackerRow {
-      display: flex; align-items: center;
-      padding: 9px 2px; border-bottom: 1px solid #f0f0f0; gap: 6px;
-    }
-    .trackerRow:last-child { border-bottom: none; }
-    .trackerNameWrap { flex: 1; display: flex; flex-direction: column; }
-    .trackerName {
-      cursor: pointer; font-size: 14px; color: #333;
-      padding: 5px 8px; border-radius: 5px; transition: background 0.15s;
-    }
-    .trackerName:hover { background: #e3f2fd; color: #1565c0; }
-    .trackerHwId { font-size: 11px; color: #bbb; padding: 0 8px; }
-    .trackerRenameInput {
-      flex: 1; padding: 6px 8px;
-      border: 2px solid #2196F3; border-radius: 5px;
-      font-size: 14px; font-family: sans-serif;
-    }
-    .trackerRenameInput:focus { outline: none; }
-    .trackerSaveBtn, .trackerCancelBtn {
-      padding: 5px 9px; border-radius: 5px; cursor: pointer;
-      font-size: 14px; background: white; font-family: sans-serif; border: 1px solid;
-    }
-    .trackerSaveBtn  { color: #2e7d32; border-color: #a5d6a7; }
-    .trackerSaveBtn:hover  { background: #e8f5e9; }
-    .trackerCancelBtn { color: #c62828; border-color: #ef9a9a; }
-    .trackerCancelBtn:hover { background: #ffebee; }
-    .trackerEmptyMsg { color: #bbb; font-size: 13px; text-align: center; padding: 18px 0; }
-    .trackerBoxClose {
-      margin-top: 16px; width: 100%; padding: 10px;
-      background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 6px;
-      cursor: pointer; font-size: 13px; font-family: sans-serif; color: #555;
-    }
-    .trackerBoxClose:hover { background: #eeeeee; }
-
     /* BUTTONS */
-    .btnGroup { display: none; }
     .btn {
       padding: 10px 14px; background: white; border: 1px solid #ccc;
       border-radius: 6px; cursor: pointer; font-size: 13px;
@@ -121,24 +55,25 @@
     .btn.wakeLock { color: #333; }
     .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
     .btn.hidden { display: none; }
-    .btn.rain-active { border-color: #1565c0; color: #0d47a1; background: #e3f2fd; }
+
+    /* Modus-Button */
+    #modeBtn.mode-race     { border-color: #e53935; color: #c62828; background: #ffebee; }
+    #modeBtn.mode-training { border-color: #1976D2; color: #1565c0; background: #e3f2fd; }
+    #modeBtn.mode-race:hover     { background: #ffcdd2; }
+    #modeBtn.mode-training:hover { background: #bbdefb; }
 
     /* OPTIONS MENU */
     #optionsBtn {
-      position: absolute;
-      bottom: 10px; left: 10px; right: 10px;
-      z-index: 999;
-      padding: 10px 14px; background: white;
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      z-index: 999; padding: 10px 14px; background: white;
       border: 1px solid #ccc; border-radius: 6px;
       cursor: pointer; font-size: 13px; font-family: sans-serif;
       transition: all 0.2s; width: 100%;
     }
     #optionsBtn:hover { background: #f5f5f5; }
     #optionsMenu {
-      position: absolute;
-      bottom: 50px; left: 10px; right: 10px;
-      z-index: 999;
-      background: white; border: 1px solid #ccc;
+      position: absolute; bottom: 50px; left: 10px; right: 10px;
+      z-index: 999; background: white; border: 1px solid #ccc;
       border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       overflow: hidden; display: flex; flex-direction: column;
     }
@@ -151,15 +86,13 @@
     #optionsMenu .btn:hover { background: #f5f5f5; }
 
     @media (min-width: 768px) {
-      #optionsBtn { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; z-index: 999; width: auto; }
-      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 220px; flex-direction: column; }
-      #optionsMenu .btn { width: 100%; }
-      #status { right: auto; left: 10px; width: fit-content; }
+      #optionsBtn  { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; width: auto; }
+      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
+      #status      { right: auto; left: 10px; width: fit-content; }
     }
 
     #teamCarToggle {
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; user-select: none;
+      display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
       padding: 10px 14px; background: white;
       border: none; border-bottom: 1px solid #eee;
       width: 100%; font-size: 13px; font-family: sans-serif;
@@ -199,7 +132,6 @@
       font-size: 13px; font-family: sans-serif;
     }
     .markerMenu input:focus { outline: none; background: #f9f9f9; }
-
   </style>
 </head>
 <body>
@@ -215,32 +147,21 @@
   </div>
 </div>
 
-<!-- TRACKER MODAL -->
-<div id="trackerModal" class="hidden">
-  <div class="trackerBox">
-    <h3>📋 Tracker-Liste</h3>
-    <p class="trackerSubtitle">Auf einen Namen klicken zum Bearbeiten</p>
-    <div id="trackerListItems"></div>
-    <button class="trackerBoxClose" id="trackerModalClose">Schließen</button>
-  </div>
-</div>
-
 <!-- OPTIONS BUTTON & MENU -->
 <button id="optionsBtn">⚙️ Optionen</button>
 
 <div id="optionsMenu" class="hidden">
   <button class="btn primary" id="loginBtnTop">🔓 Login</button>
-  <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
-  <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
-  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
-  <button class="btn hidden" id="trackerListBtn">📋 Tracker</button>
-  <button class="btn reset hidden" id="resetBtn">🧹 Karte leeren</button>
-  <label id="teamCarToggle" class="hidden">
+  <button class="btn wakeLock"        id="wakeLockBtn">💡 Bildschirm aktiv</button>
+  <button class="btn hidden"          id="modeBtn">🏁 Renn-Modus</button>
+  <button class="btn hidden"          id="gpxBtn">📂 GPX laden</button>
+  <button class="btn reset hidden"    id="gpxRemoveBtn">🗑️ GPX entfernen</button>
+  <button class="btn reset hidden"    id="resetBtn">🧹 Karte leeren</button>
+  <label  id="teamCarToggle" class="hidden">
     <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
   </label>
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
-
 
 <input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
 <div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
@@ -249,10 +170,13 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 
+const SERVER = 'https://livetracking-fq4l.onrender.com';
+
 // =======================
 // AUTH STATE
 // =======================
-let authToken = null;
+let authToken   = null;
+let currentMode = 'race';
 
 function saveToken(token) {
   authToken = token;
@@ -263,7 +187,7 @@ function saveToken(token) {
   document.getElementById('resetBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
   document.getElementById('gpxBtn').classList.remove('hidden');
-  document.getElementById('trackerListBtn').classList.remove('hidden');
+  document.getElementById('modeBtn').classList.remove('hidden');
   console.log("✅ Eingeloggt");
 }
 
@@ -275,15 +199,14 @@ function loadToken() {
     document.getElementById('resetBtn').classList.remove('hidden');
     document.getElementById('teamCarToggle').classList.remove('hidden');
     document.getElementById('gpxBtn').classList.remove('hidden');
-    document.getElementById('trackerListBtn').classList.remove('hidden');
+    document.getElementById('modeBtn').classList.remove('hidden');
   }
 }
 
 function logout() {
   if (authToken) {
-    fetch('https://livetracking-fq4l.onrender.com/logout', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${authToken}` }
+    fetch(`${SERVER}/logout`, {
+      method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }
     }).catch(console.error);
   }
   authToken = null;
@@ -296,7 +219,7 @@ function logout() {
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('gpxBtn').classList.add('hidden');
   document.getElementById('gpxRemoveBtn').classList.add('hidden');
-  document.getElementById('trackerListBtn').classList.add('hidden');
+  document.getElementById('modeBtn').classList.add('hidden');
   document.getElementById('loginModal').classList.add('hidden');
   console.log("🚪 Abgemeldet");
 }
@@ -314,7 +237,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   const errorEl  = document.getElementById('loginError');
   if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
   try {
-    const res  = await fetch('https://livetracking-fq4l.onrender.com/login', {
+    const res  = await fetch(`${SERVER}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
@@ -324,9 +247,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     saveToken(data.token);
     document.getElementById('passwordInput').value = '';
     errorEl.textContent = '';
-  } catch (err) {
-    errorEl.textContent = '❌ Fehler: ' + err.message;
-  }
+  } catch (err) { errorEl.textContent = '❌ Fehler: ' + err.message; }
 });
 
 document.getElementById('passwordInput').addEventListener('keypress', e => {
@@ -335,6 +256,45 @@ document.getElementById('passwordInput').addEventListener('keypress', e => {
 
 document.getElementById('logoutBtn').addEventListener('click', logout);
 loadToken();
+
+// =======================
+// MODUS
+// =======================
+function applyMode(mode) {
+  currentMode = mode;
+  const btn = document.getElementById('modeBtn');
+  if (mode === 'race') {
+    btn.textContent = '🏁 Renn-Modus aktiv';
+    btn.className   = 'btn mode-race';
+  } else {
+    btn.textContent = '🏋️ Training-Modus aktiv';
+    btn.className   = 'btn mode-training';
+  }
+  if (!authToken) btn.classList.add('hidden');
+}
+
+async function loadMode() {
+  try {
+    const res  = await fetch(`${SERVER}/mode`);
+    const data = await res.json();
+    applyMode(data.mode);
+  } catch (err) { console.error('Mode fetch:', err); }
+}
+
+document.getElementById('modeBtn').addEventListener('click', async () => {
+  if (!authToken) return;
+  const newMode = currentMode === 'race' ? 'training' : 'race';
+  try {
+    const res = await fetch(`${SERVER}/mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ mode: newMode })
+    });
+    const data = await res.json();
+    if (res.ok) applyMode(data.mode);
+  } catch (err) { console.error('Mode switch:', err); }
+  optionsMenu.classList.add('hidden');
+});
 
 // =======================
 // OPTIONS MENU
@@ -354,7 +314,8 @@ document.addEventListener('click', e => {
 });
 
 optionsMenu.querySelectorAll('.btn').forEach(btn => {
-  btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
+  if (btn.id !== 'modeBtn') // modeBtn schließt selbst
+    btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
 });
 
 document.getElementById('teamCarToggle').addEventListener('change', () => {
@@ -376,7 +337,7 @@ async function toggleWakeLock() {
       wakeLock = null;
       document.getElementById('wakeLockBtn').classList.remove('active');
     }
-  } catch (err) { console.error('Wake Lock Fehler:', err); }
+  } catch (err) { console.error('Wake Lock:', err); }
 }
 
 document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
@@ -432,13 +393,12 @@ function startTeamCarTracking() {
       const latlng   = [pos.coords.latitude, pos.coords.longitude];
       const accuracy = pos.coords.accuracy;
       try {
-        await fetch('https://livetracking-fq4l.onrender.com/team-position', {
+        await fetch(`${SERVER}/team-position`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
         });
       } catch (err) { console.error("Fehler beim Senden:", err); }
-
       if (!teamCarMarker) {
         teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
           .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
@@ -512,11 +472,23 @@ function animateMarker(marker, from, to, duration = 800) {
 }
 
 // =======================
-// CONTEXT MENU (Rechtsklick auf Marker)
-// markerId = Hardware-ID (stabil, nie umbenannt)
-// currentDisplayName = aktueller Anzeigename (aus Tooltip)
+// BATTERIE-ANZEIGE
 // =======================
-function showMarkerMenu(e, markerId, currentDisplayName) {
+function batLabel(bat) {
+  if (typeof bat !== 'number') return '';
+  const color = bat >= 60 ? '#2e7d32' : bat >= 30 ? '#e65100' : '#c62828';
+  const icon  = bat >= 60 ? '🟢'      : bat >= 30 ? '🟡'      : '🔴';
+  return ` <span style="color:${color};font-size:11px">${icon} ${bat}%</span>`;
+}
+
+function tooltipContent(id, bat) {
+  return id + batLabel(bat);
+}
+
+// =======================
+// CONTEXT MENU
+// =======================
+function showMarkerMenu(e, markerId) {
   if (!authToken) { showLoginModal('✏️ Zum Umbenennen anmelden'); return; }
   if (currentMarkerMenu) currentMarkerMenu.remove();
 
@@ -526,29 +498,28 @@ function showMarkerMenu(e, markerId, currentDisplayName) {
   container.style.top  = e.pageY + 'px';
 
   const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'Neuer Name…';
-  input.value = currentDisplayName || markerId;
+  input.type = 'text'; input.placeholder = 'Neuer Name…'; input.value = markerId;
 
   const renameBtn = document.createElement('button');
   renameBtn.textContent = '✏️ Umbenennen';
   renameBtn.addEventListener('click', async () => {
     const newName = input.value.trim();
-    if (!newName || newName === (currentDisplayName || markerId)) { container.remove(); return; }
+    if (!newName) { container.remove(); return; }
     try {
-      const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
+      const res = await fetch(`${SERVER}/rename-tracker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body: JSON.stringify({ trackerId: markerId, newName })   // Hardware-ID senden, nicht Anzeigename
+        body: JSON.stringify({ trackerId: markerId, newName })  // Hardware-ID bleibt Key
       });
       if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
-      // Nur Tooltip aktualisieren – kein Key-Tausch nötig
-      if (markers[markerId]) markers[markerId].setTooltipContent(newName);
+      // Lokaler Key bleibt "markerId" (Hardware-ID) – nur Tooltip aktualisieren
+      if (markers[markerId]) {
+        const lastBat = lastPositions[markerId] && lastPositions[markerId].bat;
+        markers[markerId].setTooltipContent(tooltipContent(newName, lastBat));
+      }
       container.remove();
     } catch (err) { alert('❌ Fehler: ' + err.message); }
   });
-
-  input.addEventListener('keypress', e => { if (e.key === 'Enter') renameBtn.click(); });
 
   container.appendChild(input);
   container.appendChild(renameBtn);
@@ -557,16 +528,12 @@ function showMarkerMenu(e, markerId, currentDisplayName) {
   input.focus(); input.select();
 }
 
-document.addEventListener('click', () => {
-  if (currentMarkerMenu) { currentMarkerMenu.remove(); currentMarkerMenu = null; }
-});
-
 // =======================
 // LOAD POSITIONS
 // =======================
 async function loadPositions() {
   try {
-    const res  = await fetch('https://livetracking-fq4l.onrender.com/positions');
+    const res  = await fetch(`${SERVER}/positions`);
     const data = await res.json();
     const ids  = Object.keys(data);
     if (ids.length === 0) return;
@@ -576,8 +543,9 @@ async function loadPositions() {
 
     ids.forEach(id => {
       const pos         = data[id];
-      const displayName = pos.displayName || id;   // Anzeigename vom Server (oder Hardware-ID als Fallback)
       const latlng      = [pos.lat, pos.lon];
+      const bat         = pos.bat;
+      const displayName = pos.displayName || id; // Anzeigename vom Server, fallback Hardware-ID
 
       if (!trails[id]) {
         trails[id] = L.polyline([], {
@@ -586,35 +554,28 @@ async function loadPositions() {
       }
 
       if (!markers[id]) {
-        // Neuer Marker – Hardware-ID als Key, displayName für Tooltip
         const icon = id === 'TEAMAUTO' ? teamCarIcon : L.icon({
           iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
           shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
           iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
         const marker = L.marker(latlng, { icon }).addTo(map)
-          .bindTooltip(displayName, { permanent: true, direction: 'top' });
+          .bindTooltip(tooltipContent(displayName, bat), { permanent: true, direction: 'top' });
         if (id !== 'TEAMAUTO') {
-          // Liest beim Öffnen immer den aktuellen Tooltip-Text → immer aktueller Anzeigename
-          marker.on('contextmenu', e => {
-            L.DomEvent.stop(e);
-            const latestName = markers[id] && markers[id].getTooltip()
-              ? markers[id].getTooltip().getContent()
-              : id;
-            showMarkerMenu(e.originalEvent, id, latestName);
-          });
+          marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
         }
         markers[id] = marker;
         lastPositions[id] = latlng;
+        lastPositions[id].bat = bat;
         if (firstDevice) { map.setView(latlng, 15); firstDevice = false; }
       } else {
-        // Vorhandener Marker: Tooltip aktualisieren (falls Umbenennung zwischendurch erfolgt ist)
-        markers[id].setTooltipContent(displayName);
         animateMarker(markers[id], lastPositions[id], latlng);
         const prev  = lastPositions[id];
         const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
         if (moved) trails[id].addLatLng(latlng);
         lastPositions[id] = latlng;
+        lastPositions[id].bat = bat;
+        markers[id].setTooltipContent(tooltipContent(displayName, bat)); // immer aktuell
       }
       map.panTo(latlng, { animate: true, duration: 0.6 });
     });
@@ -627,7 +588,7 @@ async function loadPositions() {
 async function clearMap() {
   if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
   try {
-    await fetch('https://livetracking-fq4l.onrender.com/positions', {
+    await fetch(`${SERVER}/positions`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
     });
     Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
@@ -639,18 +600,15 @@ async function clearMap() {
 document.getElementById("resetBtn").addEventListener("click", clearMap);
 
 // =======================
-// 📂 GPX TRACKS
+// GPX TRACKS
 // =======================
-const SERVER = 'https://livetracking-fq4l.onrender.com';
 let gpxLayer = null;
 
 async function fetchGpxTrack() {
   try {
     const res  = await fetch(`${SERVER}/gpx`);
     const data = await res.json();
-    if (data && data.coords && data.coords.length > 0) {
-      drawGpxLayer(data.coords);
-    }
+    if (data && data.coords && data.coords.length > 0) drawGpxLayer(data.coords);
   } catch (err) { console.error('GPX fetch:', err); }
 }
 
@@ -680,7 +638,6 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ coords, name: file.name })
       });
-      console.log(`📂 GPX gespeichert: ${file.name} (${coords.length} Punkte)`);
     } catch (err) { alert('❌ ' + err.message); }
     this.value = '';
   };
@@ -691,7 +648,6 @@ function parseGpx(xmlText) {
   const parser = new DOMParser();
   const xml    = parser.parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
-
   const coords = [];
   xml.querySelectorAll('trkpt').forEach(pt => {
     const lat = parseFloat(pt.getAttribute('lat'));
@@ -714,120 +670,9 @@ document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
   document.getElementById('gpxRemoveBtn').classList.add('hidden');
   try {
     await fetch(`${SERVER}/gpx`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authToken}` }
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
     });
   } catch (err) { console.error('GPX delete:', err); }
-});
-
-// =======================
-// 📋 TRACKER-LISTE
-// =======================
-function createTrackerRow(hardwareId, initialDisplayName) {
-  const row = document.createElement('div');
-  row.className = 'trackerRow';
-  let currentName = initialDisplayName;
-
-  function showLabel() {
-    row.innerHTML = '';
-    const wrap = document.createElement('div');
-    wrap.className = 'trackerNameWrap';
-
-    const nameEl = document.createElement('span');
-    nameEl.className = 'trackerName';
-    nameEl.textContent = currentName;
-    nameEl.title = 'Klicken zum Umbenennen';
-    nameEl.addEventListener('click', showInput);
-    wrap.appendChild(nameEl);
-
-    // Hardware-ID als Untertitel anzeigen, wenn umbenannt
-    if (hardwareId !== currentName) {
-      const sub = document.createElement('span');
-      sub.className = 'trackerHwId';
-      sub.textContent = `ID: ${hardwareId}`;
-      wrap.appendChild(sub);
-    }
-    row.appendChild(wrap);
-  }
-
-  function showInput() {
-    row.innerHTML = '';
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = currentName;
-    input.className = 'trackerRenameInput';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = '✓';
-    saveBtn.className = 'trackerSaveBtn';
-    saveBtn.title = 'Speichern';
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = '✕';
-    cancelBtn.className = 'trackerCancelBtn';
-    cancelBtn.title = 'Abbrechen';
-
-    row.appendChild(input);
-    row.appendChild(saveBtn);
-    row.appendChild(cancelBtn);
-    input.focus();
-    input.select();
-
-    async function doRename() {
-      const newName = input.value.trim();
-      if (!newName || newName === currentName) { showLabel(); return; }
-      try {
-        const res = await fetch(`${SERVER}/rename-tracker`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ trackerId: hardwareId, newName })
-        });
-        if (!res.ok) { alert('❌ Fehler beim Umbenennen'); showLabel(); return; }
-        currentName = newName;
-        if (markers[hardwareId]) markers[hardwareId].setTooltipContent(newName);
-      } catch (err) { alert('❌ ' + err.message); }
-      showLabel();
-    }
-
-    saveBtn.addEventListener('click', doRename);
-    cancelBtn.addEventListener('click', showLabel);
-    input.addEventListener('keypress', e => { if (e.key === 'Enter') doRename(); });
-  }
-
-  showLabel();
-  return row;
-}
-
-function openTrackerModal() {
-  const listEl = document.getElementById('trackerListItems');
-  listEl.innerHTML = '';
-
-  const ids = Object.keys(markers).filter(id => id !== 'TEAMAUTO');
-
-  if (ids.length === 0) {
-    listEl.innerHTML = '<p class="trackerEmptyMsg">Keine Tracker aktiv</p>';
-  } else {
-    ids.forEach(id => {
-      const currentDisplayName = (markers[id] && markers[id].getTooltip())
-        ? markers[id].getTooltip().getContent()
-        : id;
-      listEl.appendChild(createTrackerRow(id, currentDisplayName));
-    });
-  }
-
-  document.getElementById('trackerModal').classList.remove('hidden');
-}
-
-document.getElementById('trackerListBtn').addEventListener('click', openTrackerModal);
-
-document.getElementById('trackerModalClose').addEventListener('click', () => {
-  document.getElementById('trackerModal').classList.add('hidden');
-});
-
-// Klick außerhalb des Tracker-Modals schließt es
-document.getElementById('trackerModal').addEventListener('click', function (e) {
-  if (e.target === this) this.classList.add('hidden');
 });
 
 // =======================
@@ -836,6 +681,7 @@ document.getElementById('trackerModal').addEventListener('click', function (e) {
 loadPositions();
 setInterval(loadPositions, 1000);
 fetchGpxTrack();
+loadMode();
 
 </script>
 </body>
