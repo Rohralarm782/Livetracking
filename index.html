@@ -51,16 +51,9 @@
     .btn.primary:hover { background: #1976D2; }
     .btn.logout { background: #f44336; color: white; border-color: #c62828; }
     .btn.logout:hover { background: #d32f2f; }
-    .btn.reset { color: #f44336; }
     .btn.wakeLock { color: #333; }
     .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
     .btn.hidden { display: none; }
-
-    /* Modus-Button */
-    #modeBtn.mode-race     { border-color: #e53935; color: #c62828; background: #ffebee; }
-    #modeBtn.mode-training { border-color: #1976D2; color: #1565c0; background: #e3f2fd; }
-    #modeBtn.mode-race:hover     { background: #ffcdd2; }
-    #modeBtn.mode-training:hover { background: #bbdefb; }
 
     /* OPTIONS MENU */
     #optionsBtn {
@@ -85,6 +78,32 @@
     #optionsMenu .btn:last-child { border-bottom: none; }
     #optionsMenu .btn:hover { background: #f5f5f5; }
 
+    /* Erweiterte Einstellungen */
+    #advancedSection {
+      background: #f9f9f9; border-top: 1px solid #eee;
+    }
+    #advancedSection.hidden { display: none; }
+    #modeToggleRow {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #eee;
+    }
+    #modeSwitch {
+      width: 44px; height: 24px; border-radius: 12px;
+      cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    #modeThumb {
+      position: absolute; top: 2px; width: 20px; height: 20px;
+      background: white; border-radius: 50%; transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    #resetBtn {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #f44336;
+      transition: background 0.2s;
+    }
+    #resetBtn:hover { background: #fff5f5; }
+
     @media (min-width: 768px) {
       #optionsBtn  { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; width: auto; }
       #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
@@ -102,7 +121,6 @@
     #teamCarToggle.hidden { display: none; }
     #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
     #teamCarToggle.active { background: #fff3e0; color: #c62828; }
-    #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
 
     #status {
       position: absolute; top: 10px; right: 10px;
@@ -152,14 +170,28 @@
 
 <div id="optionsMenu" class="hidden">
   <button class="btn primary" id="loginBtnTop">🔓 Login</button>
-  <button class="btn wakeLock"        id="wakeLockBtn">💡 Bildschirm aktiv</button>
-  <button class="btn hidden"          id="modeBtn">🏁 Renn-Modus</button>
-  <button class="btn hidden"          id="gpxBtn">📂 GPX laden</button>
-  <button class="btn reset hidden"    id="gpxRemoveBtn">🗑️ GPX entfernen</button>
-  <button class="btn reset hidden"    id="resetBtn">🧹 Karte leeren</button>
+  <button class="btn wakeLock"     id="wakeLockBtn">💡 Bildschirm aktiv</button>
+  <button class="btn hidden"       id="gpxBtn">📂 GPX laden</button>
+  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
   <label  id="teamCarToggle" class="hidden">
     <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
   </label>
+  <button class="btn hidden"       id="advancedBtn">⚙️ Erweiterte Einstellungen ▸</button>
+
+  <!-- Erweiterte Einstellungen (klappt inline auf) -->
+  <div id="advancedSection" class="hidden">
+    <div id="modeToggleRow">
+      <div>
+        <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
+        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend · 30s stehend</div>
+      </div>
+      <div id="modeSwitch" style="background:#2196F3;">
+        <div id="modeThumb" style="left:22px;"></div>
+      </div>
+    </div>
+    <button id="resetBtn">🧹 Karte leeren</button>
+  </div>
+
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
@@ -178,29 +210,36 @@ const SERVER = 'https://livetracking-fq4l.onrender.com';
 let authToken   = null;
 let currentMode = 'race';
 
+function showAdminElements() {
+  document.getElementById('advancedBtn').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  document.getElementById('teamCarToggle').classList.remove('hidden');
+  document.getElementById('gpxBtn').classList.remove('hidden');
+  document.getElementById('loginBtnTop').classList.add('hidden');
+}
+
+function hideAdminElements() {
+  document.getElementById('advancedBtn').classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('teamCarToggle').classList.add('hidden');
+  document.getElementById('gpxBtn').classList.add('hidden');
+  document.getElementById('gpxRemoveBtn').classList.add('hidden');
+  document.getElementById('loginBtnTop').classList.remove('hidden');
+}
+
 function saveToken(token) {
   authToken = token;
   localStorage.setItem('authToken', token);
   document.getElementById('loginModal').classList.add('hidden');
-  document.getElementById('loginBtnTop').classList.add('hidden');
-  document.getElementById('logoutBtn').classList.remove('hidden');
-  document.getElementById('resetBtn').classList.remove('hidden');
-  document.getElementById('teamCarToggle').classList.remove('hidden');
-  document.getElementById('gpxBtn').classList.remove('hidden');
-  document.getElementById('modeBtn').classList.remove('hidden');
+  showAdminElements();
   console.log("✅ Eingeloggt");
 }
 
 function loadToken() {
   authToken = localStorage.getItem('authToken');
-  if (authToken) {
-    document.getElementById('loginBtnTop').classList.add('hidden');
-    document.getElementById('logoutBtn').classList.remove('hidden');
-    document.getElementById('resetBtn').classList.remove('hidden');
-    document.getElementById('teamCarToggle').classList.remove('hidden');
-    document.getElementById('gpxBtn').classList.remove('hidden');
-    document.getElementById('modeBtn').classList.remove('hidden');
-  }
+  if (authToken) showAdminElements();
 }
 
 function logout() {
@@ -213,14 +252,8 @@ function logout() {
   localStorage.removeItem('authToken');
   stopTeamCarTracking();
   document.getElementById('teamCarCheckbox').checked = false;
-  document.getElementById('loginBtnTop').classList.remove('hidden');
-  document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('resetBtn').classList.add('hidden');
-  document.getElementById('teamCarToggle').classList.add('hidden');
-  document.getElementById('gpxBtn').classList.add('hidden');
-  document.getElementById('gpxRemoveBtn').classList.add('hidden');
-  document.getElementById('modeBtn').classList.add('hidden');
   document.getElementById('loginModal').classList.add('hidden');
+  hideAdminElements();
   console.log("🚪 Abgemeldet");
 }
 
@@ -258,19 +291,25 @@ document.getElementById('logoutBtn').addEventListener('click', logout);
 loadToken();
 
 // =======================
-// MODUS
+// MODUS (Toggle Switch)
 // =======================
 function applyMode(mode) {
   currentMode = mode;
-  const btn = document.getElementById('modeBtn');
+  const label = document.getElementById('modeLabel');
+  const sub   = document.getElementById('modeSub');
+  const sw    = document.getElementById('modeSwitch');
+  const thumb = document.getElementById('modeThumb');
   if (mode === 'race') {
-    btn.textContent = '🏁 Renn-Modus aktiv';
-    btn.className   = 'btn mode-race';
+    label.textContent      = 'Renn-Modus';
+    sub.textContent        = '2s bewegend · 30s stehend';
+    sw.style.background    = '#2196F3';
+    thumb.style.left       = '22px';
   } else {
-    btn.textContent = '🏋️ Training-Modus aktiv';
-    btn.className   = 'btn mode-training';
+    label.textContent      = 'Training-Modus';
+    sub.textContent        = '10s bewegend · 60s stehend';
+    sw.style.background    = '#bbb';
+    thumb.style.left       = '2px';
   }
-  if (!authToken) btn.classList.add('hidden');
 }
 
 async function loadMode() {
@@ -281,11 +320,11 @@ async function loadMode() {
   } catch (err) { console.error('Mode fetch:', err); }
 }
 
-document.getElementById('modeBtn').addEventListener('click', async () => {
+document.getElementById('modeSwitch').addEventListener('click', async () => {
   if (!authToken) return;
   const newMode = currentMode === 'race' ? 'training' : 'race';
   try {
-    const res = await fetch(`${SERVER}/mode`, {
+    const res  = await fetch(`${SERVER}/mode`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
       body: JSON.stringify({ mode: newMode })
@@ -293,7 +332,6 @@ document.getElementById('modeBtn').addEventListener('click', async () => {
     const data = await res.json();
     if (res.ok) applyMode(data.mode);
   } catch (err) { console.error('Mode switch:', err); }
-  optionsMenu.classList.add('hidden');
 });
 
 // =======================
@@ -302,6 +340,12 @@ document.getElementById('modeBtn').addEventListener('click', async () => {
 const optionsBtn  = document.getElementById('optionsBtn');
 const optionsMenu = document.getElementById('optionsMenu');
 
+function closeOptionsMenu() {
+  optionsMenu.classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+}
+
 optionsBtn.addEventListener('click', e => {
   e.stopPropagation();
   optionsMenu.classList.toggle('hidden');
@@ -309,17 +353,30 @@ optionsBtn.addEventListener('click', e => {
 
 document.addEventListener('click', e => {
   if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
-    optionsMenu.classList.add('hidden');
+    closeOptionsMenu();
   }
 });
 
+// Alle Buttons schließen das Menü, außer advancedBtn und modeSwitch
 optionsMenu.querySelectorAll('.btn').forEach(btn => {
-  if (btn.id !== 'modeBtn') // modeBtn schließt selbst
-    btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
+  if (btn.id !== 'advancedBtn')
+    btn.addEventListener('click', () => closeOptionsMenu());
 });
 
-document.getElementById('teamCarToggle').addEventListener('change', () => {
-  optionsMenu.classList.add('hidden');
+document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
+
+// Erweiterte Einstellungen aufklappen/zuklappen
+document.getElementById('advancedBtn').addEventListener('click', () => {
+  const section = document.getElementById('advancedSection');
+  const btn     = document.getElementById('advancedBtn');
+  const isOpen  = !section.classList.contains('hidden');
+  if (isOpen) {
+    section.classList.add('hidden');
+    btn.textContent = '⚙️ Erweiterte Einstellungen ▸';
+  } else {
+    section.classList.remove('hidden');
+    btn.textContent = '⚙️ Erweiterte Einstellungen ▾';
+  }
 });
 
 // =======================
@@ -509,10 +566,9 @@ function showMarkerMenu(e, markerId) {
       const res = await fetch(`${SERVER}/rename-tracker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body: JSON.stringify({ trackerId: markerId, newName })  // Hardware-ID bleibt Key
+        body: JSON.stringify({ trackerId: markerId, newName })
       });
       if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
-      // Lokaler Key bleibt "markerId" (Hardware-ID) – nur Tooltip aktualisieren
       if (markers[markerId]) {
         const lastBat = lastPositions[markerId] && lastPositions[markerId].bat;
         markers[markerId].setTooltipContent(tooltipContent(newName, lastBat));
@@ -545,7 +601,7 @@ async function loadPositions() {
       const pos         = data[id];
       const latlng      = [pos.lat, pos.lon];
       const bat         = pos.bat;
-      const displayName = pos.displayName || id; // Anzeigename vom Server, fallback Hardware-ID
+      const displayName = pos.displayName || id;
 
       if (!trails[id]) {
         trails[id] = L.polyline([], {
@@ -575,7 +631,7 @@ async function loadPositions() {
         if (moved) trails[id].addLatLng(latlng);
         lastPositions[id] = latlng;
         lastPositions[id].bat = bat;
-        markers[id].setTooltipContent(tooltipContent(displayName, bat)); // immer aktuell
+        markers[id].setTooltipContent(tooltipContent(displayName, bat));
       }
       map.panTo(latlng, { animate: true, duration: 0.6 });
     });
@@ -597,7 +653,7 @@ async function clearMap() {
     lastDataTime = null; firstDevice = true; updateStatus();
   } catch (err) { alert('❌ Fehler: ' + err.message); }
 }
-document.getElementById("resetBtn").addEventListener("click", clearMap);
+document.getElementById('resetBtn').addEventListener('click', clearMap);
 
 // =======================
 // GPX TRACKS
@@ -621,7 +677,7 @@ function drawGpxLayer(coords) {
 }
 
 document.getElementById('gpxBtn').addEventListener('click', () => {
-  setTimeout(() => optionsMenu.classList.add('hidden'), 50);
+  setTimeout(() => closeOptionsMenu(), 50);
   document.getElementById('gpxFileInput').click();
 });
 
