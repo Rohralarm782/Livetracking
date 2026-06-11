@@ -127,6 +127,763 @@
       z-index: 999; padding: 8px 14px; border-radius: 6px;
       font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
     }
+    #status.ok       { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+    #status.warn     { border-color: #f44336; color: #c62828; background: #ffebee; }
+    #status.training { border-color: #f9a825; color: #e65100; background: #fffde7; }
+
+    /* MARKER CONTEXT MENU */
+    .markerMenu {
+      background: white; border: 1px solid #ddd; border-radius: 6px;
+      padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: absolute; z-index: 9500; min-width: 200px; overflow: hidden;
+    }
+    .markerMenu button {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #666;
+      transition: background 0.2s; border-bottom: 1px solid #f0f0f0;
+    }
+    .markerMenu button:last-child { border-bottom: none; }
+    .markerMenu button:hover { background: #f5f5f5; color: #333; }
+    .markerMenu input {
+      display: block; width: 100%; padding: 10px 14px;
+      border: none; border-bottom: 1px solid #f0f0f0;
+      font-size: 13px; font-family: sans-serif;
+    }
+    .markerMenu input:focus { outline: none; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="hidden">
+  <div class="loginBox">
+    <h2>🔐 Admin Login</h2>
+    <p id="loginReason">Um diese Funktion zu nutzen</p>
+    <input type="password" id="passwordInput" placeholder="Passwort eingeben">
+    <button id="loginBtn">Login</button>
+    <div id="loginError" class="error"></div>
+  </div>
+</div>
+
+<!-- OPTIONS BUTTON & MENU -->
+<button id="optionsBtn">⚙️ Optionen</button>
+
+<div id="optionsMenu" class="hidden">
+  <button class="btn primary" id="loginBtnTop">🔓 Login</button>
+  <button class="btn wakeLock"     id="wakeLockBtn">💡 Bildschirm aktiv</button>
+  <button class="btn hidden"       id="gpxBtn">📂 GPX laden</button>
+  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
+  <label  id="teamCarToggle" class="hidden">
+    <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
+  </label>
+  <button class="btn hidden"       id="advancedBtn">⚙️ Erweiterte Einstellungen ▸</button>
+
+  <!-- Erweiterte Einstellungen (klappt inline auf) -->
+  <div id="advancedSection" class="hidden">
+    <div id="modeToggleRow">
+      <div>
+        <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
+        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend · 30s stehend</div>
+      </div>
+      <div id="modeSwitch" style="background:#2196F3;">
+        <div id="modeThumb" style="left:22px;"></div>
+      </div>
+    </div>
+    <button id="resetBtn">🧹 Karte leeren</button>
+  </div>
+
+  <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
+</div>
+
+<input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
+<div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+
+const SERVER = 'https://livetracking-fq4l.onrender.com';
+
+// =======================
+// AUTH STATE
+// =======================
+let authToken   = null;
+let currentMode = 'race';
+
+function showAdminElements() {
+  document.getElementById('advancedBtn').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  document.getElementById('teamCarToggle').classList.remove('hidden');
+  document.getElementById('gpxBtn').classList.remove('hidden');
+  document.getElementById('loginBtnTop').classList.add('hidden');
+}
+
+function hideAdminElements() {
+  document.getElementById('advancedBtn').classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('teamCarToggle').classList.add('hidden');
+  document.getElementById('gpxBtn').classList.add('hidden');
+  document.getElementById('gpxRemoveBtn').classList.add('hidden');
+  document.getElementById('loginBtnTop').classList.remove('hidden');
+}
+
+function saveToken(token) {
+  authToken = token;
+  localStorage.setItem('authToken', token);
+  document.getElementById('loginModal').classList.add('hidden');
+  showAdminElements();
+  console.log("✅ Eingeloggt");
+}
+
+function loadToken() {
+  authToken = localStorage.getItem('authToken');
+  if (authToken) showAdminElements();
+}
+
+function logout() {
+  if (authToken) {
+    fetch(`${SERVER}/logout`, {
+      method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }
+    }).catch(console.error);
+  }
+  authToken = null;
+  localStorage.removeItem('authToken');
+  stopTeamCarTracking();
+  document.getElementById('teamCarCheckbox').checked = false;
+  document.getElementById('loginModal').classList.add('hidden');
+  hideAdminElements();
+  console.log("🚪 Abgemeldet");
+}
+
+function showLoginModal(reason = '🔐 Admin-Login erforderlich') {
+  document.getElementById('loginReason').textContent = reason;
+  document.getElementById('loginModal').classList.remove('hidden');
+  document.getElementById('passwordInput').focus();
+}
+
+document.getElementById('loginBtnTop').addEventListener('click', () => showLoginModal('🔐 Admin-Login erforderlich'));
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const password = document.getElementById('passwordInput').value;
+  const errorEl  = document.getElementById('loginError');
+  if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
+  try {
+    const res  = await fetch(`${SERVER}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (!res.ok) { errorEl.textContent = '❌ Falsches Passwort'; return; }
+    saveToken(data.token);
+    document.getElementById('passwordInput').value = '';
+    errorEl.textContent = '';
+  } catch (err) { errorEl.textContent = '❌ Fehler: ' + err.message; }
+});
+
+document.getElementById('passwordInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', logout);
+loadToken();
+
+// =======================
+// MODUS (Toggle Switch)
+// =======================
+function applyMode(mode) {
+  currentMode = mode;
+  const label = document.getElementById('modeLabel');
+  const sub   = document.getElementById('modeSub');
+  const sw    = document.getElementById('modeSwitch');
+  const thumb = document.getElementById('modeThumb');
+  if (mode === 'race') {
+    label.textContent      = 'Renn-Modus';
+    sub.textContent        = '2s bewegend · 30s stehend';
+    sw.style.background    = '#2196F3';
+    thumb.style.left       = '22px';
+  } else {
+    label.textContent      = 'Training-Modus';
+    sub.textContent        = '10s bewegend · 60s stehend';
+    sw.style.background    = '#bbb';
+    thumb.style.left       = '2px';
+  }
+}
+
+async function loadMode() {
+  try {
+    const res  = await fetch(`${SERVER}/mode`);
+    const data = await res.json();
+    applyMode(data.mode);
+  } catch (err) { console.error('Mode fetch:', err); }
+}
+
+document.getElementById('modeSwitch').addEventListener('click', async () => {
+  if (!authToken) return;
+  const newMode = currentMode === 'race' ? 'training' : 'race';
+  try {
+    const res  = await fetch(`${SERVER}/mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ mode: newMode })
+    });
+    const data = await res.json();
+    if (res.ok) applyMode(data.mode);
+  } catch (err) { console.error('Mode switch:', err); }
+});
+
+// =======================
+// OPTIONS MENU
+// =======================
+const optionsBtn  = document.getElementById('optionsBtn');
+const optionsMenu = document.getElementById('optionsMenu');
+
+function closeOptionsMenu() {
+  optionsMenu.classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+}
+
+optionsBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  optionsMenu.classList.toggle('hidden');
+});
+
+document.addEventListener('click', e => {
+  if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
+    closeOptionsMenu();
+  }
+});
+
+// Alle Buttons schließen das Menü, außer advancedBtn und modeSwitch
+optionsMenu.querySelectorAll('.btn').forEach(btn => {
+  if (btn.id !== 'advancedBtn')
+    btn.addEventListener('click', () => closeOptionsMenu());
+});
+
+document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
+
+// Erweiterte Einstellungen aufklappen/zuklappen
+document.getElementById('advancedBtn').addEventListener('click', () => {
+  const section = document.getElementById('advancedSection');
+  const btn     = document.getElementById('advancedBtn');
+  const isOpen  = !section.classList.contains('hidden');
+  if (isOpen) {
+    section.classList.add('hidden');
+    btn.textContent = '⚙️ Erweiterte Einstellungen ▸';
+  } else {
+    section.classList.remove('hidden');
+    btn.textContent = '⚙️ Erweiterte Einstellungen ▾';
+  }
+});
+
+// =======================
+// WAKE LOCK
+// =======================
+let wakeLock = null;
+
+async function toggleWakeLock() {
+  try {
+    if (!wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      document.getElementById('wakeLockBtn').classList.add('active');
+    } else {
+      await wakeLock.release();
+      wakeLock = null;
+      document.getElementById('wakeLockBtn').classList.remove('active');
+    }
+  } catch (err) { console.error('Wake Lock:', err); }
+}
+
+document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
+
+document.addEventListener('visibilitychange', async () => {
+  if (!document.hidden && wakeLock) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+});
+
+// =======================
+// MAP
+// =======================
+const map = L.map('map').setView([52.52, 13.405], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+// =======================
+// STATE
+// =======================
+const markers       = {};
+const lastPositions = {};
+const trails        = {};
+let currentMarkerMenu = null;
+let firstDevice  = true;
+let lastDataTime = null;
+
+// =======================
+// TEAMAUTO MARKER
+// =======================
+const teamCarIcon = L.divIcon({
+  className: '',
+  html: `<div style="background:#e53935;border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+  iconSize: [28, 28], iconAnchor: [14, 28], tooltipAnchor: [0, -28]
+});
+
+let teamCarMarker    = null;
+let teamCarWatchId   = null;
+let teamCarAccCircle = null;
+
+function startTeamCarTracking() {
+  if (!authToken) {
+    showLoginModal('🚗 Zum Aktivieren des Teamauto-Trackings');
+    document.getElementById('teamCarCheckbox').checked = false;
+    return;
+  }
+  if (!navigator.geolocation) {
+    alert("GPS wird von diesem Browser nicht unterstützt.");
+    document.getElementById('teamCarCheckbox').checked = false;
+    return;
+  }
+  teamCarWatchId = navigator.geolocation.watchPosition(
+    async (pos) => {
+      const latlng   = [pos.coords.latitude, pos.coords.longitude];
+      const accuracy = pos.coords.accuracy;
+      try {
+        await fetch(`${SERVER}/team-position`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
+        });
+      } catch (err) { console.error("Fehler beim Senden:", err); }
+      if (!teamCarMarker) {
+        teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
+          .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
+        teamCarAccCircle = L.circle(latlng, {
+          radius: accuracy, color: '#e53935', fillColor: '#e53935', fillOpacity: 0.08, weight: 1
+        }).addTo(map);
+      } else {
+        teamCarMarker.setLatLng(latlng);
+        teamCarAccCircle.setLatLng(latlng);
+        teamCarAccCircle.setRadius(accuracy);
+      }
+    },
+    (err) => {
+      console.error("Geolocation-Fehler:", err.message);
+      if (err.code === 1) {
+        alert("GPS-Zugriff verweigert.");
+        document.getElementById('teamCarCheckbox').checked = false;
+        document.getElementById('teamCarToggle').classList.remove('active');
+      }
+    },
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+  );
+}
+
+function stopTeamCarTracking() {
+  if (teamCarWatchId !== null) { navigator.geolocation.clearWatch(teamCarWatchId); teamCarWatchId = null; }
+  if (teamCarMarker)    { map.removeLayer(teamCarMarker);    teamCarMarker    = null; }
+  if (teamCarAccCircle) { map.removeLayer(teamCarAccCircle); teamCarAccCircle = null; }
+}
+
+document.getElementById('teamCarCheckbox').addEventListener('change', function () {
+  document.getElementById('teamCarToggle').classList.toggle('active', this.checked);
+  if (this.checked) startTeamCarTracking(); else stopTeamCarTracking();
+});
+
+// =======================
+// STATUS
+// =======================
+const statusEl = document.getElementById('status');
+
+function updateStatus() {
+  if (!lastDataTime) {
+    statusEl.className   = 'warn';
+    statusEl.textContent = '⚪ Warte auf Daten…';
+    return;
+  }
+  const ago = (Date.now() - lastDataTime) / 1000;
+  if (ago >= 5) {
+    statusEl.className   = 'warn';
+    statusEl.textContent = `🔴 Offline (${Math.round(ago)}s)`;
+    return;
+  }
+  // Tracker-Modus aus letzten Positionen lesen (TEAMAUTO ignorieren)
+  const modes = Object.keys(lastPositions)
+    .filter(id => id !== 'TEAMAUTO')
+    .map(id => lastPositions[id].trackerMode)
+    .filter(Boolean);
+  const inTraining = modes.some(m => m === 'training');
+  if (inTraining) {
+    statusEl.className   = 'training';
+    statusEl.textContent = '🟡 Verbunden · Training';
+  } else {
+    statusEl.className   = 'ok';
+    statusEl.textContent = '🟢 Verbunden · Rennen';
+  }
+}
+setInterval(updateStatus, 1000);
+
+// =======================
+// SMOOTH MARKER ANIMATION
+// =======================
+function animateMarker(marker, from, to, duration = 800) {
+  const start = performance.now();
+  function step(time) {
+    const t   = Math.min((time - start) / duration, 1);
+    const lat = from[0] + (to[0] - from[0]) * t;
+    const lng = from[1] + (to[1] - from[1]) * t;
+    marker.setLatLng([lat, lng]);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// =======================
+// BATTERIE-ANZEIGE
+// =======================
+function batLabel(bat) {
+  if (typeof bat !== 'number') return '';
+  const color = bat >= 60 ? '#2e7d32' : bat >= 30 ? '#e65100' : '#c62828';
+  const icon  = bat >= 60 ? '🟢'      : bat >= 30 ? '🟡'      : '🔴';
+  return ` <span style="color:${color};font-size:11px">${icon} ${bat}%</span>`;
+}
+
+function tooltipContent(id, bat) {
+  return id + batLabel(bat);
+}
+
+// =======================
+// CONTEXT MENU
+// =======================
+function showMarkerMenu(e, markerId) {
+  if (!authToken) { showLoginModal('✏️ Zum Umbenennen anmelden'); return; }
+  if (currentMarkerMenu) currentMarkerMenu.remove();
+
+  const container = document.createElement('div');
+  container.className = 'markerMenu';
+  container.style.left = e.pageX + 'px';
+  container.style.top  = e.pageY + 'px';
+
+  const input = document.createElement('input');
+  input.type = 'text'; input.placeholder = 'Neuer Name…'; input.value = markerId;
+
+  const renameBtn = document.createElement('button');
+  renameBtn.textContent = '✏️ Umbenennen';
+  renameBtn.addEventListener('click', async () => {
+    const newName = input.value.trim();
+    if (!newName) { container.remove(); return; }
+    try {
+      const res = await fetch(`${SERVER}/rename-tracker`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ trackerId: markerId, newName })
+      });
+      if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
+      if (markers[markerId]) {
+        const lastBat = lastPositions[markerId] && lastPositions[markerId].bat;
+        markers[markerId].setTooltipContent(tooltipContent(newName, lastBat));
+      }
+      container.remove();
+    } catch (err) { alert('❌ Fehler: ' + err.message); }
+  });
+
+  container.appendChild(input);
+  container.appendChild(renameBtn);
+  document.body.appendChild(container);
+  currentMarkerMenu = container;
+  input.focus(); input.select();
+}
+
+// =======================
+// LOAD POSITIONS
+// =======================
+async function loadPositions() {
+  try {
+    const res  = await fetch(`${SERVER}/positions`);
+    const data = await res.json();
+    const ids  = Object.keys(data);
+    if (ids.length === 0) return;
+
+    lastDataTime = Date.now();
+    updateStatus();
+
+    ids.forEach(id => {
+      const pos         = data[id];
+      const latlng      = [pos.lat, pos.lon];
+      const bat         = pos.bat;
+      const displayName = pos.displayName || id;
+
+      if (!trails[id]) {
+        trails[id] = L.polyline([], {
+          color: id === 'TEAMAUTO' ? '#e53935' : '#3388ff', weight: 3, opacity: 0.6
+        }).addTo(map);
+      }
+
+      if (!markers[id]) {
+        const icon = id === 'TEAMAUTO' ? teamCarIcon : L.icon({
+          iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+          shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+        const marker = L.marker(latlng, { icon }).addTo(map)
+          .bindTooltip(tooltipContent(displayName, bat), { permanent: true, direction: 'top' });
+        if (id !== 'TEAMAUTO') {
+          marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
+        }
+        markers[id] = marker;
+        lastPositions[id] = latlng;
+        lastPositions[id].bat         = bat;
+        lastPositions[id].trackerMode = pos.trackerMode || null;
+        if (firstDevice) { map.setView(latlng, 15); firstDevice = false; }
+      } else {
+        animateMarker(markers[id], lastPositions[id], latlng);
+        const prev  = lastPositions[id];
+        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
+        if (moved) trails[id].addLatLng(latlng);
+        lastPositions[id] = latlng;
+        lastPositions[id].bat         = bat;
+        lastPositions[id].trackerMode = pos.trackerMode || null;
+        markers[id].setTooltipContent(tooltipContent(displayName, bat));
+      }
+      map.panTo(latlng, { animate: true, duration: 0.6 });
+    });
+  } catch (err) { console.error("Fetch Error:", err); }
+}
+
+// =======================
+// RESET
+// =======================
+async function clearMap() {
+  if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
+  try {
+    await fetch(`${SERVER}/positions`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
+    Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
+    Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
+    lastDataTime = null; firstDevice = true; updateStatus();
+  } catch (err) { alert('❌ Fehler: ' + err.message); }
+}
+document.getElementById('resetBtn').addEventListener('click', clearMap);
+
+// =======================
+// GPX TRACKS
+// =======================
+let gpxLayer = null;
+
+async function fetchGpxTrack() {
+  try {
+    const res  = await fetch(`${SERVER}/gpx`);
+    const data = await res.json();
+    if (data && data.coords && data.coords.length > 0) drawGpxLayer(data.coords);
+  } catch (err) { console.error('GPX fetch:', err); }
+}
+
+function drawGpxLayer(coords) {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  gpxLayer = L.polyline(coords, {
+    color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
+  }).addTo(map);
+  if (authToken) document.getElementById('gpxRemoveBtn').classList.remove('hidden');
+}
+
+document.getElementById('gpxBtn').addEventListener('click', () => {
+  setTimeout(() => closeOptionsMenu(), 50);
+  document.getElementById('gpxFileInput').click();
+});
+
+document.getElementById('gpxFileInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const coords = parseGpx(e.target.result);
+      drawGpxLayer(coords);
+      await fetch(`${SERVER}/gpx`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ coords, name: file.name })
+      });
+    } catch (err) { alert('❌ ' + err.message); }
+    this.value = '';
+  };
+  reader.readAsText(file);
+});
+
+function parseGpx(xmlText) {
+  const parser = new DOMParser();
+  const xml    = parser.parseFromString(xmlText, 'application/xml');
+  if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
+  const coords = [];
+  xml.querySelectorAll('trkpt').forEach(pt => {
+    const lat = parseFloat(pt.getAttribute('lat'));
+    const lon = parseFloat(pt.getAttribute('lon'));
+    if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+  });
+  if (coords.length === 0) {
+    xml.querySelectorAll('rtept').forEach(pt => {
+      const lat = parseFloat(pt.getAttribute('lat'));
+      const lon = parseFloat(pt.getAttribute('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) coords.push([lat, lon]);
+    });
+  }
+  if (coords.length === 0) throw new Error('Keine Track-Punkte gefunden');
+  return coords;
+}
+
+document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  document.getElementById('gpxRemoveBtn').classList.add('hidden');
+  try {
+    await fetch(`${SERVER}/gpx`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+  } catch (err) { console.error('GPX delete:', err); }
+});
+
+// =======================
+// MAIN LOOP
+// =======================
+loadPositions();
+setInterval(loadPositions, 1000);
+fetchGpxTrack();
+loadMode();
+
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Tracking</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: sans-serif; }
+    #map { height: 100%; }
+
+    /* LOGIN MODAL */
+    #loginModal {
+      display: flex; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    #loginModal.hidden { display: none !important; }
+    .loginBox {
+      background: white; padding: 40px; border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      width: 100%; max-width: 380px; text-align: center;
+    }
+    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
+    .loginBox p  { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
+    .loginBox input {
+      width: 100%; padding: 12px; margin-bottom: 15px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .loginBox input:focus { outline: none; border-color: #2196F3; }
+    .loginBox button {
+      width: 100%; padding: 12px; background: #2196F3; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 16px; font-weight: bold; transition: background 0.3s;
+    }
+    .loginBox button:hover { background: #1976D2; }
+    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
+
+    /* BUTTONS */
+    .btn {
+      padding: 10px 14px; background: white; border: 1px solid #ccc;
+      border-radius: 6px; cursor: pointer; font-size: 13px;
+      font-family: sans-serif; transition: all 0.2s;
+      white-space: nowrap; flex: 1; min-width: 120px;
+    }
+    .btn:hover { background: #f5f5f5; }
+    .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
+    .btn.primary:hover { background: #1976D2; }
+    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
+    .btn.logout:hover { background: #d32f2f; }
+    .btn.wakeLock { color: #333; }
+    .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
+    .btn.hidden { display: none; }
+
+    /* OPTIONS MENU */
+    #optionsBtn {
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      z-index: 999; padding: 10px 14px; background: white;
+      border: 1px solid #ccc; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif;
+      transition: all 0.2s; width: 100%;
+    }
+    #optionsBtn:hover { background: #f5f5f5; }
+    #optionsMenu {
+      position: absolute; bottom: 50px; left: 10px; right: 10px;
+      z-index: 999; background: white; border: 1px solid #ccc;
+      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    #optionsMenu.hidden { display: none; }
+    #optionsMenu .btn {
+      width: 100%; border: none; border-bottom: 1px solid #eee;
+      border-radius: 0; flex: 0; min-width: unset; margin: 0;
+    }
+    #optionsMenu .btn:last-child { border-bottom: none; }
+    #optionsMenu .btn:hover { background: #f5f5f5; }
+
+    /* Erweiterte Einstellungen */
+    #advancedSection {
+      background: #f9f9f9; border-top: 1px solid #eee;
+    }
+    #advancedSection.hidden { display: none; }
+    #modeToggleRow {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #eee;
+    }
+    #modeSwitch {
+      width: 44px; height: 24px; border-radius: 12px;
+      cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    #modeThumb {
+      position: absolute; top: 2px; width: 20px; height: 20px;
+      background: white; border-radius: 50%; transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    #resetBtn {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #f44336;
+      transition: background 0.2s;
+    }
+    #resetBtn:hover { background: #fff5f5; }
+
+    @media (min-width: 768px) {
+      #optionsBtn  { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; width: auto; }
+      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
+      #status      { right: auto; left: 10px; width: fit-content; }
+    }
+
+    #teamCarToggle {
+      display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+      padding: 10px 14px; background: white;
+      border: none; border-bottom: 1px solid #eee;
+      width: 100%; font-size: 13px; font-family: sans-serif;
+      color: #666; transition: all 0.2s;
+    }
+    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
+    #teamCarToggle.hidden { display: none; }
+    #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
+    #teamCarToggle.active { background: #fff3e0; color: #c62828; }
+
+    #status {
+      position: absolute; top: 10px; right: 10px;
+      z-index: 999; padding: 8px 14px; border-radius: 6px;
+      font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
+    }
     #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
     #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
 
