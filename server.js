@@ -78,13 +78,14 @@ app.post('/logout', requireAuth, (req, res) => {
 // POSITIONEN
 // =======================
 app.post('/positions', (req, res) => {
-  const { id, lat, lon, bat } = req.body;
+  const { id, lat, lon, bat, mode } = req.body;
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({ error: 'id, lat, lon required' });
   }
   // Hardware-ID bleibt immer der Key
   positions[id] = { lat, lon, timestamp: Date.now() };
   if (typeof bat === 'number') positions[id].bat = bat;
+  if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;
   res.json({ ok: true });
 });
 
@@ -204,11 +205,12 @@ function connectMqtt() {
   mqttClient.on('message', (topic, message) => {
     try {
       const data = JSON.parse(message.toString());
-      const { id, lat, lon, bat } = data;
+      const { id, lat, lon, bat, mode } = data;
       if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
       positions[id] = { lat, lon, timestamp: Date.now() };
       if (typeof bat === 'number') positions[id].bat = bat;
-      console.log(`📍 MQTT: ${id} → ${lat}, ${lon}`);
+      if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;
+      console.log(`📍 MQTT: ${id} → ${lat}, ${lon}${mode ? ' [' + mode + ']' : ''}`);
     } catch (e) {
       console.error('❌ MQTT Nachricht ungültig:', e.message);
     }
