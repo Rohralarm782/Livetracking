@@ -950,7 +950,7 @@ function cancelSplit() {
   renderTaktikBody();
 }
 
-async function confirmSplit(gid) {
+async function confirmSplit(gid, direction = 'before') {
   if (splitNrs.size === 0) { alert('Keine Fahrer ausgewählt'); return; }
   const g = taktikGroups.find(g => g.id === gid);
   if (!g) return;
@@ -961,11 +961,15 @@ async function confirmSplit(gid) {
   g.riders = remainRiders;
 
   const used     = taktikGroups.map(g => g.name);
-  const newName  = ['Spitzengruppe','Ausreißer','Spitze 2','Vorne'].find(n => !used.includes(n)) || 'Neue Gruppe';
+  const namePool = direction === 'before'
+    ? ['Spitzengruppe','Ausreißer','Spitze 2','Vorne']
+    : ['Verfolger','Nachzügler','Feld 2','Hinten'];
+  const newName  = namePool.find(n => !used.includes(n)) || 'Neue Gruppe';
   const usedCols = taktikGroups.map(g => g.color);
   const newColor = GROUP_COLORS.find(c => !usedCols.includes(c)) || GROUP_COLORS[0];
 
-  taktikGroups.splice(taktikGroups.indexOf(g), 0, {
+  const insertIdx = taktikGroups.indexOf(g) + (direction === 'after' ? 1 : 0);
+  taktikGroups.splice(insertIdx, 0, {
     id:     Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
     name:   newName, color: newColor, gap: null, riders: splitRiders
   });
@@ -1188,7 +1192,7 @@ tkBody.addEventListener('click', function (e) {
     case 'gap-minus':          adjustGap(gid, -15);               break;
     case 'start-split':        startSplit(gid);                   break;
     case 'cancel-split':       cancelSplit();                     break;
-    case 'confirm-split':      confirmSplit(gid);                 break;
+    case 'confirm-split':      confirmSplit(gid, btn.dataset.direction); break;
     case 'start-merge':        startMerge(gid);                   break;
     case 'cancel-merge':       cancelMerge();                     break;
     case 'confirm-merge':      confirmMerge(gid, btn.dataset.target); break;
@@ -1206,8 +1210,11 @@ tkBody.addEventListener('change', function (e) {
   if (!e.target.classList.contains('split-check')) return;
   const nr = parseInt(e.target.dataset.nr);
   if (e.target.checked) splitNrs.add(nr); else splitNrs.delete(nr);
-  const btn = tkBody.querySelector('[data-action="confirm-split"]');
-  if (btn) btn.textContent = `✂ Aufteilen (${splitNrs.size} ausgewählt)`;
+  tkBody.querySelectorAll('[data-action="confirm-split"]').forEach(btn => {
+    btn.textContent = btn.dataset.direction === 'before'
+      ? `↑ Vorne (${splitNrs.size})`
+      : `↓ Hinten (${splitNrs.size})`;
+  });
 });
 
 tkBody.addEventListener('focusout', function (e) {
@@ -1332,10 +1339,14 @@ function renderTaktikBody() {
             <div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer wählen, die sich absetzen:</div>
             ${rows}
           </div>
-          <div class="gc-sec">
-            <button class="btn" data-action="confirm-split" data-gid="${g.id}"
-              style="width:100%;background:#e3f2fd;color:#1565c0;border-color:#90caf9">
-              ✂ Aufteilen (0 ausgewählt)
+          <div class="gc-sec" style="display:flex;gap:6px">
+            <button class="btn" data-action="confirm-split" data-gid="${g.id}" data-direction="before"
+              style="flex:1;background:#e3f2fd;color:#1565c0;border-color:#90caf9;font-size:12px">
+              ↑ Vorne (0)
+            </button>
+            <button class="btn" data-action="confirm-split" data-gid="${g.id}" data-direction="after"
+              style="flex:1;background:#fce4ec;color:#880e4f;border-color:#f48fb1;font-size:12px">
+              ↓ Hinten (0)
             </button>
           </div>
         </div>`;
