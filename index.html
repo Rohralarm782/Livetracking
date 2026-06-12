@@ -838,6 +838,8 @@ let activeSlId     = null;
 let taktikOpen     = false;
 let splittingGid   = null;
 const splitNrs     = new Set();
+let mergingGid     = null;
+let movingRider    = { gid: null, nr: null };
 
 // --- Open / Close ---
 function openTaktikView() {
@@ -897,11 +899,12 @@ async function loadStartlists() {
 async function saveGroups() {
   if (!authToken) return;
   const payload = taktikGroups.map(g => ({
-    id:     g.id,
-    name:   g.name,
-    color:  g.color,
-    gap:    g.gap || null,
-    riders: (g.riders || []).map(r => typeof r === 'object' ? r.nr : r)
+    id:      g.id,
+    name:    g.name,
+    color:   g.color,
+    gap:     g.gap    || null,
+    gapPrev: g.gapPrev || null,
+    riders:  (g.riders || []).map(r => typeof r === 'object' ? r.nr : r)
   }));
   await fetch(`${SERVER}/groups`, {
     method:  'POST',
@@ -969,6 +972,85 @@ async function confirmSplit(gid) {
 
   splittingGid = null;
   splitNrs.clear();
+  await saveGroups();
+  await loadGroups();
+  renderTaktikBody();
+  renderStrip(taktikGroups);
+}
+
+// --- Gap-Helfer ---
+function gapToSec(s) {
+  if (!s) return null;
+  const m = s.match(/^(\d+):(\d{2})$/);
+  if (m) return parseInt(m[1]) * 60 + parseInt(m[2]);
+  const n = parseInt(s);
+  return isNaN(n) ? null : n;
+}
+function secToGap(s) {
+  if (s <= 0) return '0:00';
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function trendArrow(cur, prev) {
+  const c = gapToSec(cur), p = gapToSec(prev);
+  if (c === null || p === null || c === p) return '';
+  return c > p
+    ? '<span style="color:#e53935;font-size:10px">↑</span>'
+    : '<span style="color:#2e7d32;font-size:10px">↓</span>';
+}
+function adjustGap(gid, deltaSec) {
+  const g = taktikGroups.find(g => g.id === gid);
+  if (!g || !authToken) return;
+  const newSec = Math.max(0, (gapToSec(g.gap) || 0) + deltaSec);
+  g.gapPrev = g.gap;
+  g.gap = newSec > 0 ? secToGap(newSec) : null;
+  saveGroups();
+  renderTaktikBody();
+  renderStrip(taktikGroups);
+}
+
+// --- Merge ---
+function startMerge(gid) {
+  mergingGid = gid;
+  splittingGid = null; splitNrs.clear();
+  movingRider = { gid: null, nr: null };
+  renderTaktikBody();
+}
+function cancelMerge() {
+  mergingGid = null;
+  renderTaktikBody();
+}
+async function confirmMerge(sourceGid, targetGid) {
+  const src = taktikGroups.find(g => g.id === sourceGid);
+  const tgt = taktikGroups.find(g => g.id === targetGid);
+  if (!src || !tgt) return;
+  tgt.riders = [...(tgt.riders||[]), ...(src.riders||[])];
+  taktikGroups = taktikGroups.filter(g => g.id !== sourceGid);
+  mergingGid = null;
+  await saveGroups();
+  await loadGroups();
+  renderTaktikBody();
+  renderStrip(taktikGroups);
+}
+
+// --- Fahrer verschieben ---
+function startMoveRider(gid, nr) {
+  movingRider = { gid, nr };
+  splittingGid = null; splitNrs.clear();
+  mergingGid = null;
+  renderTaktikBody();
+}
+function cancelMoveRider() {
+  movingRider = { gid: null, nr: null };
+  renderTaktikBody();
+}
+async function confirmMoveRider(targetGid) {
+  const { gid: srcGid, nr } = movingRider;
+  const src = taktikGroups.find(g => g.id === srcGid);
+  const tgt = taktikGroups.find(g => g.id === targetGid);
+  if (!src || !tgt) return;
+  src.riders = (src.riders||[]).filter(r => (r.nr !== undefined ? r.nr : r) !== nr);
+  tgt.riders = [...(tgt.riders||[]), nr];
+  movingRider = { gid: null, nr: null };
   await saveGroups();
   await loadGroups();
   renderTaktikBody();
@@ -1097,18 +1179,26 @@ tkBody.addEventListener('click', function (e) {
   if (!btn) return;
   const { action, gid, id, nr } = btn.dataset;
   switch (action) {
-    case 'add-group':         addGroup();                     break;
-    case 'new-race':          neuesRennen();                  break;
-    case 'add-rider':         addRider(gid);                  break;
-    case 'remove-rider':      removeRider(gid, parseInt(nr)); break;
-    case 'delete-group':      deleteGroup(gid);               break;
-    case 'start-split':       startSplit(gid);                break;
-    case 'cancel-split':      cancelSplit();                  break;
-    case 'confirm-split':     confirmSplit(gid);              break;
-    case 'activate-list':     activateStartlist(id);          break;
-    case 'delete-list':       deleteStartlist(id);            break;
-    case 'upload-startlist':  document.getElementById('startlistFileInput').click(); break;
-    case 'download-template': downloadTemplate();             break;
+    case 'add-group':          addGroup();                        break;
+    case 'new-race':           neuesRennen();                     break;
+    case 'add-rider':          addRider(gid);                     break;
+    case 'remove-rider':       removeRider(gid, parseInt(nr));    break;
+    case 'delete-group':       deleteGroup(gid);                  break;
+    case 'gap-plus':           adjustGap(gid, +15);               break;
+    case 'gap-minus':          adjustGap(gid, -15);               break;
+    case 'start-split':        startSplit(gid);                   break;
+    case 'cancel-split':       cancelSplit();                     break;
+    case 'confirm-split':      confirmSplit(gid);                 break;
+    case 'start-merge':        startMerge(gid);                   break;
+    case 'cancel-merge':       cancelMerge();                     break;
+    case 'confirm-merge':      confirmMerge(gid, btn.dataset.target); break;
+    case 'start-move-rider':   startMoveRider(gid, parseInt(nr)); break;
+    case 'cancel-move-rider':  cancelMoveRider();                 break;
+    case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
+    case 'activate-list':      activateStartlist(id);             break;
+    case 'delete-list':        deleteStartlist(id);               break;
+    case 'upload-startlist':   document.getElementById('startlistFileInput').click(); break;
+    case 'download-template':  downloadTemplate();                break;
   }
 });
 
@@ -1131,8 +1221,10 @@ tkBody.addEventListener('focusout', function (e) {
     if (v) { g.name = v; saveGroups(); renderStrip(taktikGroups); }
   }
   if (e.target.classList.contains('gap-inp')) {
+    g.gapPrev = g.gap;
     g.gap = e.target.value.trim() || null;
     saveGroups();
+    renderTaktikBody();
     renderStrip(taktikGroups);
   }
 });
@@ -1160,10 +1252,11 @@ function renderStrip(grps) {
     const cnt     = (g.riders||[]).length;
     const lbl     = g.name.length > 7 ? g.name.slice(0, 6) + '.' : g.name;
     const nextGap = grps[i + 1] ? grps[i + 1].gap : null;
+    const nextPrev = grps[i + 1] ? grps[i + 1].gapPrev : null;
     const conn    = i < grps.length - 1
       ? `<div class="strip-conn">
            <div class="strip-line"></div>
-           <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '–'}</div>
+           <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '–'}${trendArrow(nextGap, nextPrev)}</div>
            <div class="strip-line"></div>
          </div>`
       : '';
@@ -1216,6 +1309,7 @@ function renderTaktikBody() {
     taktikGroups.forEach((g, idx) => {
       const riders    = g.riders || [];
       const isLeading = idx === 0;
+      const others    = taktikGroups.filter(tg => tg.id !== g.id);
 
       // ---- SPLIT-MODUS ----
       if (splittingGid === g.id) {
@@ -1248,14 +1342,44 @@ function renderTaktikBody() {
         return;
       }
 
+      // ---- MERGE-MODUS ----
+      if (mergingGid === g.id) {
+        html += `<div class="gc" style="border-color:#ffe0b2">
+          <div style="height:3px;background:${g.color}"></div>
+          <div class="gc-hdr" style="background:#fff3e0">
+            <span style="font-size:13px;font-weight:500;color:#e65100">⊕ ${escH(g.name)} zusammenführen</span>
+            <button class="btn" data-action="cancel-merge" style="padding:3px 8px;font-size:11px">✕</button>
+          </div>
+          <div class="gc-sec">
+            <div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer in welche Gruppe verschieben?</div>
+            ${others.map(tg => `
+              <button class="btn" data-action="confirm-merge" data-gid="${g.id}" data-target="${tg.id}"
+                style="width:100%;margin-bottom:6px;display:flex;align-items:center;gap:7px;padding:8px 12px">
+                <div style="width:9px;height:9px;border-radius:50%;background:${tg.color};flex-shrink:0"></div>
+                ${escH(tg.name)}
+              </button>`).join('')}
+          </div>
+        </div>`;
+        return;
+      }
+
       // ---- NORMALES RENDERING ----
+      const trend = trendArrow(g.gap, g.gapPrev);
+
       const gapHtml = isLeading
         ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e8f5e9;color:#2e7d32">Führend</span>`
         : authToken
-          ? `<input class="gap-inp" data-gid="${g.id}" value="${escH(g.gap||'')}" placeholder="0:00"
-               style="width:58px;font-size:13px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;text-align:center">`
+          ? `<div style="display:flex;align-items:center;gap:2px">
+               <button data-action="gap-minus" data-gid="${g.id}"
+                 style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">−</button>
+               <input class="gap-inp" data-gid="${g.id}" value="${escH(g.gap||'')}" placeholder="0:00"
+                 style="width:46px;font-size:13px;padding:3px 5px;border:1px solid #ddd;border-radius:6px;text-align:center">
+               <button data-action="gap-plus" data-gid="${g.id}"
+                 style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">+</button>
+               ${trend}
+             </div>`
           : g.gap
-            ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e3f2fd;color:#1565c0">+${escH(g.gap)}</span>`
+            ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e3f2fd;color:#1565c0">+${escH(g.gap)}${trend}</span>`
             : '';
 
       const nameHtml = authToken
@@ -1264,31 +1388,53 @@ function renderTaktikBody() {
         : `<span style="font-size:14px;font-weight:500;color:#333">${escH(g.name)}</span>`;
 
       const riderRows = riders.map(r => {
-        const nr = r.nr || r;
+        const nr = r.nr !== undefined ? r.nr : r;
+        if (authToken && movingRider.gid === g.id && movingRider.nr === nr) {
+          return `<div class="r-row" style="background:#f9f9f9;border-radius:6px;padding:5px;flex-wrap:wrap;gap:4px">
+            <span class="r-nr">${nr}</span>
+            <span style="font-size:11px;color:#999;flex-shrink:0">→</span>
+            ${others.map(tg => `
+              <button class="btn" data-action="confirm-move-rider" data-target="${tg.id}"
+                style="display:flex;align-items:center;gap:4px;padding:3px 7px;font-size:11px;flex-shrink:0">
+                <div style="width:7px;height:7px;border-radius:50%;background:${tg.color};flex-shrink:0"></div>
+                ${escH(tg.name.length > 9 ? tg.name.slice(0,8)+'.' : tg.name)}
+              </button>`).join('')}
+            <button class="btn" data-action="cancel-move-rider"
+              style="padding:3px 7px;font-size:11px;flex-shrink:0">✕</button>
+          </div>`;
+        }
         return `<div class="r-row">
           ${authToken ? `<button class="btn" data-action="remove-rider" data-gid="${g.id}" data-nr="${nr}"
             style="padding:1px 5px;font-size:11px;color:#f44336;min-width:unset;flex:0">✕</button>` : ''}
           <span class="r-nr">${nr}</span>
-          <div>${r.name
+          <div style="flex:1">${r.name
             ? `<div class="r-name">${escH(r.name)}</div><div class="r-team">${escH(r.team||'')}</div>`
             : `<div class="r-none">kein Eintrag</div>`
           }</div>
+          ${(authToken && others.length > 0) ? `
+            <button class="btn" data-action="start-move-rider" data-gid="${g.id}" data-nr="${nr}"
+              style="padding:2px 6px;font-size:12px;color:#666;min-width:unset;flex:0" title="Fahrer verschieben">→</button>` : ''}
         </div>`;
       }).join('');
 
-      const splitBtn = (authToken && riders.length >= 2)
-        ? `<div class="gc-sec" style="border-top:1px dashed #f0f0f0;padding-top:6px;padding-bottom:6px">
-             <button class="btn" data-action="start-split" data-gid="${g.id}"
-               style="width:100%;font-size:12px;color:#666">✂ Gruppe aufteilen</button>
-           </div>`
-        : '';
+      const extraBtns = authToken ? [
+        riders.length >= 2
+          ? `<button class="btn" data-action="start-split" data-gid="${g.id}"
+               style="flex:1;font-size:12px;color:#555">✂ Aufteilen</button>` : '',
+        others.length > 0
+          ? `<button class="btn" data-action="start-merge" data-gid="${g.id}"
+               style="flex:1;font-size:12px;color:#555">⊕ Zusammenführen</button>` : ''
+      ].filter(Boolean).join('') : '';
 
-      const footer = authToken ? `<div class="gc-sec" style="display:flex;gap:8px">
-        <input type="number" class="add-rider-input" data-gid="${g.id}" min="1" placeholder="Nr."
-          style="flex:1;min-width:60px;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px">
-        <button class="btn" data-action="add-rider"    data-gid="${g.id}" style="flex:1">＋ Fahrer</button>
-        <button class="btn" data-action="delete-group" data-gid="${g.id}" style="flex:0;padding:7px 10px;color:#f44336">🗑</button>
-      </div>${splitBtn}` : '';
+      const footer = authToken ? `
+        <div class="gc-sec" style="display:flex;gap:8px">
+          <input type="number" class="add-rider-input" data-gid="${g.id}" min="1" placeholder="Nr."
+            style="flex:1;min-width:60px;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+          <button class="btn" data-action="add-rider"    data-gid="${g.id}" style="flex:1">＋ Fahrer</button>
+          <button class="btn" data-action="delete-group" data-gid="${g.id}" style="flex:0;padding:7px 10px;color:#f44336">🗑</button>
+        </div>
+        ${extraBtns ? `<div class="gc-sec" style="border-top:1px dashed #f0f0f0;padding-top:6px;padding-bottom:6px;display:flex;gap:6px">${extraBtns}</div>` : ''}
+      ` : '';
 
       html += `<div class="gc">
         <div style="height:3px;background:${g.color}"></div>
