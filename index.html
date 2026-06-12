@@ -155,8 +155,12 @@
 
     /* ---- TAKTIK STRIP ---- */
     #taktikStrip {
-      position: fixed; top: 0; right: 0; bottom: 0; width: 76px;
-      z-index: 998; background: white; border-left: 1px solid #e0e0e0;
+      position: fixed; top: 50%; right: 8px; width: 70px;
+      transform: translateY(-50%);
+      z-index: 998;
+      background: rgba(255,255,255,0.90);
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 10px;
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; padding: 14px 0;
     }
@@ -846,6 +850,17 @@ document.getElementById('closeTaktikBtn').addEventListener('click', closeTaktikV
 async function loadTaktikView() {
   await loadGroups();
   if (authToken) await loadStartlists();
+  // Hauptfeld standardmäßig anlegen wenn noch keine Gruppen vorhanden
+  if (taktikGroups.length === 0 && authToken) {
+    taktikGroups.push({
+      id:     'hauptfeld-' + Date.now().toString(36),
+      name:   'Hauptfeld',
+      color:  '#888780',
+      gap:    null,
+      riders: []
+    });
+    await saveGroups();
+  }
   renderTaktikBody();
 }
 
@@ -886,12 +901,13 @@ async function saveGroups() {
 
 // --- Group operations ---
 async function addGroup() {
-  const idx   = taktikGroups.length;
-  const names = ['Spitzengruppe', 'Verfolger', 'Hauptfeld'];
-  taktikGroups.push({
+  const last       = taktikGroups[taktikGroups.length - 1];
+  const insertIdx  = (last && last.name === 'Hauptfeld') ? taktikGroups.length - 1 : taktikGroups.length;
+  const names      = ['Spitzengruppe', 'Verfolger'];
+  taktikGroups.splice(insertIdx, 0, {
     id:     Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
-    name:   names[idx] || ('Gruppe ' + (idx + 1)),
-    color:  GROUP_COLORS[idx % GROUP_COLORS.length],
+    name:   names[insertIdx] || ('Gruppe ' + (insertIdx + 1)),
+    color:  GROUP_COLORS[insertIdx % GROUP_COLORS.length],
     gap:    null,
     riders: []
   });
@@ -1071,22 +1087,20 @@ tkBody.addEventListener('keydown', function (e) {
 // --- Render: vertical strip ---
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
-  const stat  = document.getElementById('status');
   if (!grps || grps.length === 0) {
     strip.classList.add('hidden');
-    stat.style.right = '';
     return;
   }
   strip.classList.remove('hidden');
-  if (window.innerWidth < 768) stat.style.right = '86px';
 
   strip.innerHTML = grps.map((g, i) => {
-    const cnt  = (g.riders||[]).length;
-    const lbl  = g.name.length > 7 ? g.name.slice(0, 6) + '.' : g.name;
-    const conn = i < grps.length - 1
+    const cnt     = (g.riders||[]).length;
+    const lbl     = g.name.length > 7 ? g.name.slice(0, 6) + '.' : g.name;
+    const nextGap = grps[i + 1] ? grps[i + 1].gap : null;
+    const conn    = i < grps.length - 1
       ? `<div class="strip-conn">
            <div class="strip-line"></div>
-           <div class="strip-gap">${g.gap ? '+' + escH(g.gap) : '–'}</div>
+           <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '–'}</div>
            <div class="strip-line"></div>
          </div>`
       : '';
