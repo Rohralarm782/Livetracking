@@ -341,7 +341,7 @@
 <!-- KI-IMPORT MODAL -->
 <div id="aiImportModal" class="hidden">
   <div class="aiBox">
-    <h2>🤖 KI-Import</h2>
+    <h2>📂 Import</h2>
     <p>Lade eine Startliste in beliebigem Format hoch – die KI extrahiert die Fahrer der gewünschten Kategorie automatisch.</p>
     <label>Kategorie</label>
     <input type="text" id="aiCategory" placeholder="z.B. U17m, Junioren, Elite, U15 männlich">
@@ -1398,7 +1398,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     }
 
     statusEl.textContent = '🤖 KI analysiert…';
-    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+    const res  = await fetch(`${SERVER}/api/claude`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(apiBody)
@@ -1534,7 +1534,7 @@ function renderTaktikBody() {
       </div>`;
     });
     html += `<div style="padding:10px 14px">
-      <button class="btn" data-action="upload-startlist" style="width:100%">🤖 KI-Import</button>
+      <button class="btn" data-action="upload-startlist" style="width:100%">📂 Import</button>
     </div></div>`;
     html += `<div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="btn" data-action="add-group" style="flex:1">＋ Gruppe</button>
