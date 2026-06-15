@@ -1400,7 +1400,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     statusEl.textContent = '🤖 KI analysiert…';
     const res  = await fetch(`${SERVER}/api/claude`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
       body: JSON.stringify(apiBody)
     });
     if (!res.ok) throw new Error(`API-Fehler ${res.status}`);
