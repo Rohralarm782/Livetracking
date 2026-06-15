@@ -1,8 +1,5 @@
 const express = require('express');
-const cors    = require('cors');
-const mqtt    = require('mqtt');
-const fs      = require('fs');
-const path    = require('path');
+const cors = require('cors');
 
 const app = express();
 
@@ -26,59 +23,41 @@ app.use(express.static(__dirname));
 // STATE
 // =======================
 let positions = Object.create(null);
-let gpxTrack  = null;
-let currentMode = 'race'; // 'race' | 'training'
-
-// Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
-const trackerDisplayNames = Object.create(null);
+let gpxTrack  = null;   // { coords: [[lat,lon], ...], name: string }
 
 // =======================
-// STARTLISTEN (persistent auf Disk)
+// AUTH
+// Login-Level:
+//   'spolei'   → Vollzugriff (SpoLei / Admin)
+//   'betreuer' → Basis-Zugriff (nur eigenen Standort teilen)
 // =======================
-const STARTLISTS_FILE = path.join(__dirname, 'startlists.json');
-let startlists        = Object.create(null); // { id: { id, name, createdAt, riders } }
-let activeStartlistId = null;
+const ADMIN_PASSWORD    = process.env.ADMIN_PASSWORD    || 'admin123';
+const BETREUER_PASSWORD = process.env.BETREUER_PASSWORD || 'betreuer123';
 
-function loadStartlistsFromDisk() {
-  try {
-    if (fs.existsSync(STARTLISTS_FILE)) {
-      const raw      = JSON.parse(fs.readFileSync(STARTLISTS_FILE, 'utf8'));
-      startlists      = raw.lists   || Object.create(null);
-      activeStartlistId = raw.activeId || null;
-      console.log(`📋 ${Object.keys(startlists).length} Startliste(n) geladen`);
-    }
-  } catch (e) { console.error('❌ Startlisten laden:', e.message); }
-}
+// Map<token, { level: 'spolei' | 'betreuer' }>
+const tokens = new Map();
 
-function saveStartlistsToDisk() {
-  try {
-    fs.writeFileSync(STARTLISTS_FILE,
-      JSON.stringify({ lists: startlists, activeId: activeStartlistId }, null, 2));
-  } catch (e) { console.error('❌ Startlisten speichern:', e.message); }
-}
-
-loadStartlistsFromDisk();
-
-// =======================
-// GRUPPEN (in-memory, Renndaten)
-// =======================
-let groups = []; // [{ id, name, color, gap, riders: [nr, ...] }]
-
-// =======================
-// SIMPLE AUTH
-// =======================
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const tokens = new Set();
-
+// Jeder eingeloggte Nutzer (jedes Level)
 function requireAuth(req, res, next) {
   const auth = req.headers['authorization'];
-  if (!auth || !auth.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
   const token = auth.slice(7);
-  if (!tokens.has(token)) {
-    return res.status(401).json({ error: 'Invalid token' });
+  const entry = tokens.get(token);
+  if (!entry) return res.status(401).json({ error: 'Invalid token' });
+  req.userLevel = entry.level;
+  next();
+}
+
+// Nur SpoLei (Admin)
+function requireSpolei(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  const token = auth.slice(7);
+  const entry = tokens.get(token);
+  if (!entry || entry.level !== 'spolei') {
+    return res.status(403).json({ error: 'Forbidden: SpoLei access required' });
   }
+  req.userLevel = 'spolei';
   next();
 }
 
@@ -90,61 +69,75 @@ app.get('/health', (req, res) => {
 });
 
 // =======================
-// AUTH
+// AUTH ENDPOINTS
 // =======================
 app.post('/login', (req, res) => {
   const { password } = req.body;
-  if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ error: 'Wrong password' });
-  }
+  let level = null;
+  if (password === ADMIN_PASSWORD)    level = 'spolei';
+  if (password === BETREUER_PASSWORD) level = 'betreuer';
+  if (!level) return res.status(401).json({ error: 'Wrong password' });
   const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  tokens.add(token);
-  res.json({ token });
+  tokens.set(token, { level });
+  console.log(`🔓 Login: ${level}`);
+  res.json({ token, level });
 });
 
 app.post('/logout', requireAuth, (req, res) => {
   const token = req.headers['authorization'].slice(7);
   tokens.delete(token);
+  console.log(`🚪 Logout: ${req.userLevel}`);
   res.json({ ok: true });
 });
 
 // =======================
-// POSITIONEN
+// POSITIONEN (GPS-Tracker → kein Auth nötig)
 // =======================
 app.post('/positions', (req, res) => {
-  const { id, lat, lon, bat, mode } = req.body;
+  const { id, lat, lon } = req.body;
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({ error: 'id, lat, lon required' });
   }
-  // Hardware-ID bleibt immer der Key
   positions[id] = { lat, lon, timestamp: Date.now() };
-  if (typeof bat === 'number') positions[id].bat = bat;
-  if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;
   res.json({ ok: true });
 });
 
 app.get('/positions', (req, res) => {
-  // displayName wird on-the-fly ergänzt, ohne den Key zu verändern
-  const result = Object.create(null);
-  for (const id of Object.keys(positions)) {
-    result[id] = Object.assign({}, positions[id], {
-      displayName: trackerDisplayNames[id] || null
-    });
-  }
-  res.json(result);
+  res.json(positions);
 });
 
-app.delete('/positions', requireAuth, (req, res) => {
+app.delete('/positions', requireSpolei, (req, res) => {
   for (const key of Object.keys(positions)) delete positions[key];
-  // trackerDisplayNames bewusst NICHT löschen – Umbenennung bleibt nach Reset erhalten
   console.log("🧹 Positionen gelöscht");
   res.json({ ok: true });
 });
 
 // =======================
-// TEAM-POSITION
+// BETREUER-POSITION
+// Jeder eingeloggte Nutzer kann seinen Standort einmalig setzen.
+// Marker erscheint auf der Karte mit Name (z.B. "Heinz – VP KM 45").
 // =======================
-app.post('/team-position', requireAuth, (req, res) => {
+app.post('/betreuer-position', requireAuth, (req, res) => {
+  const { lat, lon, name } = req.body;
+  if (typeof lat !== 'number' || typeof lon !== 'number' || !name) {
+    return res.status(400).json({ error: 'lat, lon, name required' });
+  }
+  const safeName = String(name).trim().slice(0, 40);
+  const id = 'betreuer-' + safeName
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 30);
+  positions[id] = { lat, lon, timestamp: Date.now(), type: 'betreuer', name: safeName };
+  console.log(`👤 Betreuer gesetzt: "${safeName}" → ${id}`);
+  res.json({ ok: true, id });
+});
+
+// =======================
+// TEAM-POSITION (SpoLei only)
+// =======================
+app.post('/team-position', requireSpolei, (req, res) => {
   const { lat, lon } = req.body;
   if (typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({ error: 'lat, lon required' });
@@ -154,47 +147,26 @@ app.post('/team-position', requireAuth, (req, res) => {
 });
 
 // =======================
-// RENAME TRACKER
+// RENAME TRACKER (SpoLei only)
 // =======================
-app.post('/rename-tracker', requireAuth, (req, res) => {
-  const { trackerId, newName } = req.body;
-  if (!trackerId || !newName) return res.status(400).json({ error: 'trackerId, newName required' });
-  // Nur Anzeigename setzen – Hardware-ID und positions-Key bleiben unverändert
-  trackerDisplayNames[trackerId] = newName.trim();
-  console.log(`✏️ Tracker "${trackerId}" → "${newName}"`);
+app.post('/rename-tracker', requireSpolei, (req, res) => {
+  const { oldName, newName } = req.body;
+  if (!oldName || !newName) return res.status(400).json({ error: 'oldName, newName required' });
+  if (positions[oldName]) {
+    positions[newName] = positions[oldName];
+    delete positions[oldName];
+  }
   res.json({ ok: true });
 });
 
 // =======================
-// MODUS (training / race)
-// =======================
-app.get('/mode', (req, res) => {
-  res.json({ mode: currentMode });
-});
-
-app.post('/mode', requireAuth, (req, res) => {
-  const { mode } = req.body;
-  if (mode !== 'training' && mode !== 'race') {
-    return res.status(400).json({ error: 'mode must be "training" or "race"' });
-  }
-  currentMode = mode;
-  console.log(`🔄 Modus: ${mode}`);
-  // Retained MQTT-Nachricht → alle Firmware-Instanzen holen sich den neuen Modus
-  mqttClient.publish('livetracking-fq4l/config', mode, { retain: true, qos: 0 }, err => {
-    if (err) console.error('❌ MQTT config publish:', err.message);
-    else     console.log(`📡 MQTT config → "${mode}" (retained)`);
-  });
-  res.json({ ok: true, mode });
-});
-
-// =======================
-// GPX TRACK
+// GPX TRACK (SpoLei only)
 // =======================
 app.get('/gpx', (req, res) => {
   res.json(gpxTrack || null);
 });
 
-app.post('/gpx', requireAuth, (req, res) => {
+app.post('/gpx', requireSpolei, (req, res) => {
   const { coords, name } = req.body;
   if (!Array.isArray(coords) || coords.length === 0) {
     return res.status(400).json({ error: 'coords array required' });
@@ -204,139 +176,11 @@ app.post('/gpx', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-app.delete('/gpx', requireAuth, (req, res) => {
+app.delete('/gpx', requireSpolei, (req, res) => {
   gpxTrack = null;
   console.log("🗑️ GPX gelöscht");
   res.json({ ok: true });
 });
-
-// =======================
-// STARTLISTEN ENDPOINTS
-// =======================
-app.get('/startlists', (req, res) => {
-  const list = Object.values(startlists).map(sl => ({
-    id:         sl.id,
-    name:       sl.name,
-    createdAt:  sl.createdAt,
-    riderCount: sl.riders.length,
-    isActive:   sl.id === activeStartlistId
-  }));
-  res.json({ lists: list, activeId: activeStartlistId });
-});
-
-app.get('/startlists/active', (req, res) => {
-  if (!activeStartlistId || !startlists[activeStartlistId]) return res.json([]);
-  res.json(startlists[activeStartlistId].riders);
-});
-
-app.post('/startlists', requireAuth, (req, res) => {
-  const { name, riders } = req.body;
-  if (!name || !Array.isArray(riders) || riders.length === 0) {
-    return res.status(400).json({ error: 'name und riders[] erforderlich' });
-  }
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-  startlists[id] = { id, name: name.trim(), createdAt: new Date().toISOString(), riders };
-  saveStartlistsToDisk();
-  console.log(`📋 Startliste gespeichert: "${name}" (${riders.length} Fahrer)`);
-  res.json({ ok: true, id });
-});
-
-app.delete('/startlists/:id', requireAuth, (req, res) => {
-  const { id } = req.params;
-  if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
-  const name = startlists[id].name;
-  delete startlists[id];
-  if (activeStartlistId === id) activeStartlistId = null;
-  saveStartlistsToDisk();
-  console.log(`🗑️ Startliste gelöscht: "${name}"`);
-  res.json({ ok: true });
-});
-
-app.post('/startlists/:id/activate', requireAuth, (req, res) => {
-  const { id } = req.params;
-  if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
-  activeStartlistId = id;
-  saveStartlistsToDisk();
-  console.log(`✅ Aktive Startliste: "${startlists[id].name}"`);
-  res.json({ ok: true });
-});
-
-// =======================
-// GRUPPEN ENDPOINTS
-// =======================
-app.get('/groups', (req, res) => {
-  const riderMap = Object.create(null);
-  if (activeStartlistId && startlists[activeStartlistId]) {
-    for (const r of startlists[activeStartlistId].riders) {
-      riderMap[Number(r.nr)] = { name: r.name, team: r.team };
-    }
-  }
-  const enriched = groups.map(g => ({
-    ...g,
-    riders: (g.riders || []).map(nr => ({ nr, ...(riderMap[Number(nr)] || {}) }))
-  }));
-  res.json(enriched);
-});
-
-app.post('/groups', requireAuth, (req, res) => {
-  const { groups: g } = req.body;
-  if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
-  groups = g;
-  res.json({ ok: true });
-});
-
-app.delete('/groups', requireAuth, (req, res) => {
-  groups = [];
-  console.log('🧹 Gruppen gelöscht');
-  res.json({ ok: true });
-});
-
-// =======================
-// MQTT BRIDGE
-// =======================
-const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
-const MQTT_TOPIC  = 'livetracking-fq4l/positions';
-
-let mqttClient = null; // modul-global → wird von /mode-Endpoint genutzt
-
-function connectMqtt() {
-  mqttClient = mqtt.connect(MQTT_BROKER, {
-    clientId:        'render-server-' + Math.random().toString(36).slice(2),
-    clean:           true,
-    reconnectPeriod: 5000,
-    connectTimeout:  15000
-  });
-
-  mqttClient.on('connect', () => {
-    console.log('✅ MQTT verbunden mit broker.emqx.io');
-    mqttClient.subscribe(MQTT_TOPIC, err => {
-      if (err) console.error('❌ MQTT Subscribe Fehler:', err.message);
-      else     console.log(`📡 MQTT subscribed: ${MQTT_TOPIC}`);
-    });
-    // Retained config-Nachricht beim (Re-)Connect wiederherstellen
-    mqttClient.publish('livetracking-fq4l/config', currentMode, { retain: true, qos: 0 });
-  });
-
-  mqttClient.on('message', (topic, message) => {
-    try {
-      const data = JSON.parse(message.toString());
-      const { id, lat, lon, bat, mode } = data;
-      if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
-      positions[id] = { lat, lon, timestamp: Date.now() };
-      if (typeof bat === 'number') positions[id].bat = bat;
-      if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;
-      console.log(`📍 MQTT: ${id} → ${lat}, ${lon}${mode ? ' [' + mode + ']' : ''}`);
-    } catch (e) {
-      console.error('❌ MQTT Nachricht ungültig:', e.message);
-    }
-  });
-
-  mqttClient.on('error',      err => console.error('❌ MQTT Fehler:', err.message));
-  mqttClient.on('reconnect',  ()  => console.log('🔄 MQTT reconnect…'));
-  mqttClient.on('disconnect', ()  => console.log('⚠️ MQTT getrennt'));
-}
-
-connectMqtt();
 
 // =======================
 // START
