@@ -5,130 +5,158 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Tracking</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; font-family: sans-serif; }
     #map { height: 100%; }
 
-    /* ── MODALS ── */
-    .modal {
-      display: flex;
-      position: fixed;
+    /* LOGIN MODAL */
+    #loginModal {
+      display: flex; position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 10000;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; padding: 20px;
     }
-    .modal.hidden { display: none !important; }
-    .modalBox {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
+    #loginModal.hidden { display: none !important; }
+
+    /* BETREUER MODAL */
+    #betreuerModal {
+      display: flex; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    #betreuerModal.hidden { display: none !important; }
+
+    .loginBox {
+      background: white; padding: 40px; border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
+      width: 100%; max-width: 380px; text-align: center;
     }
-    .modalBox h2 { margin: 0 0 10px 0; color: #333; font-size: 22px; }
-    .modalBox p  { color: #666; margin: 8px 0 22px 0; font-size: 14px; }
-    .modalBox input[type="password"],
-    .modalBox input[type="text"] {
-      width: 100%; padding: 12px; margin-bottom: 12px;
+    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
+    .loginBox p  { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
+    .loginBox input {
+      width: 100%; padding: 12px; margin-bottom: 15px;
       border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
-      transition: border-color 0.2s;
+      transition: border-color 0.3s;
     }
-    .modalBox input:focus { outline: none; border-color: #2196F3; }
-    .modalBox .modalPrimary {
+    .loginBox input:focus { outline: none; border-color: #2196F3; }
+    .loginBox button {
       width: 100%; padding: 12px; background: #2196F3; color: white;
       border: none; border-radius: 6px; cursor: pointer;
-      font-size: 15px; font-weight: bold; transition: background 0.2s;
+      font-size: 16px; font-weight: bold; transition: background 0.3s;
     }
-    .modalBox .modalPrimary:hover  { background: #1976D2; }
-    .modalBox .modalPrimary:disabled { background: #90caf9; cursor: default; }
-    .modalBox .modalSecondary {
-      width: 100%; padding: 10px; background: #eee; color: #555;
-      border: none; border-radius: 6px; cursor: pointer;
-      font-size: 14px; margin-top: 8px; transition: background 0.2s;
+    .loginBox button:hover { background: #1976D2; }
+    .loginBox button:disabled { background: #90caf9; cursor: default; }
+    .loginBox .btnSecondary {
+      background: #eee; color: #555; margin-top: 8px; font-size: 14px; font-weight: normal;
     }
-    .modalBox .modalSecondary:hover { background: #ddd; }
-    .modalBox .error { color: #d32f2f; font-size: 13px; margin-top: 12px; min-height: 18px; }
+    .loginBox .btnSecondary:hover { background: #ddd; }
+    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
 
-    /* ── BUTTONS ── */
+    /* BUTTONS */
     .btn {
       padding: 10px 14px; background: white; border: 1px solid #ccc;
       border-radius: 6px; cursor: pointer; font-size: 13px;
       font-family: sans-serif; transition: all 0.2s;
-      white-space: nowrap;
+      white-space: nowrap; flex: 1; min-width: 120px;
     }
     .btn:hover { background: #f5f5f5; }
     .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
     .btn.primary:hover { background: #1976D2; }
-    .btn.logout  { background: #f44336; color: white; border-color: #c62828; }
-    .btn.logout:hover  { background: #d32f2f; }
-    .btn.reset   { color: #f44336; }
+    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
+    .btn.logout:hover { background: #d32f2f; }
     .btn.wakeLock { color: #333; }
     .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
-    .btn.hidden  { display: none; }
+    .btn.hidden { display: none; }
 
-    /* ── OPTIONS ── */
+    /* OPTIONS MENU */
     #optionsBtn {
-      position: absolute;
-      bottom: 10px; left: 10px; right: 10px;
-      z-index: 999;
-      padding: 10px 14px; background: white;
+      position: absolute; bottom: 10px; left: 10px; right: calc(50% + 5px);
+      z-index: 999; padding: 10px 14px; background: white;
       border: 1px solid #ccc; border-radius: 6px;
       cursor: pointer; font-size: 13px; font-family: sans-serif;
-      transition: all 0.2s; width: calc(100% - 20px);
+      transition: all 0.2s; width: auto;
     }
     #optionsBtn:hover { background: #f5f5f5; }
-
+    #taktikBtn {
+      position: absolute; bottom: 10px; right: 10px; left: calc(50% + 5px);
+      z-index: 999; padding: 10px 14px; background: white;
+      border: 1px solid #ccc; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif;
+      transition: all 0.2s; width: auto;
+    }
+    #taktikBtn:hover { background: #f5f5f5; }
     #optionsMenu {
-      position: absolute;
-      bottom: 50px; left: 10px; right: 10px;
-      z-index: 999;
-      background: white; border: 1px solid #ccc;
+      position: absolute; bottom: 50px; left: 10px; right: 10px;
+      z-index: 999; background: white; border: 1px solid #ccc;
       border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       overflow: hidden; display: flex; flex-direction: column;
     }
     #optionsMenu.hidden { display: none; }
     #optionsMenu .btn {
       width: 100%; border: none; border-bottom: 1px solid #eee;
-      border-radius: 0; margin: 0;
+      border-radius: 0; flex: 0; min-width: unset; margin: 0;
     }
     #optionsMenu .btn:last-child { border-bottom: none; }
     #optionsMenu .btn:hover { background: #f5f5f5; }
 
+    /* Erweiterte Einstellungen */
+    #advancedSection {
+      background: #f9f9f9; border-top: 1px solid #eee;
+    }
+    #advancedSection.hidden { display: none; }
+    #modeToggleRow {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #eee;
+    }
+    #modeSwitch {
+      width: 44px; height: 24px; border-radius: 12px;
+      cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    #modeThumb {
+      position: absolute; top: 2px; width: 20px; height: 20px;
+      background: white; border-radius: 50%; transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    #resetBtn {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #f44336;
+      transition: background 0.2s;
+    }
+    #resetBtn:hover { background: #fff5f5; }
+
     @media (min-width: 768px) {
       #optionsBtn  { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; width: auto; }
+      #taktikBtn   { top: 10px; right: 120px; bottom: auto; left: auto; width: auto; }
       #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
       #status      { right: auto; left: 10px; width: fit-content; }
     }
 
     #teamCarToggle {
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; user-select: none;
+      display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
       padding: 10px 14px; background: white;
       border: none; border-bottom: 1px solid #eee;
       width: 100%; font-size: 13px; font-family: sans-serif;
       color: #666; transition: all 0.2s;
     }
-    #teamCarToggle:hover  { background: #f5f5f5; color: #333; }
+    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
     #teamCarToggle.hidden { display: none; }
     #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
     #teamCarToggle.active { background: #fff3e0; color: #c62828; }
-    #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
 
     #status {
       position: absolute; top: 10px; right: 10px;
       z-index: 999; padding: 8px 14px; border-radius: 6px;
       font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
     }
-    #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
-    #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
+    #status.ok       { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+    #status.warn     { border-color: #f44336; color: #c62828; background: #ffebee; }
+    #status.training { border-color: #f9a825; color: #e65100; background: #fffde7; }
 
-    /* ── MARKER CONTEXT MENU ── */
+    /* MARKER CONTEXT MENU */
     .markerMenu {
       background: white; border: 1px solid #ddd; border-radius: 6px;
       padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -148,59 +176,136 @@
       font-size: 13px; font-family: sans-serif;
     }
     .markerMenu input:focus { outline: none; background: #f9f9f9; }
+
+    /* ---- TAKTIK STRIP ---- */
+    #taktikStrip {
+      position: fixed; top: 50%; right: 8px; width: 70px;
+      transform: translateY(-50%);
+      z-index: 998;
+      background: rgba(255,255,255,0.90);
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 14px 0;
+    }
+    #taktikStrip.hidden { display: none; }
+    .strip-grp   { text-align: center; width: 100%; padding: 4px 6px; }
+    .strip-dot   { width: 8px; height: 8px; border-radius: 50%; margin: 0 auto 2px; }
+    .strip-name  { font-size: 11px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; }
+    .strip-cnt   { font-size: 15px; font-weight: 500; color: #333; line-height: 1.2; }
+    .strip-conn  { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
+    .strip-line  { width: 1px; height: 8px; background: #ccc; }
+    .strip-gap   { font-size: 11px; font-weight: 500; color: #aaa; }
+
+    /* ---- TAKTIK VOLLANSICHT ---- */
+    #taktikView {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 2000; background: #f5f5f5; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #taktikView.hidden { display: none; }
+    .tk-header {
+      position: sticky; top: 0; background: white; border-bottom: 1px solid #eee;
+      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+      z-index: 10;
+    }
+    .tk-body { padding: 12px; }
+
+    /* ---- GROUP CARDS ---- */
+    .gc       { background: white; border: 1px solid #eee; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .gc-hdr   { padding: 11px 14px 9px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .gc-sec   { border-top: 1px solid #f0f0f0; padding: 9px 14px; }
+    .gc-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .r-row    { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; }
+    .r-nr     { background: #f0f0f0; color: #666; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 500; min-width: 26px; text-align: center; margin-top: 2px; flex-shrink: 0; }
+    .r-name   { font-size: 13px; font-weight: 500; color: #333; }
+    .r-team   { font-size: 11px; color: #999; }
+    .r-none   { font-size: 13px; color: #bbb; font-style: italic; }
+
+    /* ---- STARTLISTEN PANEL ---- */
+    .sl-panel { background: white; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+    .sl-item  { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .sl-item:last-child { border-bottom: none; }
+    .sl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════ LOGIN MODAL ══════════════════════════════ -->
-<div id="loginModal" class="modal hidden">
-  <div class="modalBox">
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="hidden">
+  <div class="loginBox">
     <h2>🔐 Login</h2>
     <p id="loginReason">SpoLei- oder Betreuer-Passwort eingeben</p>
     <input type="password" id="passwordInput" placeholder="Passwort eingeben">
-    <button class="modalPrimary" id="loginBtn">Einloggen</button>
-    <div class="error" id="loginError"></div>
+    <button id="loginBtn">Einloggen</button>
+    <div id="loginError" class="error"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════ BETREUER MODAL ══════════════════════════ -->
-<div id="betreuerModal" class="modal hidden">
-  <div class="modalBox">
+<!-- BETREUER SHARE MODAL -->
+<div id="betreuerModal" class="hidden">
+  <div class="loginBox">
     <h2>📍 Standort teilen</h2>
     <p>Dein Name erscheint als Label auf der Karte – z.B. mit Verpflegungszone-Info.</p>
     <input type="text" id="betreuerNameInput" placeholder="z.B. Heinz – VP KM 45" maxlength="40">
-    <button class="modalPrimary" id="betreuerConfirmBtn">📍 Jetzt teilen</button>
-    <div class="error" id="betreuerError"></div>
-    <button class="modalSecondary" id="betreuerCancelBtn">Abbrechen</button>
+    <button id="betreuerConfirmBtn">📍 Jetzt teilen</button>
+    <div id="betreuerError" class="error"></div>
+    <button id="betreuerCancelBtn" class="btnSecondary">Abbrechen</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════ OPTIONS ══════════════════════════════════ -->
+<!-- OPTIONS BUTTON & MENU -->
 <button id="optionsBtn">⚙️ Optionen</button>
+<button id="taktikBtn">📊 Taktik</button>
 
 <div id="optionsMenu" class="hidden">
-  <!-- Sichtbar für alle (nicht eingeloggt) -->
   <button class="btn primary" id="loginBtnTop">🔓 Login</button>
+  <button class="btn wakeLock"     id="wakeLockBtn">💡 Bildschirm aktiv</button>
 
-  <!-- Immer sichtbar -->
-  <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
+  <!-- Betreuer-Level -->
+  <button class="btn hidden"       id="betreuerBtn">📍 Standort teilen</button>
 
-  <!-- Nur Betreuer -->
-  <button class="btn hidden" id="betreuerBtn">📍 Standort teilen</button>
-
-  <!-- Nur SpoLei -->
-  <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
+  <!-- SpoLei-Level -->
+  <button class="btn hidden"       id="gpxBtn">📂 GPX laden</button>
   <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
-  <button class="btn reset hidden" id="resetBtn">🧹 Karte leeren</button>
-  <label id="teamCarToggle" class="hidden">
+  <label  id="teamCarToggle" class="hidden">
     <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
   </label>
+  <button class="btn hidden"       id="advancedBtn">⚙️ Erweiterte Einstellungen ▸</button>
 
-  <!-- Eingeloggt (beide Level) -->
+  <!-- Erweiterte Einstellungen (klappt inline auf) -->
+  <div id="advancedSection" class="hidden">
+    <div id="modeToggleRow">
+      <div>
+        <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
+        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend · 30s stehend</div>
+      </div>
+      <div id="modeSwitch" style="background:#2196F3;">
+        <div id="modeThumb" style="left:22px;"></div>
+      </div>
+    </div>
+    <button id="resetBtn">🧹 Karte leeren</button>
+  </div>
+
+  <!-- Beide Level -->
   <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
 </div>
 
-<input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
+<input type="file" id="gpxFileInput"       accept=".gpx"       style="display:none">
+<input type="file" id="startlistFileInput" accept=".xlsx,.xls" style="display:none">
+
+<!-- TAKTIK STRIP -->
+<div id="taktikStrip" class="hidden"></div>
+
+<!-- TAKTIK VOLLANSICHT -->
+<div id="taktikView" class="hidden">
+  <div class="tk-header">
+    <span style="font-size:16px;font-weight:500">📊 Taktik</span>
+    <button id="closeTaktikBtn" class="btn" style="padding:6px 12px">✕ Karte</button>
+  </div>
+  <div class="tk-body" id="taktikBody"></div>
+</div>
+
 <div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
 <div id="map"></div>
 
@@ -212,40 +317,42 @@ const SERVER = 'https://livetracking-fq4l.onrender.com';
 // =======================
 // AUTH STATE
 // =======================
-let authToken = null;
-let authLevel = null;   // 'spolei' | 'betreuer' | null
+let authToken   = null;
+let authLevel   = null;   // 'spolei' | 'betreuer' | null
+let currentMode = 'race';
 
-// Elemente nur für SpoLei einblenden
-function showSpoleiElements() {
-  document.getElementById('loginBtnTop').classList.add('hidden');
+function showAdminElements() {
+  // SpoLei – alle Funktionen
+  document.getElementById('advancedBtn').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
-  document.getElementById('resetBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
   document.getElementById('gpxBtn').classList.remove('hidden');
+  document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
 }
 
-// Elemente nur für Betreuer einblenden
 function showBetreuerElements() {
-  document.getElementById('loginBtnTop').classList.add('hidden');
+  // Betreuer – nur Standort teilen
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('betreuerBtn').classList.remove('hidden');
-  // SpoLei-Funktionen verstecken
-  document.getElementById('resetBtn').classList.add('hidden');
+  document.getElementById('loginBtnTop').classList.add('hidden');
+  // SpoLei-exklusiv versteckt halten
+  document.getElementById('advancedBtn').classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('gpxBtn').classList.add('hidden');
-  document.getElementById('gpxRemoveBtn').classList.add('hidden');
 }
 
-// Alle Auth-Elemente ausblenden (nach Logout)
-function hideAllAuthElements() {
-  document.getElementById('loginBtnTop').classList.remove('hidden');
+function hideAdminElements() {
+  document.getElementById('advancedBtn').classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
   document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('resetBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('gpxBtn').classList.add('hidden');
   document.getElementById('gpxRemoveBtn').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
+  document.getElementById('loginBtnTop').classList.remove('hidden');
 }
 
 function saveToken(token, level) {
@@ -254,7 +361,7 @@ function saveToken(token, level) {
   localStorage.setItem('authToken', token);
   localStorage.setItem('authLevel', level);
   document.getElementById('loginModal').classList.add('hidden');
-  if (level === 'spolei') showSpoleiElements();
+  if (level === 'spolei') showAdminElements();
   else                    showBetreuerElements();
   console.log(`✅ Eingeloggt als ${level}`);
 }
@@ -263,7 +370,7 @@ function loadToken() {
   authToken = localStorage.getItem('authToken');
   authLevel = localStorage.getItem('authLevel');
   if (authToken && authLevel) {
-    if (authLevel === 'spolei') showSpoleiElements();
+    if (authLevel === 'spolei') showAdminElements();
     else                        showBetreuerElements();
   }
 }
@@ -271,8 +378,7 @@ function loadToken() {
 function logout() {
   if (authToken) {
     fetch(`${SERVER}/logout`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${authToken}` }
+      method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }
     }).catch(console.error);
   }
   authToken = null;
@@ -281,9 +387,8 @@ function logout() {
   localStorage.removeItem('authLevel');
   stopTeamCarTracking();
   document.getElementById('teamCarCheckbox').checked = false;
-  document.getElementById('teamCarToggle').classList.remove('active');
-  hideAllAuthElements();
   document.getElementById('loginModal').classList.add('hidden');
+  hideAdminElements();
   console.log("🚪 Abgemeldet");
 }
 
@@ -311,10 +416,8 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     saveToken(data.token, data.level);
     document.getElementById('passwordInput').value = '';
     errorEl.textContent = '';
-    optionsMenu.classList.add('hidden');
-  } catch (err) {
-    errorEl.textContent = '❌ Fehler: ' + err.message;
-  }
+    closeOptionsMenu();
+  } catch (err) { errorEl.textContent = '❌ Fehler: ' + err.message; }
 });
 
 document.getElementById('passwordInput').addEventListener('keypress', e => {
@@ -325,10 +428,121 @@ document.getElementById('logoutBtn').addEventListener('click', logout);
 loadToken();
 
 // =======================
+// BETREUER – STANDORT TEILEN
+// =======================
+let betreuerSharedName = '';
+
+function showBetreuerShareModal() {
+  closeOptionsMenu();
+  document.getElementById('betreuerNameInput').value = betreuerSharedName;
+  document.getElementById('betreuerError').textContent = '';
+  document.getElementById('betreuerConfirmBtn').textContent = '📍 Jetzt teilen';
+  document.getElementById('betreuerConfirmBtn').disabled = false;
+  document.getElementById('betreuerModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('betreuerNameInput').focus(), 50);
+}
+
+async function confirmBetreuerShare() {
+  const name    = document.getElementById('betreuerNameInput').value.trim();
+  const errorEl = document.getElementById('betreuerError');
+  if (!name) { errorEl.textContent = '❌ Name erforderlich'; return; }
+
+  const btn = document.getElementById('betreuerConfirmBtn');
+  btn.textContent = '⏳ GPS wird abgerufen…';
+  btn.disabled    = true;
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const res = await fetch(`${SERVER}/betreuer-position`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ lat: pos.coords.latitude, lon: pos.coords.longitude, name })
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Fehler'); }
+        betreuerSharedName = name;
+        document.getElementById('betreuerModal').classList.add('hidden');
+        document.getElementById('betreuerBtn').textContent = '🔄 Standort aktualisieren';
+        errorEl.textContent = '';
+      } catch (err) {
+        errorEl.textContent = '❌ ' + err.message;
+        btn.textContent = '📍 Jetzt teilen';
+        btn.disabled    = false;
+      }
+    },
+    (err) => {
+      errorEl.textContent = '❌ GPS: ' + err.message;
+      btn.textContent = '📍 Jetzt teilen';
+      btn.disabled    = false;
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+document.getElementById('betreuerBtn').addEventListener('click', showBetreuerShareModal);
+document.getElementById('betreuerConfirmBtn').addEventListener('click', confirmBetreuerShare);
+document.getElementById('betreuerCancelBtn').addEventListener('click', () => {
+  document.getElementById('betreuerModal').classList.add('hidden');
+});
+document.getElementById('betreuerNameInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') confirmBetreuerShare();
+});
+
+// =======================
+// MODUS (Toggle Switch)
+// =======================
+function applyMode(mode) {
+  currentMode = mode;
+  const label = document.getElementById('modeLabel');
+  const sub   = document.getElementById('modeSub');
+  const sw    = document.getElementById('modeSwitch');
+  const thumb = document.getElementById('modeThumb');
+  if (mode === 'race') {
+    label.textContent      = 'Renn-Modus';
+    sub.textContent        = '2s bewegend · 30s stehend';
+    sw.style.background    = '#2196F3';
+    thumb.style.left       = '22px';
+  } else {
+    label.textContent      = 'Training-Modus';
+    sub.textContent        = '10s bewegend · 60s stehend';
+    sw.style.background    = '#bbb';
+    thumb.style.left       = '2px';
+  }
+}
+
+async function loadMode() {
+  try {
+    const res  = await fetch(`${SERVER}/mode`);
+    const data = await res.json();
+    applyMode(data.mode);
+  } catch (err) { console.error('Mode fetch:', err); }
+}
+
+document.getElementById('modeSwitch').addEventListener('click', async () => {
+  if (!authToken) return;
+  const newMode = currentMode === 'race' ? 'training' : 'race';
+  try {
+    const res  = await fetch(`${SERVER}/mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ mode: newMode })
+    });
+    const data = await res.json();
+    if (res.ok) applyMode(data.mode);
+  } catch (err) { console.error('Mode switch:', err); }
+});
+
+// =======================
 // OPTIONS MENU
 // =======================
 const optionsBtn  = document.getElementById('optionsBtn');
 const optionsMenu = document.getElementById('optionsMenu');
+
+function closeOptionsMenu() {
+  optionsMenu.classList.add('hidden');
+  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+}
 
 optionsBtn.addEventListener('click', e => {
   e.stopPropagation();
@@ -337,18 +551,28 @@ optionsBtn.addEventListener('click', e => {
 
 document.addEventListener('click', e => {
   if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
-    optionsMenu.classList.add('hidden');
+    closeOptionsMenu();
   }
 });
 
 optionsMenu.querySelectorAll('.btn').forEach(btn => {
-  if (btn.id !== 'betreuerBtn') {
-    btn.addEventListener('click', () => optionsMenu.classList.add('hidden'));
-  }
+  if (btn.id !== 'advancedBtn' && btn.id !== 'betreuerBtn')
+    btn.addEventListener('click', () => closeOptionsMenu());
 });
 
-document.getElementById('teamCarToggle').addEventListener('change', () => {
-  optionsMenu.classList.add('hidden');
+document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
+
+document.getElementById('advancedBtn').addEventListener('click', () => {
+  const section = document.getElementById('advancedSection');
+  const btn     = document.getElementById('advancedBtn');
+  const isOpen  = !section.classList.contains('hidden');
+  if (isOpen) {
+    section.classList.add('hidden');
+    btn.textContent = '⚙️ Erweiterte Einstellungen ▸';
+  } else {
+    section.classList.remove('hidden');
+    btn.textContent = '⚙️ Erweiterte Einstellungen ▾';
+  }
 });
 
 // =======================
@@ -366,7 +590,7 @@ async function toggleWakeLock() {
       wakeLock = null;
       document.getElementById('wakeLockBtn').classList.remove('active');
     }
-  } catch (err) { console.error('Wake Lock Fehler:', err); }
+  } catch (err) { console.error('Wake Lock:', err); }
 }
 
 document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
@@ -404,92 +628,23 @@ const teamCarIcon = L.divIcon({
   iconSize: [28, 28], iconAnchor: [14, 28], tooltipAnchor: [0, -28]
 });
 
-// 🟠 Betreuer (stehender Standort)
+// 🟠 Betreuer (stehender Standort, oranges Quadrat)
 const betreuerIcon = L.divIcon({
   className: '',
   html: `<div style="background:#ff9800;border:3px solid white;border-radius:4px;width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
   iconSize: [28, 28], iconAnchor: [14, 14], tooltipAnchor: [0, -16]
 });
 
-// Standard-Leaflet-Icon
-const defaultIcon = L.icon({
-  iconUrl:    'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-  shadowUrl:  'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-  iconSize:   [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-});
-
-// =======================
-// BETREUER – STANDORT TEILEN
-// =======================
-let betreuerSharedName = '';
-
-function showBetreuerShareModal() {
-  optionsMenu.classList.add('hidden');
-  document.getElementById('betreuerNameInput').value = betreuerSharedName;
-  document.getElementById('betreuerError').textContent = '';
-  document.getElementById('betreuerConfirmBtn').textContent = '📍 Jetzt teilen';
-  document.getElementById('betreuerConfirmBtn').disabled = false;
-  document.getElementById('betreuerModal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('betreuerNameInput').focus(), 50);
-}
-
-async function confirmBetreuerShare() {
-  const name   = document.getElementById('betreuerNameInput').value.trim();
-  const errorEl = document.getElementById('betreuerError');
-  if (!name) { errorEl.textContent = '❌ Name erforderlich'; return; }
-
-  const btn = document.getElementById('betreuerConfirmBtn');
-  btn.textContent = '⏳ GPS wird abgerufen…';
-  btn.disabled    = true;
-
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      try {
-        const res = await fetch(`${SERVER}/betreuer-position`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ lat: pos.coords.latitude, lon: pos.coords.longitude, name })
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Server-Fehler');
-        }
-        betreuerSharedName = name;
-        document.getElementById('betreuerModal').classList.add('hidden');
-        document.getElementById('betreuerBtn').textContent = '🔄 Standort aktualisieren';
-        errorEl.textContent = '';
-      } catch (err) {
-        errorEl.textContent = '❌ ' + err.message;
-        btn.textContent = '📍 Jetzt teilen';
-        btn.disabled    = false;
-      }
-    },
-    (err) => {
-      errorEl.textContent = '❌ GPS: ' + err.message;
-      btn.textContent = '📍 Jetzt teilen';
-      btn.disabled    = false;
-    },
-    { enableHighAccuracy: true, timeout: 15000 }
-  );
-}
-
-document.getElementById('betreuerBtn').addEventListener('click', showBetreuerShareModal);
-document.getElementById('betreuerConfirmBtn').addEventListener('click', confirmBetreuerShare);
-document.getElementById('betreuerCancelBtn').addEventListener('click', () => {
-  document.getElementById('betreuerModal').classList.add('hidden');
-});
-document.getElementById('betreuerNameInput').addEventListener('keypress', e => {
-  if (e.key === 'Enter') confirmBetreuerShare();
-});
-
-// =======================
-// TEAMAUTO – STANDORT (SpoLei)
-// =======================
 let teamCarMarker    = null;
 let teamCarWatchId   = null;
 let teamCarAccCircle = null;
 
 function startTeamCarTracking() {
+  if (!authToken) {
+    showLoginModal('🚗 Zum Aktivieren des Teamauto-Trackings');
+    document.getElementById('teamCarCheckbox').checked = false;
+    return;
+  }
   if (!navigator.geolocation) {
     alert("GPS wird von diesem Browser nicht unterstützt.");
     document.getElementById('teamCarCheckbox').checked = false;
@@ -506,7 +661,6 @@ function startTeamCarTracking() {
           body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
         });
       } catch (err) { console.error("Fehler beim Senden:", err); }
-
       if (!teamCarMarker) {
         teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
           .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
@@ -554,12 +708,22 @@ function updateStatus() {
     return;
   }
   const ago = (Date.now() - lastDataTime) / 1000;
-  if (ago < 5) {
-    statusEl.className   = 'ok';
-    statusEl.textContent = '🟢 Verbunden';
-  } else {
+  if (ago >= 5) {
     statusEl.className   = 'warn';
     statusEl.textContent = `🔴 Offline (${Math.round(ago)}s)`;
+    return;
+  }
+  const modes = Object.keys(lastPositions)
+    .filter(id => id !== 'TEAMAUTO' && !id.startsWith('betreuer-'))
+    .map(id => lastPositions[id].trackerMode)
+    .filter(Boolean);
+  const inTraining = modes.some(m => m === 'training');
+  if (inTraining) {
+    statusEl.className   = 'training';
+    statusEl.textContent = '🟡 Verbunden · Training';
+  } else {
+    statusEl.className   = 'ok';
+    statusEl.textContent = '🟢 Verbunden · Rennen';
   }
 }
 setInterval(updateStatus, 1000);
@@ -580,7 +744,21 @@ function animateMarker(marker, from, to, duration = 800) {
 }
 
 // =======================
-// CONTEXT MENU (SpoLei only)
+// BATTERIE-ANZEIGE
+// =======================
+function batLabel(bat) {
+  if (typeof bat !== 'number') return '';
+  const color = bat >= 60 ? '#2e7d32' : bat >= 30 ? '#e65100' : '#c62828';
+  const icon  = bat >= 60 ? '🟢'      : bat >= 30 ? '🟡'      : '🔴';
+  return ` <span style="color:${color};font-size:11px">${icon} ${bat}%</span>`;
+}
+
+function tooltipContent(id, bat) {
+  return id + batLabel(bat);
+}
+
+// =======================
+// CONTEXT MENU (nur SpoLei)
 // =======================
 function showMarkerMenu(e, markerId) {
   if (authLevel !== 'spolei') return;
@@ -598,19 +776,17 @@ function showMarkerMenu(e, markerId) {
   renameBtn.textContent = '✏️ Umbenennen';
   renameBtn.addEventListener('click', async () => {
     const newName = input.value.trim();
-    if (!newName || newName === markerId) { container.remove(); return; }
+    if (!newName) { container.remove(); return; }
     try {
       const res = await fetch(`${SERVER}/rename-tracker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body: JSON.stringify({ oldName: markerId, newName })
+        body: JSON.stringify({ trackerId: markerId, newName })
       });
       if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
       if (markers[markerId]) {
-        markers[newName]       = markers[markerId];       delete markers[markerId];
-        lastPositions[newName] = lastPositions[markerId]; delete lastPositions[markerId];
-        if (trails[markerId]) { trails[newName] = trails[markerId]; delete trails[markerId]; }
-        markers[newName].setTooltipContent(newName);
+        const lastBat = lastPositions[markerId] && lastPositions[markerId].bat;
+        markers[markerId].setTooltipContent(tooltipContent(newName, lastBat));
       }
       container.remove();
     } catch (err) { alert('❌ Fehler: ' + err.message); }
@@ -622,10 +798,6 @@ function showMarkerMenu(e, markerId) {
   currentMarkerMenu = container;
   input.focus(); input.select();
 }
-
-document.addEventListener('click', () => {
-  if (currentMarkerMenu) { currentMarkerMenu.remove(); currentMarkerMenu = null; }
-});
 
 // =======================
 // LOAD POSITIONS
@@ -641,53 +813,72 @@ async function loadPositions() {
     updateStatus();
 
     ids.forEach(id => {
-      const pos    = data[id];
-      const latlng = [pos.lat, pos.lon];
+      const pos         = data[id];
+      const latlng      = [pos.lat, pos.lon];
+      const bat         = pos.bat;
+      const displayName = pos.displayName || id;
+      const isBetreuer  = pos.type === 'betreuer';
 
-      // Trail-Farbe je nach Typ
+      // Trail
       if (!trails[id]) {
         const color = id === 'TEAMAUTO' ? '#e53935'
-                    : pos.type === 'betreuer' ? '#ff9800'
+                    : isBetreuer        ? '#ff9800'
                     : '#3388ff';
         trails[id] = L.polyline([], { color, weight: 3, opacity: 0.6 }).addTo(map);
       }
 
       if (!markers[id]) {
-        // Icon je nach Typ wählen
-        const icon = id === 'TEAMAUTO'          ? teamCarIcon
-                   : pos.type === 'betreuer'    ? betreuerIcon
-                   : defaultIcon;
+        // Icon
+        const icon = id === 'TEAMAUTO' ? teamCarIcon
+                   : isBetreuer        ? betreuerIcon
+                   : L.icon({
+                       iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+                       shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+                       iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                     });
 
-        // Label: Betreuer zeigen Namen, andere zeigen ID
-        const label = pos.type === 'betreuer' ? `👤 ${pos.name || id}` : id;
+        // Label
+        const label = isBetreuer ? `👤 ${pos.name || id}` : tooltipContent(displayName, bat);
 
         const marker = L.marker(latlng, { icon }).addTo(map)
           .bindTooltip(label, { permanent: true, direction: 'top' });
 
-        // Rechtsklick → Umbenennen (nur für GPS-Tracker, nicht Betreuer/Teamauto)
-        if (id !== 'TEAMAUTO' && pos.type !== 'betreuer') {
+        // Rechtsklick-Umbenennen nur für GPS-Tracker (nicht Betreuer / Teamauto)
+        if (id !== 'TEAMAUTO' && !isBetreuer) {
           marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
         }
 
-        markers[id]       = marker;
+        markers[id] = marker;
         lastPositions[id] = latlng;
-        if (firstDevice) { map.setView(latlng, 15); firstDevice = false; }
+        lastPositions[id].bat         = bat;
+        lastPositions[id].trackerMode = pos.trackerMode || null;
+        if (firstDevice && !isBetreuer) { map.setView(latlng, 15); firstDevice = false; }
+
       } else {
-        // Betreuer-Marker bleiben fest (keine Animation nötig da statisch)
-        if (pos.type === 'betreuer') {
+        // Betreuer-Marker: kein Smooth-Animate (stehen still)
+        if (isBetreuer) {
           markers[id].setLatLng(latlng);
         } else {
           animateMarker(markers[id], lastPositions[id], latlng);
         }
+
         const prev  = lastPositions[id];
-        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 ||
-                      Math.abs(prev[1] - latlng[1]) > 0.000005;
-        if (moved && pos.type !== 'betreuer') trails[id].addLatLng(latlng);
+        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
+        // Kein Trail für Betreuer
+        if (moved && !isBetreuer) trails[id].addLatLng(latlng);
+
         lastPositions[id] = latlng;
+        lastPositions[id].bat         = bat;
+        lastPositions[id].trackerMode = pos.trackerMode || null;
+
+        // Tooltip nur für GPS-Tracker aktualisieren
+        if (!isBetreuer && id !== 'TEAMAUTO') {
+          markers[id].setTooltipContent(tooltipContent(displayName, bat));
+        }
       }
 
-      // Karte nur bei GPS-Trackern nachführen, nicht bei statischen Markern
-      if (id !== 'TEAMAUTO' && pos.type !== 'betreuer') {
+      // Karte nur bei aktiven Trackern nachführen (nicht Betreuer / Teamauto)
+      if (!isBetreuer && id !== 'TEAMAUTO') {
         map.panTo(latlng, { animate: true, duration: 0.6 });
       }
     });
@@ -695,7 +886,7 @@ async function loadPositions() {
 }
 
 // =======================
-// RESET (SpoLei only)
+// RESET
 // =======================
 async function clearMap() {
   if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
@@ -712,7 +903,7 @@ async function clearMap() {
 document.getElementById('resetBtn').addEventListener('click', clearMap);
 
 // =======================
-// GPX TRACKS (SpoLei only)
+// GPX TRACKS
 // =======================
 let gpxLayer = null;
 
@@ -733,7 +924,7 @@ function drawGpxLayer(coords) {
 }
 
 document.getElementById('gpxBtn').addEventListener('click', () => {
-  setTimeout(() => optionsMenu.classList.add('hidden'), 50);
+  setTimeout(() => closeOptionsMenu(), 50);
   document.getElementById('gpxFileInput').click();
 });
 
@@ -750,7 +941,6 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ coords, name: file.name })
       });
-      console.log(`📂 GPX gespeichert: ${file.name} (${coords.length} Punkte)`);
     } catch (err) { alert('❌ ' + err.message); }
     this.value = '';
   };
@@ -761,8 +951,7 @@ function parseGpx(xmlText) {
   const parser = new DOMParser();
   const xml    = parser.parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
-
-  let coords = [];
+  const coords = [];
   xml.querySelectorAll('trkpt').forEach(pt => {
     const lat = parseFloat(pt.getAttribute('lat'));
     const lon = parseFloat(pt.getAttribute('lon'));
@@ -795,6 +984,557 @@ document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
 loadPositions();
 setInterval(loadPositions, 1000);
 fetchGpxTrack();
+loadMode();
+
+// =======================
+// TAKTIK
+// =======================
+const GROUP_COLORS = ['#EF9F27', '#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#888780'];
+let taktikGroups   = [];
+let startlistMeta  = [];
+let activeSlId     = null;
+let taktikOpen     = false;
+let splittingGid   = null;
+const splitNrs     = new Set();
+let mergingGid     = null;
+let movingRider    = { gid: null, nr: null };
+
+function openTaktikView() {
+  taktikOpen = true;
+  document.getElementById('taktikView').classList.remove('hidden');
+  document.getElementById('taktikStrip').classList.add('hidden');
+  closeOptionsMenu();
+  loadTaktikView();
+}
+
+function closeTaktikView() {
+  taktikOpen = false;
+  document.getElementById('taktikView').classList.add('hidden');
+  renderStrip(taktikGroups);
+}
+
+document.getElementById('taktikBtn').addEventListener('click', openTaktikView);
+document.getElementById('closeTaktikBtn').addEventListener('click', closeTaktikView);
+
+async function loadTaktikView() {
+  await loadGroups();
+  if (authToken) await loadStartlists();
+  if (taktikGroups.length === 0 && authToken) {
+    taktikGroups.push({
+      id:     'hauptfeld-' + Date.now().toString(36),
+      name:   'Hauptfeld',
+      color:  '#888780',
+      gap:    null,
+      riders: []
+    });
+    await saveGroups();
+  }
+  renderTaktikBody();
+}
+
+async function loadGroups() {
+  try {
+    const res  = await fetch(`${SERVER}/groups`);
+    taktikGroups = await res.json();
+  } catch (e) { console.error('Groups:', e); }
+}
+
+async function loadStartlists() {
+  try {
+    const res  = await fetch(`${SERVER}/startlists`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    startlistMeta = data.lists    || [];
+    activeSlId    = data.activeId || null;
+  } catch (e) { console.error('Startlists:', e); }
+}
+
+async function saveGroups() {
+  if (!authToken) return;
+  const payload = taktikGroups.map(g => ({
+    id:      g.id,
+    name:    g.name,
+    color:   g.color,
+    gap:     g.gap    || null,
+    gapPrev: g.gapPrev || null,
+    riders:  (g.riders || []).map(r => typeof r === 'object' ? r.nr : r)
+  }));
+  await fetch(`${SERVER}/groups`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+    body:    JSON.stringify({ groups: payload })
+  }).catch(e => console.error('saveGroups:', e));
+}
+
+async function addGroup() {
+  const last       = taktikGroups[taktikGroups.length - 1];
+  const insertIdx  = (last && last.name === 'Hauptfeld') ? taktikGroups.length - 1 : taktikGroups.length;
+  const names      = ['Spitzengruppe', 'Verfolger'];
+  taktikGroups.splice(insertIdx, 0, {
+    id:     Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
+    name:   names[insertIdx] || ('Gruppe ' + (insertIdx + 1)),
+    color:  GROUP_COLORS[insertIdx % GROUP_COLORS.length],
+    gap:    null,
+    riders: []
+  });
+  await saveGroups();
+  renderTaktikBody();
+  renderStrip(taktikGroups);
+}
+
+async function deleteGroup(gid) {
+  taktikGroups = taktikGroups.filter(g => g.id !== gid);
+  await saveGroups();
+  renderTaktikBody();
+  renderStrip(taktikGroups);
+}
+
+function startSplit(gid) { splittingGid = gid; splitNrs.clear(); renderTaktikBody(); }
+function cancelSplit()    { splittingGid = null; splitNrs.clear(); renderTaktikBody(); }
+
+async function confirmSplit(gid, direction = 'before') {
+  if (splitNrs.size === 0) { alert('Keine Fahrer ausgewählt'); return; }
+  const g = taktikGroups.find(g => g.id === gid);
+  if (!g) return;
+  const nr = r => r.nr !== undefined ? r.nr : r;
+  const splitRiders  = (g.riders||[]).filter(r =>  splitNrs.has(nr(r)));
+  const remainRiders = (g.riders||[]).filter(r => !splitNrs.has(nr(r)));
+  g.riders = remainRiders;
+  const used     = taktikGroups.map(g => g.name);
+  const namePool = direction === 'before'
+    ? ['Spitzengruppe','Ausreißer','Spitze 2','Vorne']
+    : ['Verfolger','Nachzügler','Feld 2','Hinten'];
+  const newName  = namePool.find(n => !used.includes(n)) || 'Neue Gruppe';
+  const usedCols = taktikGroups.map(g => g.color);
+  const newColor = GROUP_COLORS.find(c => !usedCols.includes(c)) || GROUP_COLORS[0];
+  const insertIdx = taktikGroups.indexOf(g) + (direction === 'after' ? 1 : 0);
+  taktikGroups.splice(insertIdx, 0, {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
+    name: newName, color: newColor, gap: null, riders: splitRiders
+  });
+  splittingGid = null; splitNrs.clear();
+  await saveGroups(); await loadGroups();
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+function gapToSec(s) {
+  if (!s) return null;
+  const m = s.match(/^(\d+):(\d{2})$/);
+  if (m) return parseInt(m[1]) * 60 + parseInt(m[2]);
+  const n = parseInt(s);
+  return isNaN(n) ? null : n;
+}
+function secToGap(s) {
+  if (s <= 0) return '0:00';
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function trendArrow(cur, prev) {
+  const c = gapToSec(cur), p = gapToSec(prev);
+  if (c === null || p === null || c === p) return '';
+  return c > p
+    ? '<span style="color:#e53935;font-size:10px">↑</span>'
+    : '<span style="color:#2e7d32;font-size:10px">↓</span>';
+}
+function adjustGap(gid, deltaSec) {
+  const g = taktikGroups.find(g => g.id === gid);
+  if (!g || !authToken) return;
+  const newSec = Math.max(0, (gapToSec(g.gap) || 0) + deltaSec);
+  g.gapPrev = g.gap;
+  g.gap = newSec > 0 ? secToGap(newSec) : null;
+  saveGroups(); renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+function startMerge(gid)  { mergingGid = gid; splittingGid = null; splitNrs.clear(); movingRider = { gid: null, nr: null }; renderTaktikBody(); }
+function cancelMerge()    { mergingGid = null; renderTaktikBody(); }
+
+async function confirmMerge(sourceGid, targetGid) {
+  const src = taktikGroups.find(g => g.id === sourceGid);
+  const tgt = taktikGroups.find(g => g.id === targetGid);
+  if (!src || !tgt) return;
+  tgt.riders = [...(tgt.riders||[]), ...(src.riders||[])];
+  taktikGroups = taktikGroups.filter(g => g.id !== sourceGid);
+  mergingGid = null;
+  await saveGroups(); await loadGroups();
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+function startMoveRider(gid, nr)  { movingRider = { gid, nr }; splittingGid = null; splitNrs.clear(); mergingGid = null; renderTaktikBody(); }
+function cancelMoveRider()        { movingRider = { gid: null, nr: null }; renderTaktikBody(); }
+
+async function confirmMoveRider(targetGid) {
+  const { gid: srcGid, nr } = movingRider;
+  const src = taktikGroups.find(g => g.id === srcGid);
+  const tgt = taktikGroups.find(g => g.id === targetGid);
+  if (!src || !tgt) return;
+  src.riders = (src.riders||[]).filter(r => (r.nr !== undefined ? r.nr : r) !== nr);
+  tgt.riders = [...(tgt.riders||[]), nr];
+  movingRider = { gid: null, nr: null };
+  await saveGroups(); await loadGroups();
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+async function addRider(gid) {
+  const inp = document.querySelector(`.add-rider-input[data-gid="${gid}"]`);
+  if (!inp) return;
+  const nr = parseInt(inp.value);
+  if (isNaN(nr) || nr < 1) return;
+  if (taktikGroups.some(g => (g.riders||[]).some(r => (r.nr||r) === nr))) {
+    alert(`Nr. ${nr} ist bereits in einer Gruppe`); return;
+  }
+  const g = taktikGroups.find(g => g.id === gid);
+  if (!g) return;
+  if (!g.riders) g.riders = [];
+  g.riders.push(nr);
+  await saveGroups(); await loadGroups();
+  renderTaktikBody(); renderStrip(taktikGroups);
+  const refocus = document.querySelector(`.add-rider-input[data-gid="${gid}"]`);
+  if (refocus) { refocus.value = ''; refocus.focus(); }
+}
+
+async function removeRider(gid, nr) {
+  const g = taktikGroups.find(g => g.id === gid);
+  if (!g) return;
+  g.riders = (g.riders||[]).filter(r => (r.nr||r) !== nr);
+  await saveGroups(); await loadGroups();
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+async function neuesRennen() {
+  if (!confirm('🚨 Gruppen und Positionen löschen?')) return;
+  try {
+    await Promise.all([
+      fetch(`${SERVER}/groups`,    { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } }),
+      fetch(`${SERVER}/positions`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } })
+    ]);
+    taktikGroups = [];
+    Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
+    Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
+    Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
+    lastDataTime = null; firstDevice = true; updateStatus();
+    renderTaktikBody(); renderStrip([]);
+  } catch (e) { alert('❌ ' + e.message); }
+}
+
+async function activateStartlist(id) {
+  await fetch(`${SERVER}/startlists/${id}/activate`, {
+    method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }
+  }).catch(e => console.error(e));
+  activeSlId = id;
+  await loadGroups(); await loadStartlists();
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+async function deleteStartlist(id) {
+  if (!confirm('Startliste löschen?')) return;
+  await fetch(`${SERVER}/startlists/${id}`, {
+    method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+  }).catch(e => console.error(e));
+  if (activeSlId === id) activeSlId = null;
+  await loadStartlists(); renderTaktikBody();
+}
+
+function downloadTemplate() {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Nr', 'Name', 'Team'],
+    [1, 'Beispiel Fahrer', 'Beispiel Team'],
+    [2, 'Max Mustermann',  'RSV Muster']
+  ]);
+  ws['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 20 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Startliste');
+  XLSX.writeFile(wb, 'startliste_vorlage.xlsx');
+}
+
+document.getElementById('startlistFileInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const defaultName = file.name.replace(/\.xlsx?$/i, '').replace(/_/g, ' ');
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try {
+      const wb     = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+      const ws     = wb.Sheets[wb.SheetNames[0]];
+      const rows   = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      if (rows.length < 2) { alert('❌ Keine Daten gefunden'); return; }
+      const riders = rows.slice(1)
+        .map(r => ({ nr: parseInt(r[0]), name: String(r[1]||'').trim(), team: String(r[2]||'').trim() }))
+        .filter(r => !isNaN(r.nr) && r.nr > 0 && r.name.length > 0);
+      if (riders.length === 0) { alert('❌ Keine gültigen Einträge (Spalten: Nr, Name, Team)'); return; }
+      const listName = prompt('Name für diese Startliste:', defaultName);
+      if (!listName) return;
+      const res = await fetch(`${SERVER}/startlists`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body:    JSON.stringify({ name: listName.trim(), riders })
+      });
+      if (!res.ok) { alert('❌ Fehler beim Speichern'); return; }
+      await loadStartlists(); renderTaktikBody();
+      alert(`✅ ${riders.length} Fahrer gespeichert`);
+    } catch (err) { alert('❌ ' + err.message); }
+    this.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+const tkBody = document.getElementById('taktikBody');
+
+tkBody.addEventListener('click', function (e) {
+  if (!authToken) return;
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const { action, gid, id, nr } = btn.dataset;
+  switch (action) {
+    case 'add-group':          addGroup();                        break;
+    case 'new-race':           neuesRennen();                     break;
+    case 'add-rider':          addRider(gid);                     break;
+    case 'remove-rider':       removeRider(gid, parseInt(nr));    break;
+    case 'delete-group':       deleteGroup(gid);                  break;
+    case 'gap-plus':           adjustGap(gid, +15);               break;
+    case 'gap-minus':          adjustGap(gid, -15);               break;
+    case 'start-split':        startSplit(gid);                   break;
+    case 'cancel-split':       cancelSplit();                     break;
+    case 'confirm-split':      confirmSplit(gid, btn.dataset.direction); break;
+    case 'start-merge':        startMerge(gid);                   break;
+    case 'cancel-merge':       cancelMerge();                     break;
+    case 'confirm-merge':      confirmMerge(gid, btn.dataset.target); break;
+    case 'start-move-rider':   startMoveRider(gid, parseInt(nr)); break;
+    case 'cancel-move-rider':  cancelMoveRider();                 break;
+    case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
+    case 'activate-list':      activateStartlist(id);             break;
+    case 'delete-list':        deleteStartlist(id);               break;
+    case 'upload-startlist':   document.getElementById('startlistFileInput').click(); break;
+    case 'download-template':  downloadTemplate();                break;
+  }
+});
+
+tkBody.addEventListener('change', function (e) {
+  if (!e.target.classList.contains('split-check')) return;
+  const nr = parseInt(e.target.dataset.nr);
+  if (e.target.checked) splitNrs.add(nr); else splitNrs.delete(nr);
+  tkBody.querySelectorAll('[data-action="confirm-split"]').forEach(btn => {
+    btn.textContent = btn.dataset.direction === 'before'
+      ? `↑ Vorne (${splitNrs.size})`
+      : `↓ Hinten (${splitNrs.size})`;
+  });
+});
+
+tkBody.addEventListener('focusout', function (e) {
+  if (!authToken) return;
+  const { gid } = e.target.dataset;
+  if (!gid) return;
+  const g = taktikGroups.find(g => g.id === gid);
+  if (!g) return;
+  if (e.target.classList.contains('name-inp')) {
+    const v = e.target.value.trim();
+    if (v) { g.name = v; saveGroups(); renderStrip(taktikGroups); }
+  }
+  if (e.target.classList.contains('gap-inp')) {
+    g.gapPrev = g.gap;
+    g.gap = e.target.value.trim() || null;
+    saveGroups(); renderTaktikBody(); renderStrip(taktikGroups);
+  }
+});
+
+tkBody.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  if (e.target.classList.contains('add-rider-input')) { e.preventDefault(); addRider(e.target.dataset.gid); }
+  if (e.target.classList.contains('gap-inp') || e.target.classList.contains('name-inp')) { e.target.blur(); }
+});
+
+function renderStrip(grps) {
+  const strip = document.getElementById('taktikStrip');
+  if (!grps || grps.length === 0) { strip.classList.add('hidden'); return; }
+  strip.classList.remove('hidden');
+  strip.innerHTML = grps.map((g, i) => {
+    const cnt      = (g.riders||[]).length;
+    const lbl      = g.name.length > 7 ? g.name.slice(0, 6) + '.' : g.name;
+    const nextGap  = grps[i + 1] ? grps[i + 1].gap  : null;
+    const nextPrev = grps[i + 1] ? grps[i + 1].gapPrev : null;
+    const conn     = i < grps.length - 1
+      ? `<div class="strip-conn">
+           <div class="strip-line"></div>
+           <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '–'}${trendArrow(nextGap, nextPrev)}</div>
+           <div class="strip-line"></div>
+         </div>` : '';
+    return `<div class="strip-grp">
+      <div class="strip-dot" style="background:${g.color}"></div>
+      <div class="strip-name">${escH(lbl)}</div>
+      <div class="strip-cnt">${cnt}</div>
+    </div>${conn}`;
+  }).join('');
+}
+
+function renderTaktikBody() {
+  let html = '';
+  if (authToken) {
+    const active = startlistMeta.find(s => s.id === activeSlId);
+    html += `<div class="sl-panel">
+      <div style="padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0">
+        <span style="font-size:13px;font-weight:500;color:#333">📋 Starterliste</span>
+        <span style="font-size:12px;color:${active ? '#2e7d32' : '#999'}">${active ? escH(active.name) : 'Keine aktiv'}</span>
+      </div>`;
+    startlistMeta.forEach(sl => {
+      html += `<div class="sl-item">
+        <div class="sl-dot" style="background:${sl.id === activeSlId ? '#4caf50' : '#ddd'}"></div>
+        <span style="font-size:13px;color:#333;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(sl.name)}</span>
+        <span style="font-size:11px;color:#aaa;flex-shrink:0">${sl.riderCount}</span>
+        <button class="btn" data-action="activate-list" data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0">Aktiv</button>
+        <button class="btn" data-action="delete-list"   data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:#f44336">✕</button>
+      </div>`;
+    });
+    html += `<div style="padding:10px 14px;display:flex;gap:8px">
+      <button class="btn" data-action="upload-startlist"  style="flex:1">📂 Hochladen</button>
+      <button class="btn" data-action="download-template" style="flex:1">⬇ Vorlage</button>
+    </div></div>`;
+    html += `<div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn" data-action="add-group" style="flex:1">＋ Gruppe</button>
+      <button class="btn" data-action="new-race"  style="flex:1;color:#f44336">🚨 Neues Rennen</button>
+    </div>`;
+  }
+  if (taktikGroups.length === 0) {
+    html += `<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">
+      ${authToken ? 'Noch keine Gruppen – oben auf ＋ Gruppe tippen' : 'Noch keine Gruppen angelegt'}
+    </div>`;
+  } else {
+    taktikGroups.forEach((g, idx) => {
+      const riders    = g.riders || [];
+      const isLeading = idx === 0;
+      const others    = taktikGroups.filter(tg => tg.id !== g.id);
+      if (splittingGid === g.id) {
+        const rows = riders.map(r => {
+          const n = r.nr !== undefined ? r.nr : r;
+          return `<div class="r-row">
+            <input type="checkbox" class="split-check" data-nr="${n}"
+              style="width:18px;height:18px;cursor:pointer;flex-shrink:0;accent-color:#2196F3">
+            <span class="r-nr">${n}</span>
+            <div>${r.name ? `<div class="r-name">${escH(r.name)}</div>` : `<div class="r-none">kein Eintrag</div>`}</div>
+          </div>`;
+        }).join('');
+        html += `<div class="gc" style="border-color:#bbdefb">
+          <div style="height:3px;background:${g.color}"></div>
+          <div class="gc-hdr" style="background:#e3f2fd">
+            <span style="font-size:13px;font-weight:500;color:#1565c0">✂ ${escH(g.name)} aufteilen</span>
+            <button class="btn" data-action="cancel-split" style="padding:3px 8px;font-size:11px">✕</button>
+          </div>
+          <div class="gc-sec"><div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer wählen, die sich absetzen:</div>${rows}</div>
+          <div class="gc-sec" style="display:flex;gap:6px">
+            <button class="btn" data-action="confirm-split" data-gid="${g.id}" data-direction="before"
+              style="flex:1;background:#e3f2fd;color:#1565c0;border-color:#90caf9;font-size:12px">↑ Vorne (0)</button>
+            <button class="btn" data-action="confirm-split" data-gid="${g.id}" data-direction="after"
+              style="flex:1;background:#fce4ec;color:#880e4f;border-color:#f48fb1;font-size:12px">↓ Hinten (0)</button>
+          </div>
+        </div>`;
+        return;
+      }
+      if (mergingGid === g.id) {
+        html += `<div class="gc" style="border-color:#ffe0b2">
+          <div style="height:3px;background:${g.color}"></div>
+          <div class="gc-hdr" style="background:#fff3e0">
+            <span style="font-size:13px;font-weight:500;color:#e65100">⊕ ${escH(g.name)} zusammenführen</span>
+            <button class="btn" data-action="cancel-merge" style="padding:3px 8px;font-size:11px">✕</button>
+          </div>
+          <div class="gc-sec">
+            <div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer in welche Gruppe verschieben?</div>
+            ${others.map(tg => `
+              <button class="btn" data-action="confirm-merge" data-gid="${g.id}" data-target="${tg.id}"
+                style="width:100%;margin-bottom:6px;display:flex;align-items:center;gap:7px;padding:8px 12px">
+                <div style="width:9px;height:9px;border-radius:50%;background:${tg.color};flex-shrink:0"></div>
+                ${escH(tg.name)}</button>`).join('')}
+          </div>
+        </div>`;
+        return;
+      }
+      const trend   = trendArrow(g.gap, g.gapPrev);
+      const gapHtml = isLeading
+        ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e8f5e9;color:#2e7d32">Führend</span>`
+        : authToken
+          ? `<div style="display:flex;align-items:center;gap:2px">
+               <button data-action="gap-minus" data-gid="${g.id}" style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">−</button>
+               <input class="gap-inp" data-gid="${g.id}" value="${escH(g.gap||'')}" placeholder="0:00"
+                 style="width:46px;font-size:13px;padding:3px 5px;border:1px solid #ddd;border-radius:6px;text-align:center">
+               <button data-action="gap-plus" data-gid="${g.id}" style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">+</button>
+               ${trend}</div>`
+          : g.gap
+            ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e3f2fd;color:#1565c0">+${escH(g.gap)}${trend}</span>`
+            : '';
+      const nameHtml = authToken
+        ? `<input class="name-inp" data-gid="${g.id}" value="${escH(g.name)}"
+             style="font-size:14px;font-weight:500;border:none;background:transparent;color:#333;padding:0;width:145px;max-width:55vw">`
+        : `<span style="font-size:14px;font-weight:500;color:#333">${escH(g.name)}</span>`;
+      const riderRows = riders.map(r => {
+        const nr = r.nr !== undefined ? r.nr : r;
+        if (authToken && movingRider.gid === g.id && movingRider.nr === nr) {
+          return `<div class="r-row" style="background:#f9f9f9;border-radius:6px;padding:5px;flex-wrap:wrap;gap:4px">
+            <span class="r-nr">${nr}</span>
+            <span style="font-size:11px;color:#999;flex-shrink:0">→</span>
+            ${others.map(tg => `
+              <button class="btn" data-action="confirm-move-rider" data-target="${tg.id}"
+                style="display:flex;align-items:center;gap:4px;padding:3px 7px;font-size:11px;flex-shrink:0">
+                <div style="width:7px;height:7px;border-radius:50%;background:${tg.color};flex-shrink:0"></div>
+                ${escH(tg.name.length > 9 ? tg.name.slice(0,8)+'.' : tg.name)}</button>`).join('')}
+            <button class="btn" data-action="cancel-move-rider" style="padding:3px 7px;font-size:11px;flex-shrink:0">✕</button>
+          </div>`;
+        }
+        return `<div class="r-row">
+          ${authToken ? `<button class="btn" data-action="remove-rider" data-gid="${g.id}" data-nr="${nr}"
+            style="padding:1px 5px;font-size:11px;color:#f44336;min-width:unset;flex:0">✕</button>` : ''}
+          <span class="r-nr">${nr}</span>
+          <div style="flex:1">${r.name
+            ? `<div class="r-name">${escH(r.name)}</div><div class="r-team">${escH(r.team||'')}</div>`
+            : `<div class="r-none">kein Eintrag</div>`
+          }</div>
+          ${(authToken && others.length > 0) ? `
+            <button class="btn" data-action="start-move-rider" data-gid="${g.id}" data-nr="${nr}"
+              style="padding:2px 6px;font-size:12px;color:#666;min-width:unset;flex:0" title="Fahrer verschieben">→</button>` : ''}
+        </div>`;
+      }).join('');
+      const extraBtns = authToken ? [
+        riders.length >= 2 ? `<button class="btn" data-action="start-split" data-gid="${g.id}"
+          style="flex:1;font-size:12px;color:#555">✂ Aufteilen</button>` : '',
+        others.length > 0 ? `<button class="btn" data-action="start-merge" data-gid="${g.id}"
+          style="flex:1;font-size:12px;color:#555">⊕ Zusammenführen</button>` : ''
+      ].filter(Boolean).join('') : '';
+      const footer = authToken ? `
+        <div class="gc-sec" style="display:flex;gap:8px">
+          <input type="number" class="add-rider-input" data-gid="${g.id}" min="1" placeholder="Nr."
+            style="flex:1;min-width:60px;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+          <button class="btn" data-action="add-rider"    data-gid="${g.id}" style="flex:1">＋ Fahrer</button>
+          <button class="btn" data-action="delete-group" data-gid="${g.id}" style="flex:0;padding:7px 10px;color:#f44336">🗑</button>
+        </div>
+        ${extraBtns ? `<div class="gc-sec" style="border-top:1px dashed #f0f0f0;padding-top:6px;padding-bottom:6px;display:flex;gap:6px">${extraBtns}</div>` : ''}
+      ` : '';
+      html += `<div class="gc">
+        <div style="height:3px;background:${g.color}"></div>
+        <div class="gc-hdr">
+          <div style="display:flex;align-items:center;gap:7px;min-width:0">
+            <div class="gc-dot" style="background:${g.color}"></div>
+            ${nameHtml}
+          </div>
+          ${gapHtml}
+        </div>
+        ${riders.length > 0 ? `<div class="gc-sec">${riderRows}</div>` : ''}
+        ${footer}
+      </div>`;
+    });
+  }
+  tkBody.innerHTML = html;
+}
+
+function escH(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function pollGroups() {
+  try {
+    const res  = await fetch(`${SERVER}/groups`);
+    taktikGroups = await res.json();
+    if (!taktikOpen) renderStrip(taktikGroups);
+  } catch (e) {}
+}
+
+pollGroups();
+setInterval(pollGroups, 5000);
 
 </script>
 </body>
