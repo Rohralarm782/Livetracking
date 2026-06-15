@@ -29,6 +29,50 @@
     }
     #betreuerModal.hidden { display: none !important; }
 
+    /* KI-IMPORT MODAL */
+    #aiImportModal {
+      display: flex; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: flex-start; justify-content: center;
+      padding: 20px; overflow-y: auto;
+    }
+    #aiImportModal.hidden { display: none !important; }
+    .aiBox {
+      background: white; padding: 28px; border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      width: 100%; max-width: 420px; margin: auto;
+    }
+    .aiBox h2 { margin: 0 0 6px 0; color: #333; font-size: 20px; }
+    .aiBox p  { color: #666; margin: 0 0 18px 0; font-size: 13px; line-height: 1.5; }
+    .aiBox label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    .aiBox input[type="text"] {
+      width: 100%; padding: 10px 12px; margin-bottom: 14px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px; transition: border-color 0.2s;
+    }
+    .aiBox input[type="text"]:focus { outline: none; border-color: #2196F3; }
+    .aiBtnPrimary {
+      width: 100%; padding: 11px; background: #2196F3; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 14px; font-weight: bold; transition: background 0.2s;
+    }
+    .aiBtnPrimary:hover    { background: #1976D2; }
+    .aiBtnPrimary:disabled { background: #90caf9; cursor: default; }
+    .aiBtnSecondary {
+      width: 100%; padding: 9px; background: #eee; color: #555;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 14px; margin-top: 8px; transition: background 0.2s;
+    }
+    .aiBtnSecondary:hover { background: #ddd; }
+    #aiPreviewTable {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+      display: block; max-height: 200px; overflow-y: auto; margin: 10px 0 14px;
+      border: 1px solid #eee; border-radius: 6px;
+    }
+    #aiPreviewTable th { background: #f5f5f5; padding: 6px 8px; text-align: left; position: sticky; top: 0; font-size: 11px; }
+    #aiPreviewTable td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; }
+    #aiStatus { font-size: 13px; color: #666; padding: 14px 0; text-align: center; }
+
     .loginBox {
       background: white; padding: 40px; border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
@@ -292,7 +336,30 @@
 </div>
 
 <input type="file" id="gpxFileInput"       accept=".gpx"       style="display:none">
-<input type="file" id="startlistFileInput" accept=".xlsx,.xls" style="display:none">
+<input type="file" id="startlistFileInput" accept=".pdf,.xlsx,.xls,.csv,.txt" style="display:none">
+
+<!-- KI-IMPORT MODAL -->
+<div id="aiImportModal" class="hidden">
+  <div class="aiBox">
+    <h2>🤖 KI-Import</h2>
+    <p>Lade eine Startliste in beliebigem Format hoch – die KI extrahiert die Fahrer der gewünschten Kategorie automatisch.</p>
+    <label>Kategorie</label>
+    <input type="text" id="aiCategory" placeholder="z.B. U17m, Junioren, Elite, U15 männlich">
+    <button class="aiBtnPrimary" id="aiFilePickBtn">📂 Datei wählen (PDF, Excel, CSV…)</button>
+    <div id="aiStatus" style="display:none"></div>
+    <div id="aiPreviewSection" style="display:none; margin-top:12px">
+      <span id="aiRiderCount" style="font-size:13px;color:#2e7d32;font-weight:600"></span>
+      <table id="aiPreviewTable">
+        <thead><tr><th>Nr</th><th>Name</th><th>Team</th></tr></thead>
+        <tbody id="aiPreviewBody"></tbody>
+      </table>
+      <label>Name der Startliste</label>
+      <input type="text" id="aiListName" placeholder="z.B. U17m Schierke 2026">
+      <button class="aiBtnPrimary" id="aiSaveBtn">✅ Speichern</button>
+    </div>
+    <button class="aiBtnSecondary" id="aiCancelBtn">Abbrechen</button>
+  </div>
+</div>
 
 <!-- TAKTIK STRIP -->
 <div id="taktikStrip" class="hidden"></div>
@@ -1234,47 +1301,131 @@ async function deleteStartlist(id) {
   await loadStartlists(); renderTaktikBody();
 }
 
-function downloadTemplate() {
-  const ws = XLSX.utils.aoa_to_sheet([
-    ['Nr', 'Name', 'Team'],
-    [1, 'Beispiel Fahrer', 'Beispiel Team'],
-    [2, 'Max Mustermann',  'RSV Muster']
-  ]);
-  ws['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 20 }];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Startliste');
-  XLSX.writeFile(wb, 'startliste_vorlage.xlsx');
+// =======================
+// KI-IMPORT STARTLISTE
+// =======================
+let aiRiders = [];
+
+function openAiImport() {
+  aiRiders = [];
+  document.getElementById('aiCategory').value = '';
+  document.getElementById('aiStatus').style.display = 'none';
+  document.getElementById('aiPreviewSection').style.display = 'none';
+  document.getElementById('aiImportModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('aiCategory').focus(), 50);
 }
 
-document.getElementById('startlistFileInput').addEventListener('change', function () {
+document.getElementById('aiCancelBtn').addEventListener('click', () => {
+  document.getElementById('aiImportModal').classList.add('hidden');
+});
+
+document.getElementById('aiFilePickBtn').addEventListener('click', () => {
+  const cat = document.getElementById('aiCategory').value.trim();
+  if (!cat) { document.getElementById('aiCategory').focus(); return; }
+  document.getElementById('startlistFileInput').click();
+});
+
+document.getElementById('aiSaveBtn').addEventListener('click', async () => {
+  const name = document.getElementById('aiListName').value.trim();
+  if (!name || aiRiders.length === 0) return;
+  const btn = document.getElementById('aiSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ Speichern…';
+  try {
+    const res = await fetch(`${SERVER}/startlists`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ name, riders: aiRiders })
+    });
+    if (!res.ok) throw new Error('Server-Fehler');
+    document.getElementById('aiImportModal').classList.add('hidden');
+    await loadStartlists();
+    renderTaktikBody();
+  } catch (err) {
+    alert('❌ ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ Speichern';
+  }
+});
+
+function aiPrompt(category) {
+  return `Extrahiere alle Fahrer der Kategorie "${category}" aus dieser Startliste.\n\nAntworte NUR mit einem JSON-Array, ohne Text, ohne Backticks:\n[{"nr": null, "name": "NACHNAME Vorname", "team": "Teamname"}, ...]\n\nFalls Startnummern vorhanden sind, trage sie als Zahl ein. Sonst null.\nFalls keine Fahrer für diese Kategorie gefunden werden: []`;
+}
+
+document.getElementById('startlistFileInput').addEventListener('change', async function () {
   const file = this.files[0];
   if (!file) return;
-  const defaultName = file.name.replace(/\.xlsx?$/i, '').replace(/_/g, ' ');
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    try {
-      const wb     = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
-      const ws     = wb.Sheets[wb.SheetNames[0]];
-      const rows   = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      if (rows.length < 2) { alert('❌ Keine Daten gefunden'); return; }
-      const riders = rows.slice(1)
-        .map(r => ({ nr: parseInt(r[0]), name: String(r[1]||'').trim(), team: String(r[2]||'').trim() }))
-        .filter(r => !isNaN(r.nr) && r.nr > 0 && r.name.length > 0);
-      if (riders.length === 0) { alert('❌ Keine gültigen Einträge (Spalten: Nr, Name, Team)'); return; }
-      const listName = prompt('Name für diese Startliste:', defaultName);
-      if (!listName) return;
-      const res = await fetch(`${SERVER}/startlists`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body:    JSON.stringify({ name: listName.trim(), riders })
-      });
-      if (!res.ok) { alert('❌ Fehler beim Speichern'); return; }
-      await loadStartlists(); renderTaktikBody();
-      alert(`✅ ${riders.length} Fahrer gespeichert`);
-    } catch (err) { alert('❌ ' + err.message); }
-    this.value = '';
-  };
-  reader.readAsArrayBuffer(file);
+  this.value = '';
+
+  const category  = document.getElementById('aiCategory').value.trim();
+  const statusEl  = document.getElementById('aiStatus');
+  const previewEl = document.getElementById('aiPreviewSection');
+  aiRiders = [];
+  statusEl.style.display = 'block';
+  previewEl.style.display = 'none';
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let apiBody;
+
+    if (ext === 'pdf') {
+      statusEl.textContent = '⏳ PDF wird gelesen…';
+      const ab    = await file.arrayBuffer();
+      const bytes = new Uint8Array(ab);
+      let binary  = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+      apiBody = {
+        model: 'claude-sonnet-4-6', max_tokens: 1000,
+        messages: [{ role: 'user', content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+          { type: 'text', text: aiPrompt(category) }
+        ]}]
+      };
+    } else {
+      statusEl.textContent = '⏳ Datei wird gelesen…';
+      let text;
+      if (ext === 'xlsx' || ext === 'xls') {
+        const ab = await file.arrayBuffer();
+        const wb = XLSX.read(new Uint8Array(ab), { type: 'array' });
+        text = wb.SheetNames.map(n => `[${n}]\n` + XLSX.utils.sheet_to_csv(wb.Sheets[n])).join('\n\n');
+      } else {
+        text = await file.text();
+      }
+      apiBody = {
+        model: 'claude-sonnet-4-6', max_tokens: 1000,
+        messages: [{ role: 'user', content: `${aiPrompt(category)}\n\n${text}` }]
+      };
+    }
+
+    statusEl.textContent = '🤖 KI analysiert…';
+    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(apiBody)
+    });
+    if (!res.ok) throw new Error(`API-Fehler ${res.status}`);
+    const data = await res.json();
+    const raw  = data.content.map(b => b.text || '').join('');
+    const m    = raw.match(/\[[\s\S]*\]/);
+    if (!m) throw new Error('Keine Fahrerliste in der Antwort');
+    aiRiders = JSON.parse(m[0]);
+
+    if (aiRiders.length === 0) {
+      statusEl.textContent = `⚠️ Keine Fahrer für „${category}" gefunden – Bezeichnung prüfen.`;
+      return;
+    }
+
+    statusEl.style.display = 'none';
+    document.getElementById('aiRiderCount').textContent = `✅ ${aiRiders.length} Fahrer gefunden`;
+    document.getElementById('aiListName').value = `${category} – ${file.name.replace(/\.[^.]+$/, '')}`;
+    document.getElementById('aiPreviewBody').innerHTML = aiRiders.map(r =>
+      `<tr><td>${r.nr ?? '–'}</td><td>${escH(r.name)}</td><td>${escH(r.team || '')}</td></tr>`
+    ).join('');
+    previewEl.style.display = 'block';
+
+  } catch (err) {
+    statusEl.textContent = '❌ ' + err.message;
+  }
 });
 
 const tkBody = document.getElementById('taktikBody');
@@ -1303,8 +1454,7 @@ tkBody.addEventListener('click', function (e) {
     case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
     case 'activate-list':      activateStartlist(id);             break;
     case 'delete-list':        deleteStartlist(id);               break;
-    case 'upload-startlist':   document.getElementById('startlistFileInput').click(); break;
-    case 'download-template':  downloadTemplate();                break;
+    case 'upload-startlist':   openAiImport();                    break;
   }
 });
 
@@ -1383,9 +1533,8 @@ function renderTaktikBody() {
         <button class="btn" data-action="delete-list"   data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:#f44336">✕</button>
       </div>`;
     });
-    html += `<div style="padding:10px 14px;display:flex;gap:8px">
-      <button class="btn" data-action="upload-startlist"  style="flex:1">📂 Hochladen</button>
-      <button class="btn" data-action="download-template" style="flex:1">⬇ Vorlage</button>
+    html += `<div style="padding:10px 14px">
+      <button class="btn" data-action="upload-startlist" style="width:100%">🤖 KI-Import</button>
     </div></div>`;
     html += `<div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="btn" data-action="add-group" style="flex:1">＋ Gruppe</button>
