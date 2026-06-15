@@ -1,5 +1,8 @@
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
+const mqtt    = require('mqtt');
+const fs      = require('fs');
+const path    = require('path');
 
 const app = express();
 
@@ -23,7 +26,43 @@ app.use(express.static(__dirname));
 // STATE
 // =======================
 let positions = Object.create(null);
-let gpxTrack  = null;   // { coords: [[lat,lon], ...], name: string }
+let gpxTrack  = null;
+let currentMode = 'race'; // 'race' | 'training'
+
+// Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
+const trackerDisplayNames = Object.create(null);
+
+// =======================
+// STARTLISTEN (persistent auf Disk)
+// =======================
+const STARTLISTS_FILE = path.join(__dirname, 'startlists.json');
+let startlists        = Object.create(null);
+let activeStartlistId = null;
+
+function loadStartlistsFromDisk() {
+  try {
+    if (fs.existsSync(STARTLISTS_FILE)) {
+      const raw      = JSON.parse(fs.readFileSync(STARTLISTS_FILE, 'utf8'));
+      startlists      = raw.lists   || Object.create(null);
+      activeStartlistId = raw.activeId || null;
+      console.log(`📋 ${Object.keys(startlists).length} Startliste(n) geladen`);
+    }
+  } catch (e) { console.error('❌ Startlisten laden:', e.message); }
+}
+
+function saveStartlistsToDisk() {
+  try {
+    fs.writeFileSync(STARTLISTS_FILE,
+      JSON.stringify({ lists: startlists, activeId: activeStartlistId }, null, 2));
+  } catch (e) { console.error('❌ Startlisten speichern:', e.message); }
+}
+
+loadStartlistsFromDisk();
+
+// =======================
+// GRUPPEN (in-memory, Renndaten)
+// =======================
+let groups = [];
 
 // =======================
 // AUTH
@@ -37,7 +76,7 @@ const BETREUER_PASSWORD = process.env.BETREUER_PASSWORD || 'betreuer123';
 // Map<token, { level: 'spolei' | 'betreuer' }>
 const tokens = new Map();
 
-// Jeder eingeloggte Nutzer (jedes Level)
+// Jeder eingeloggte Nutzer
 function requireAuth(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
@@ -48,7 +87,7 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// Nur SpoLei (Admin)
+// Nur SpoLei
 function requireSpolei(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
@@ -91,7 +130,7 @@ app.post('/logout', requireAuth, (req, res) => {
 });
 
 // =======================
-// POSITIONEN (GPS-Tracker → kein Auth nötig)
+// POSITIONEN (GPS-Tracker schreiben via MQTT, POST bleibt für Kompatibilität)
 // =======================
 app.post('/positions', (req, res) => {
   const { id, lat, lon } = req.body;
@@ -103,7 +142,15 @@ app.post('/positions', (req, res) => {
 });
 
 app.get('/positions', (req, res) => {
-  res.json(positions);
+  const enriched = Object.create(null);
+  for (const [id, pos] of Object.entries(positions)) {
+    if (pos.type === 'betreuer') {
+      enriched[id] = { ...pos };
+    } else {
+      enriched[id] = { ...pos, displayName: trackerDisplayNames[id] || id };
+    }
+  }
+  res.json(enriched);
 });
 
 app.delete('/positions', requireSpolei, (req, res) => {
@@ -113,9 +160,8 @@ app.delete('/positions', requireSpolei, (req, res) => {
 });
 
 // =======================
-// BETREUER-POSITION
-// Jeder eingeloggte Nutzer kann seinen Standort einmalig setzen.
-// Marker erscheint auf der Karte mit Name (z.B. "Heinz – VP KM 45").
+// BETREUER-POSITION (NEU)
+// Jeder eingeloggte Nutzer kann seinen Standort einmalig als Betreuer-Marker setzen.
 // =======================
 app.post('/betreuer-position', requireAuth, (req, res) => {
   const { lat, lon, name } = req.body;
@@ -126,9 +172,7 @@ app.post('/betreuer-position', requireAuth, (req, res) => {
   const id = 'betreuer-' + safeName
     .toLowerCase()
     .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 30);
+    .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30);
   positions[id] = { lat, lon, timestamp: Date.now(), type: 'betreuer', name: safeName };
   console.log(`👤 Betreuer gesetzt: "${safeName}" → ${id}`);
   res.json({ ok: true, id });
@@ -148,19 +192,18 @@ app.post('/team-position', requireSpolei, (req, res) => {
 
 // =======================
 // RENAME TRACKER (SpoLei only)
+// Speichert Anzeigenamen – Hardware-ID bleibt erhalten
 // =======================
 app.post('/rename-tracker', requireSpolei, (req, res) => {
-  const { oldName, newName } = req.body;
-  if (!oldName || !newName) return res.status(400).json({ error: 'oldName, newName required' });
-  if (positions[oldName]) {
-    positions[newName] = positions[oldName];
-    delete positions[oldName];
-  }
+  const { trackerId, newName } = req.body;
+  if (!trackerId || !newName) return res.status(400).json({ error: 'trackerId, newName required' });
+  trackerDisplayNames[trackerId] = newName.trim();
+  console.log(`✏️ Tracker umbenannt: ${trackerId} → ${newName}`);
   res.json({ ok: true });
 });
 
 // =======================
-// GPX TRACK (SpoLei only)
+// GPX TRACK
 // =======================
 app.get('/gpx', (req, res) => {
   res.json(gpxTrack || null);
@@ -181,6 +224,154 @@ app.delete('/gpx', requireSpolei, (req, res) => {
   console.log("🗑️ GPX gelöscht");
   res.json({ ok: true });
 });
+
+// =======================
+// MODUS (race / training)
+// =======================
+app.get('/mode', (req, res) => {
+  res.json({ mode: currentMode });
+});
+
+app.post('/mode', requireSpolei, (req, res) => {
+  const { mode } = req.body;
+  if (mode !== 'race' && mode !== 'training') {
+    return res.status(400).json({ error: 'mode must be race or training' });
+  }
+  currentMode = mode;
+  if (mqttClient && mqttClient.connected) {
+    mqttClient.publish('livetracking-fq4l/config', mode, { retain: true, qos: 0 });
+  }
+  console.log(`🔄 Modus: ${mode}`);
+  res.json({ ok: true, mode: currentMode });
+});
+
+// =======================
+// STARTLISTEN ENDPOINTS
+// =======================
+app.get('/startlists', (req, res) => {
+  const list = Object.values(startlists).map(sl => ({
+    id:         sl.id,
+    name:       sl.name,
+    createdAt:  sl.createdAt,
+    riderCount: sl.riders.length,
+    isActive:   sl.id === activeStartlistId
+  }));
+  res.json({ lists: list, activeId: activeStartlistId });
+});
+
+app.get('/startlists/active', (req, res) => {
+  if (!activeStartlistId || !startlists[activeStartlistId]) return res.json([]);
+  res.json(startlists[activeStartlistId].riders);
+});
+
+app.post('/startlists', requireSpolei, (req, res) => {
+  const { name, riders } = req.body;
+  if (!name || !Array.isArray(riders) || riders.length === 0) {
+    return res.status(400).json({ error: 'name und riders[] erforderlich' });
+  }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  startlists[id] = { id, name: name.trim(), createdAt: new Date().toISOString(), riders };
+  saveStartlistsToDisk();
+  console.log(`📋 Startliste gespeichert: "${name}" (${riders.length} Fahrer)`);
+  res.json({ ok: true, id });
+});
+
+app.delete('/startlists/:id', requireSpolei, (req, res) => {
+  const { id } = req.params;
+  if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  const name = startlists[id].name;
+  delete startlists[id];
+  if (activeStartlistId === id) activeStartlistId = null;
+  saveStartlistsToDisk();
+  console.log(`🗑️ Startliste gelöscht: "${name}"`);
+  res.json({ ok: true });
+});
+
+app.post('/startlists/:id/activate', requireSpolei, (req, res) => {
+  const { id } = req.params;
+  if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  activeStartlistId = id;
+  saveStartlistsToDisk();
+  console.log(`✅ Aktive Startliste: "${startlists[id].name}"`);
+  res.json({ ok: true });
+});
+
+// =======================
+// GRUPPEN ENDPOINTS
+// =======================
+app.get('/groups', (req, res) => {
+  const riderMap = Object.create(null);
+  if (activeStartlistId && startlists[activeStartlistId]) {
+    for (const r of startlists[activeStartlistId].riders) {
+      riderMap[Number(r.nr)] = { name: r.name, team: r.team };
+    }
+  }
+  const enriched = groups.map(g => ({
+    ...g,
+    riders: (g.riders || []).map(nr => ({ nr, ...(riderMap[Number(nr)] || {}) }))
+  }));
+  res.json(enriched);
+});
+
+app.post('/groups', requireSpolei, (req, res) => {
+  const { groups: g } = req.body;
+  if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
+  groups = g;
+  res.json({ ok: true });
+});
+
+app.delete('/groups', requireSpolei, (req, res) => {
+  groups = [];
+  console.log('🧹 Gruppen gelöscht');
+  res.json({ ok: true });
+});
+
+// =======================
+// MQTT BRIDGE
+// =======================
+const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
+const MQTT_TOPIC  = 'livetracking-fq4l/positions';
+
+let mqttClient = null;
+
+function connectMqtt() {
+  mqttClient = mqtt.connect(MQTT_BROKER, {
+    clientId:        'render-server-' + Math.random().toString(36).slice(2),
+    clean:           true,
+    reconnectPeriod: 5000,
+    connectTimeout:  15000
+  });
+
+  mqttClient.on('connect', () => {
+    console.log('✅ MQTT verbunden mit broker.emqx.io');
+    mqttClient.subscribe(MQTT_TOPIC, err => {
+      if (err) console.error('❌ MQTT Subscribe Fehler:', err.message);
+      else     console.log(`📡 MQTT subscribed: ${MQTT_TOPIC}`);
+    });
+    // Retained config-Nachricht beim (Re-)Connect wiederherstellen
+    mqttClient.publish('livetracking-fq4l/config', currentMode, { retain: true, qos: 0 });
+  });
+
+  mqttClient.on('message', (topic, message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      const { id, lat, lon, bat, mode } = data;
+      if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
+      positions[id] = { lat, lon, timestamp: Date.now() };
+      if (typeof bat === 'number') positions[id].bat = bat;
+      if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;
+      console.log(`📍 MQTT: ${id} → ${lat}, ${lon}${mode ? ' [' + mode + ']' : ''}`);
+    } catch (e) {
+      console.error('❌ MQTT Nachricht ungültig:', e.message);
+    }
+  });
+
+  mqttClient.on('error',      err => console.error('❌ MQTT Fehler:', err.message));
+  mqttClient.on('reconnect',  ()  => console.log('🔄 MQTT reconnect…'));
+  mqttClient.on('disconnect', ()  => console.log('⚠️ MQTT getrennt'));
+}
+
+connectMqtt();
 
 // =======================
 // START
