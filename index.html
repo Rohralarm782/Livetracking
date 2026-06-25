@@ -13,12 +13,145 @@
 
     /* LOGIN MODAL */
     #loginModal {
-      display: flex; position: fixed;
+      display: flex;
+      position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 10000; background: rgba(0,0,0,0.6);
-      align-items: center; justify-content: center; padding: 20px;
+      z-index: 10000;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
     #loginModal.hidden { display: none !important; }
+    .loginBox {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
+    .loginBox p { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
+    .loginBox input {
+      width: 100%; padding: 12px; margin-bottom: 15px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .loginBox input:focus { outline: none; border-color: #2196F3; }
+    .loginBox button {
+      width: 100%; padding: 12px; background: #2196F3; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 16px; font-weight: bold; transition: background 0.3s;
+    }
+    .loginBox button:hover { background: #1976D2; }
+    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
+
+    /* BUTTONS */
+    .btnGroup { display: none; }
+    .btn {
+      padding: 10px 14px; background: white; border: 1px solid #ccc;
+      border-radius: 6px; cursor: pointer; font-size: 13px;
+      font-family: sans-serif; transition: all 0.2s;
+      white-space: nowrap; flex: 1; min-width: 120px;
+    }
+    .btn:hover { background: #f5f5f5; }
+    .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
+    .btn.primary:hover { background: #1976D2; }
+    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
+    .btn.logout:hover { background: #d32f2f; }
+    .btn.reset { color: #f44336; }
+    .btn.wakeLock { color: #333; }
+    .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
+    .btn.hidden { display: none; }
+    .btn.rain-active { border-color: #1565c0; color: #0d47a1; background: #e3f2fd; }
+    .btn.autoZoom.active { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+
+    /* OPTIONS MENU */
+    #optionsBtn {
+      position: absolute;
+      bottom: 10px; left: 10px; right: calc(50% + 5px);
+      z-index: 999; padding: 10px 14px; background: white;
+      border: 1px solid #ccc; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif;
+      transition: all 0.2s; width: auto;
+    }
+    #optionsBtn:hover { background: #f5f5f5; }
+    #optionsMenu {
+      position: absolute;
+      bottom: 50px; left: 10px; right: 10px;
+      z-index: 999;
+      background: white; border: 1px solid #ccc;
+      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    #optionsMenu.hidden { display: none; }
+    #optionsMenu .btn {
+      width: 100%; border: none; border-bottom: 1px solid #eee;
+      border-radius: 0; flex: 0; min-width: unset; margin: 0;
+    }
+    #optionsMenu .btn:last-child { border-bottom: none; }
+    #optionsMenu .btn:hover { background: #f5f5f5; }
+
+    @media (min-width: 768px) {
+      #optionsBtn  { position: absolute; top: 10px; left: auto; right: 120px; bottom: auto; width: auto; }
+      #taktikBtn   { top: 10px; right: 10px; bottom: auto; left: auto; width: auto; }
+      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
+      #optionsMenu .btn { width: 100%; }
+      #status { right: auto; left: 10px; width: fit-content; }
+    }
+
+    #teamCarToggle {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+      padding: 10px 14px; background: white;
+      border: none; border-bottom: 1px solid #eee;
+      width: 100%; font-size: 13px; font-family: sans-serif;
+      color: #666; transition: all 0.2s;
+    }
+    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
+    #teamCarToggle.hidden { display: none; }
+    #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
+    #teamCarToggle.active { background: #fff3e0; color: #c62828; }
+    #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
+
+    #status {
+      position: absolute; top: 10px; right: 10px;
+      z-index: 999; padding: 8px 14px; border-radius: 6px;
+      font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
+    }
+    #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+    #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
+
+    /* MARKER CONTEXT MENU */
+    .markerMenu {
+      background: white; border: 1px solid #ddd; border-radius: 6px;
+      padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: absolute; z-index: 9500; min-width: 200px; overflow: hidden;
+    }
+    .markerMenu button {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #666;
+      transition: background 0.2s; border-bottom: 1px solid #f0f0f0;
+    }
+    .markerMenu button:last-child { border-bottom: none; }
+    .markerMenu button:hover { background: #f5f5f5; color: #333; }
+    .markerMenu input {
+      display: block; width: 100%; padding: 10px 14px;
+      border: none; border-bottom: 1px solid #f0f0f0;
+      font-size: 13px; font-family: sans-serif;
+    }
+    .markerMenu input:focus { outline: none; background: #f9f9f9; }
+
+
+    /* BETREUER + LOGIN EXTRAS */
+    .loginBox button:disabled { background: #90caf9; cursor: default; }
+    .loginBox .btnSecondary {
+      background: #eee; color: #555; margin-top: 8px; font-size: 14px; font-weight: normal;
+    }
+    .loginBox .btnSecondary:hover { background: #ddd; }
 
     /* BETREUER MODAL */
     #betreuerModal {
@@ -73,57 +206,7 @@
     #aiPreviewTable td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; }
     #aiStatus { font-size: 13px; color: #666; padding: 14px 0; text-align: center; }
 
-    .loginBox {
-      background: white; padding: 40px; border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      width: 100%; max-width: 380px; text-align: center;
-    }
-    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
-    .loginBox p  { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
-    .loginBox input {
-      width: 100%; padding: 12px; margin-bottom: 15px;
-      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
-      transition: border-color 0.3s;
-    }
-    .loginBox input:focus { outline: none; border-color: #2196F3; }
-    .loginBox button {
-      width: 100%; padding: 12px; background: #2196F3; color: white;
-      border: none; border-radius: 6px; cursor: pointer;
-      font-size: 16px; font-weight: bold; transition: background 0.3s;
-    }
-    .loginBox button:hover { background: #1976D2; }
-    .loginBox button:disabled { background: #90caf9; cursor: default; }
-    .loginBox .btnSecondary {
-      background: #eee; color: #555; margin-top: 8px; font-size: 14px; font-weight: normal;
-    }
-    .loginBox .btnSecondary:hover { background: #ddd; }
-    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
-
-    /* BUTTONS */
-    .btn {
-      padding: 10px 14px; background: white; border: 1px solid #ccc;
-      border-radius: 6px; cursor: pointer; font-size: 13px;
-      font-family: sans-serif; transition: all 0.2s;
-      white-space: nowrap; flex: 1; min-width: 120px;
-    }
-    .btn:hover { background: #f5f5f5; }
-    .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
-    .btn.primary:hover { background: #1976D2; }
-    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
-    .btn.logout:hover { background: #d32f2f; }
-    .btn.wakeLock { color: #333; }
-    .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
-    .btn.hidden { display: none; }
-
-    /* OPTIONS MENU */
-    #optionsBtn {
-      position: absolute; bottom: 10px; left: 10px; right: calc(50% + 5px);
-      z-index: 999; padding: 10px 14px; background: white;
-      border: 1px solid #ccc; border-radius: 6px;
-      cursor: pointer; font-size: 13px; font-family: sans-serif;
-      transition: all 0.2s; width: auto;
-    }
-    #optionsBtn:hover { background: #f5f5f5; }
+    /* TAKTIK BUTTON */
     #taktikBtn {
       position: absolute; bottom: 10px; right: 10px; left: calc(50% + 5px);
       z-index: 999; padding: 10px 14px; background: white;
@@ -132,24 +215,9 @@
       transition: all 0.2s; width: auto;
     }
     #taktikBtn:hover { background: #f5f5f5; }
-    #optionsMenu {
-      position: absolute; bottom: 50px; left: 10px; right: 10px;
-      z-index: 999; background: white; border: 1px solid #ccc;
-      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      overflow: hidden; display: flex; flex-direction: column;
-    }
-    #optionsMenu.hidden { display: none; }
-    #optionsMenu .btn {
-      width: 100%; border: none; border-bottom: 1px solid #eee;
-      border-radius: 0; flex: 0; min-width: unset; margin: 0;
-    }
-    #optionsMenu .btn:last-child { border-bottom: none; }
-    #optionsMenu .btn:hover { background: #f5f5f5; }
 
-    /* Erweiterte Einstellungen */
-    #advancedSection {
-      background: #f9f9f9; border-top: 1px solid #eee;
-    }
+    /* ADVANCED SECTION */
+    #advancedSection { background: #f9f9f9; border-top: 1px solid #eee; }
     #advancedSection.hidden { display: none; }
     #modeToggleRow {
       display: flex; align-items: center; justify-content: space-between;
@@ -172,56 +240,10 @@
     }
     #resetBtn:hover { background: #fff5f5; }
 
-    @media (min-width: 768px) {
-      #optionsBtn  { position: absolute; top: 10px; left: auto; right: 10px; bottom: auto; width: auto; }
-      #taktikBtn   { top: 10px; right: 120px; bottom: auto; left: auto; width: auto; }
-      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
-      #status      { right: auto; left: 10px; width: fit-content; }
-    }
-
-    #teamCarToggle {
-      display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-      padding: 10px 14px; background: white;
-      border: none; border-bottom: 1px solid #eee;
-      width: 100%; font-size: 13px; font-family: sans-serif;
-      color: #666; transition: all 0.2s;
-    }
-    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
-    #teamCarToggle.hidden { display: none; }
-    #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
-    #teamCarToggle.active { background: #fff3e0; color: #c62828; }
-
-    #status {
-      position: absolute; top: 10px; right: 10px;
-      z-index: 999; padding: 8px 14px; border-radius: 6px;
-      font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
-    }
-    #status.ok       { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
-    #status.warn     { border-color: #f44336; color: #c62828; background: #ffebee; }
+    /* STATUS TRAINING */
     #status.training { border-color: #f9a825; color: #e65100; background: #fffde7; }
 
-    /* MARKER CONTEXT MENU */
-    .markerMenu {
-      background: white; border: 1px solid #ddd; border-radius: 6px;
-      padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      position: absolute; z-index: 9500; min-width: 200px; overflow: hidden;
-    }
-    .markerMenu button {
-      display: block; width: 100%; padding: 10px 14px;
-      background: none; border: none; text-align: left; cursor: pointer;
-      font-size: 13px; font-family: sans-serif; color: #666;
-      transition: background 0.2s; border-bottom: 1px solid #f0f0f0;
-    }
-    .markerMenu button:last-child { border-bottom: none; }
-    .markerMenu button:hover { background: #f5f5f5; color: #333; }
-    .markerMenu input {
-      display: block; width: 100%; padding: 10px 14px;
-      border: none; border-bottom: 1px solid #f0f0f0;
-      font-size: 13px; font-family: sans-serif;
-    }
-    .markerMenu input:focus { outline: none; background: #f9f9f9; }
-
-    /* ---- TAKTIK STRIP ---- */
+    /* TAKTIK STRIP */
     #taktikStrip {
       position: fixed; top: 50%; right: 8px; width: 70px;
       transform: translateY(-50%);
@@ -241,7 +263,7 @@
     .strip-line  { width: 1px; height: 8px; background: #ccc; }
     .strip-gap   { font-size: 11px; font-weight: 500; color: #aaa; }
 
-    /* ---- TAKTIK VOLLANSICHT ---- */
+    /* TAKTIK VOLLANSICHT */
     #taktikView {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       z-index: 2000; background: #f5f5f5; overflow-y: auto;
@@ -255,7 +277,7 @@
     }
     .tk-body { padding: 12px; }
 
-    /* ---- GROUP CARDS ---- */
+    /* GROUP CARDS */
     .gc       { background: white; border: 1px solid #eee; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
     .gc-hdr   { padding: 11px 14px 9px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .gc-sec   { border-top: 1px solid #f0f0f0; padding: 9px 14px; }
@@ -266,11 +288,12 @@
     .r-team   { font-size: 11px; color: #999; }
     .r-none   { font-size: 13px; color: #bbb; font-style: italic; }
 
-    /* ---- STARTLISTEN PANEL ---- */
+    /* STARTLISTEN PANEL */
     .sl-panel { background: white; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
     .sl-item  { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
     .sl-item:last-child { border-bottom: none; }
     .sl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
   </style>
 </head>
 <body>
@@ -286,6 +309,7 @@
   </div>
 </div>
 
+
 <!-- BETREUER SHARE MODAL -->
 <div id="betreuerModal" class="hidden">
   <div class="loginBox">
@@ -297,46 +321,6 @@
     <button id="betreuerCancelBtn" class="btnSecondary">Abbrechen</button>
   </div>
 </div>
-
-<!-- OPTIONS BUTTON & MENU -->
-<button id="optionsBtn">⚙️ Optionen</button>
-<button id="taktikBtn">📊 Taktik</button>
-
-<div id="optionsMenu" class="hidden">
-  <button class="btn primary" id="loginBtnTop">🔓 Login</button>
-  <button class="btn wakeLock"     id="wakeLockBtn">💡 Bildschirm aktiv</button>
-
-  <!-- Betreuer-Level -->
-  <button class="btn hidden"       id="betreuerBtn">📍 Standort teilen</button>
-
-  <!-- SpoLei-Level -->
-  <button class="btn hidden"       id="gpxBtn">📂 GPX laden</button>
-  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
-  <label  id="teamCarToggle" class="hidden">
-    <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
-  </label>
-  <button class="btn hidden"       id="advancedBtn">⚙️ Erweiterte Einstellungen ▸</button>
-
-  <!-- Erweiterte Einstellungen (klappt inline auf) -->
-  <div id="advancedSection" class="hidden">
-    <div id="modeToggleRow">
-      <div>
-        <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
-        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend · 30s stehend</div>
-      </div>
-      <div id="modeSwitch" style="background:#2196F3;">
-        <div id="modeThumb" style="left:22px;"></div>
-      </div>
-    </div>
-    <button id="resetBtn">🧹 Karte leeren</button>
-  </div>
-
-  <!-- Beide Level -->
-  <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
-</div>
-
-<input type="file" id="gpxFileInput"       accept=".gpx"       style="display:none">
-<input type="file" id="startlistFileInput" accept=".pdf,.xlsx,.xls,.csv,.txt" style="display:none">
 
 <!-- KI-IMPORT MODAL -->
 <div id="aiImportModal" class="hidden">
@@ -361,6 +345,46 @@
   </div>
 </div>
 
+<!-- OPTIONS BUTTON & MENU -->
+<button id="optionsBtn">⚙️ Optionen</button>
+<button id="taktikBtn">📊 Taktik</button>
+
+<div id="optionsMenu" class="hidden">
+  <button class="btn primary" id="loginBtnTop">🔓 Login</button>
+  <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
+  <button class="btn autoZoom active" id="autoZoomBtn">🎯 Auto-Zoom: Ein</button>
+
+  <!-- Betreuer-Level -->
+  <button class="btn hidden" id="betreuerBtn">📍 Standort teilen</button>
+
+  <!-- SpoLei-Level -->
+  <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
+  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
+  <label id="teamCarToggle" class="hidden">
+    <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
+  </label>
+  <button class="btn hidden" id="advancedBtn">⚙️ Erweiterte Einstellungen ▸</button>
+
+  <!-- Erweiterte Einstellungen -->
+  <div id="advancedSection" class="hidden">
+    <div id="modeToggleRow">
+      <div>
+        <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
+        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend · 30s stehend</div>
+      </div>
+      <div id="modeSwitch" style="background:#2196F3;">
+        <div id="modeThumb" style="left:22px;"></div>
+      </div>
+    </div>
+    <button id="resetBtn">🧹 Karte leeren</button>
+  </div>
+
+  <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
+</div>
+
+
+<input type="file" id="gpxFileInput" accept=".gpx" style="display:none">
+<input type="file" id="startlistFileInput" accept=".pdf,.xlsx,.xls,.csv,.txt" style="display:none">
 <!-- TAKTIK STRIP -->
 <div id="taktikStrip" class="hidden"></div>
 
@@ -389,7 +413,6 @@ let authLevel   = null;   // 'spolei' | 'betreuer' | null
 let currentMode = 'race';
 
 function showAdminElements() {
-  // SpoLei – alle Funktionen
   document.getElementById('advancedBtn').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
@@ -399,11 +422,9 @@ function showAdminElements() {
 }
 
 function showBetreuerElements() {
-  // Betreuer – nur Standort teilen
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('betreuerBtn').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
-  // SpoLei-exklusiv versteckt halten
   document.getElementById('advancedBtn').classList.add('hidden');
   document.getElementById('advancedSection').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
@@ -513,11 +534,9 @@ async function confirmBetreuerShare() {
   const name    = document.getElementById('betreuerNameInput').value.trim();
   const errorEl = document.getElementById('betreuerError');
   if (!name) { errorEl.textContent = '❌ Name erforderlich'; return; }
-
   const btn = document.getElementById('betreuerConfirmBtn');
   btn.textContent = '⏳ GPS wird abgerufen…';
   btn.disabled    = true;
-
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       try {
@@ -565,15 +584,15 @@ function applyMode(mode) {
   const sw    = document.getElementById('modeSwitch');
   const thumb = document.getElementById('modeThumb');
   if (mode === 'race') {
-    label.textContent      = 'Renn-Modus';
-    sub.textContent        = '2s bewegend · 30s stehend';
-    sw.style.background    = '#2196F3';
-    thumb.style.left       = '22px';
+    label.textContent   = 'Renn-Modus';
+    sub.textContent     = '2s bewegend · 30s stehend';
+    sw.style.background = '#2196F3';
+    thumb.style.left    = '22px';
   } else {
-    label.textContent      = 'Training-Modus';
-    sub.textContent        = '10s bewegend · 60s stehend';
-    sw.style.background    = '#bbb';
-    thumb.style.left       = '2px';
+    label.textContent   = 'Training-Modus';
+    sub.textContent     = '10s bewegend · 60s stehend';
+    sw.style.background = '#bbb';
+    thumb.style.left    = '2px';
   }
 }
 
@@ -599,6 +618,8 @@ document.getElementById('modeSwitch').addEventListener('click', async () => {
   } catch (err) { console.error('Mode switch:', err); }
 });
 
+
+
 // =======================
 // OPTIONS MENU
 // =======================
@@ -617,7 +638,8 @@ optionsBtn.addEventListener('click', e => {
 });
 
 document.addEventListener('click', e => {
-  if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
+  if (!optionsBtn.contains(e.target) && !optionsMenu.contains(e.target)
+      && !document.getElementById('taktikBtn').contains(e.target)) {
     closeOptionsMenu();
   }
 });
@@ -633,13 +655,8 @@ document.getElementById('advancedBtn').addEventListener('click', () => {
   const section = document.getElementById('advancedSection');
   const btn     = document.getElementById('advancedBtn');
   const isOpen  = !section.classList.contains('hidden');
-  if (isOpen) {
-    section.classList.add('hidden');
-    btn.textContent = '⚙️ Erweiterte Einstellungen ▸';
-  } else {
-    section.classList.remove('hidden');
-    btn.textContent = '⚙️ Erweiterte Einstellungen ▾';
-  }
+  if (isOpen) { section.classList.add('hidden');    btn.textContent = '⚙️ Erweiterte Einstellungen ▸'; }
+  else         { section.classList.remove('hidden'); btn.textContent = '⚙️ Erweiterte Einstellungen ▾'; }
 });
 
 // =======================
@@ -657,7 +674,7 @@ async function toggleWakeLock() {
       wakeLock = null;
       document.getElementById('wakeLockBtn').classList.remove('active');
     }
-  } catch (err) { console.error('Wake Lock:', err); }
+  } catch (err) { console.error('Wake Lock Fehler:', err); }
 }
 
 document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
@@ -683,19 +700,18 @@ const trails        = {};
 let currentMarkerMenu = null;
 let firstDevice  = true;
 let lastDataTime = null;
+let autoZoom     = true;
 
 // =======================
-// MARKER-ICONS
+// TEAMAUTO MARKER
 // =======================
-
-// 🔴 Teamauto (SpoLei)
 const teamCarIcon = L.divIcon({
   className: '',
   html: `<div style="background:#e53935;border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
   iconSize: [28, 28], iconAnchor: [14, 28], tooltipAnchor: [0, -28]
 });
 
-// 🟠 Betreuer (stehender Standort, oranges Quadrat)
+// 🟠 Betreuer (oranges Quadrat)
 const betreuerIcon = L.divIcon({
   className: '',
   html: `<div style="background:#ff9800;border:3px solid white;border-radius:4px;width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
@@ -722,15 +738,16 @@ function startTeamCarTracking() {
       const latlng   = [pos.coords.latitude, pos.coords.longitude];
       const accuracy = pos.coords.accuracy;
       try {
-        await fetch(`${SERVER}/team-position`, {
+        await fetch('https://livetracking-fq4l.onrender.com/team-position', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
         });
       } catch (err) { console.error("Fehler beim Senden:", err); }
+
       if (!teamCarMarker) {
         teamCarMarker = L.marker(latlng, { icon: teamCarIcon, zIndexOffset: 1000 })
-          .addTo(map).bindTooltip('🚗 Teamauto', { permanent: true, direction: 'top' });
+          .addTo(map);
         teamCarAccCircle = L.circle(latlng, {
           radius: accuracy, color: '#e53935', fillColor: '#e53935', fillOpacity: 0.08, weight: 1
         }).addTo(map);
@@ -782,7 +799,7 @@ function updateStatus() {
   }
   const modes = Object.keys(lastPositions)
     .filter(id => id !== 'TEAMAUTO' && !id.startsWith('betreuer-'))
-    .map(id => lastPositions[id].trackerMode)
+    .map(id => lastPositions[id] && lastPositions[id].trackerMode)
     .filter(Boolean);
   const inTraining = modes.some(m => m === 'training');
   if (inTraining) {
@@ -825,7 +842,7 @@ function tooltipContent(id, bat) {
 }
 
 // =======================
-// CONTEXT MENU (nur SpoLei)
+// CONTEXT MENU
 // =======================
 function showMarkerMenu(e, markerId) {
   if (authLevel !== 'spolei') return;
@@ -843,17 +860,19 @@ function showMarkerMenu(e, markerId) {
   renameBtn.textContent = '✏️ Umbenennen';
   renameBtn.addEventListener('click', async () => {
     const newName = input.value.trim();
-    if (!newName) { container.remove(); return; }
+    if (!newName || newName === markerId) { container.remove(); return; }
     try {
-      const res = await fetch(`${SERVER}/rename-tracker`, {
+      const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ trackerId: markerId, newName })
       });
       if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
       if (markers[markerId]) {
-        const lastBat = lastPositions[markerId] && lastPositions[markerId].bat;
-        markers[markerId].setTooltipContent(tooltipContent(newName, lastBat));
+        markers[newName] = markers[markerId]; delete markers[markerId];
+        if (lastPositions[markerId]) { lastPositions[newName] = lastPositions[markerId]; delete lastPositions[markerId]; }
+        if (trails[markerId])        { trails[newName] = trails[markerId]; delete trails[markerId]; }
+        markers[newName].setTooltipContent(newName);
       }
       container.remove();
     } catch (err) { alert('❌ Fehler: ' + err.message); }
@@ -865,6 +884,16 @@ function showMarkerMenu(e, markerId) {
   currentMarkerMenu = container;
   input.focus(); input.select();
 }
+
+// =======================
+// AUTO-ZOOM TOGGLE
+// =======================
+document.getElementById('autoZoomBtn').addEventListener('click', () => {
+  autoZoom = !autoZoom;
+  const btn = document.getElementById('autoZoomBtn');
+  btn.textContent = autoZoom ? '🎯 Auto-Zoom: Ein' : '🎯 Auto-Zoom: Aus';
+  btn.classList.toggle('active', autoZoom);
+});
 
 // =======================
 // LOAD POSITIONS
@@ -886,6 +915,9 @@ async function loadPositions() {
       const displayName = pos.displayName || id;
       const isBetreuer  = pos.type === 'betreuer';
 
+      // TEAMAUTO überspringen wenn lokaler Marker aktiv (verhindert Doppeldarstellung)
+      if (id === 'TEAMAUTO' && teamCarMarker !== null) return;
+
       // Trail
       if (!trails[id]) {
         const color = id === 'TEAMAUTO' ? '#e53935'
@@ -895,7 +927,6 @@ async function loadPositions() {
       }
 
       if (!markers[id]) {
-        // Icon
         const icon = id === 'TEAMAUTO' ? teamCarIcon
                    : isBetreuer        ? betreuerIcon
                    : L.icon({
@@ -904,7 +935,6 @@ async function loadPositions() {
                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                      });
 
-        // Label
         const label = isBetreuer ? `👤 ${pos.name || id}` : tooltipContent(displayName, bat);
 
         const marker = L.marker(latlng, { icon }).addTo(map)
@@ -931,9 +961,7 @@ async function loadPositions() {
 
         const prev  = lastPositions[id];
         const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
-        // Kein Trail für Betreuer
         if (moved && !isBetreuer) trails[id].addLatLng(latlng);
-
         lastPositions[id] = latlng;
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
@@ -943,12 +971,24 @@ async function loadPositions() {
           markers[id].setTooltipContent(tooltipContent(displayName, bat));
         }
       }
-
-      // Karte nur bei aktiven Trackern nachführen (nicht Betreuer / Teamauto)
-      if (!isBetreuer && id !== 'TEAMAUTO') {
-        map.panTo(latlng, { animate: true, duration: 0.6 });
-      }
     });
+
+    // Auto-Zoom: alle sichtbaren Marker + Teamauto einschließen
+    if (autoZoom) {
+      const allLatLngs = Object.values(lastPositions);
+      if (teamCarMarker) {
+        const tc = teamCarMarker.getLatLng();
+        allLatLngs.push([tc.lat, tc.lng]);
+      }
+      if (allLatLngs.length === 1) {
+        // Einzelner Marker: sanft nachführen
+        map.panTo(allLatLngs[0], { animate: true, duration: 0.5 });
+      } else if (allLatLngs.length >= 2) {
+        // Mehrere Marker: alle gleichzeitig sichtbar halten
+        map.fitBounds(allLatLngs, { padding: [50, 50], animate: true, duration: 0.3 });
+      }
+    }
+
   } catch (err) { console.error("Fetch Error:", err); }
 }
 
@@ -967,18 +1007,21 @@ async function clearMap() {
     lastDataTime = null; firstDevice = true; updateStatus();
   } catch (err) { alert('❌ Fehler: ' + err.message); }
 }
-document.getElementById('resetBtn').addEventListener('click', clearMap);
+document.getElementById("resetBtn").addEventListener("click", clearMap);
 
 // =======================
-// GPX TRACKS
+// 📂 GPX TRACKS
 // =======================
 let gpxLayer = null;
 
+// Beim Laden: GPX vom Server holen (für alle sichtbar)
 async function fetchGpxTrack() {
   try {
     const res  = await fetch(`${SERVER}/gpx`);
     const data = await res.json();
-    if (data && data.coords && data.coords.length > 0) drawGpxLayer(data.coords);
+    if (data && data.coords && data.coords.length > 0) {
+      drawGpxLayer(data.coords);
+    }
   } catch (err) { console.error('GPX fetch:', err); }
 }
 
@@ -987,11 +1030,11 @@ function drawGpxLayer(coords) {
   gpxLayer = L.polyline(coords, {
     color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
   }).addTo(map);
-  if (authLevel === 'spolei') document.getElementById('gpxRemoveBtn').classList.remove('hidden');
+  if (authToken) document.getElementById('gpxRemoveBtn').classList.remove('hidden');
 }
 
 document.getElementById('gpxBtn').addEventListener('click', () => {
-  setTimeout(() => closeOptionsMenu(), 50);
+  setTimeout(() => optionsMenu.classList.add('hidden'), 50);
   document.getElementById('gpxFileInput').click();
 });
 
@@ -1003,11 +1046,13 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
     try {
       const coords = parseGpx(e.target.result);
       drawGpxLayer(coords);
+      // Global speichern
       await fetch(`${SERVER}/gpx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ coords, name: file.name })
       });
+      console.log(`📂 GPX gespeichert: ${file.name} (${coords.length} Punkte)`);
     } catch (err) { alert('❌ ' + err.message); }
     this.value = '';
   };
@@ -1018,6 +1063,7 @@ function parseGpx(xmlText) {
   const parser = new DOMParser();
   const xml    = parser.parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
+
   const coords = [];
   xml.querySelectorAll('trkpt').forEach(pt => {
     const lat = parseFloat(pt.getAttribute('lat'));
@@ -1040,18 +1086,11 @@ document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
   document.getElementById('gpxRemoveBtn').classList.add('hidden');
   try {
     await fetch(`${SERVER}/gpx`, {
-      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
     });
   } catch (err) { console.error('GPX delete:', err); }
 });
-
-// =======================
-// MAIN LOOP
-// =======================
-loadPositions();
-setInterval(loadPositions, 1000);
-fetchGpxTrack();
-loadMode();
 
 // =======================
 // TAKTIK
@@ -1428,6 +1467,9 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
   }
 });
 
+// =======================
+// TAKTIK – EVENT DELEGATION
+// =======================
 const tkBody = document.getElementById('taktikBody');
 
 tkBody.addEventListener('click', function (e) {
@@ -1492,6 +1534,9 @@ tkBody.addEventListener('keydown', function (e) {
   if (e.target.classList.contains('gap-inp') || e.target.classList.contains('name-inp')) { e.target.blur(); }
 });
 
+// =======================
+// TAKTIK – RENDER
+// =======================
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
   if (!grps || grps.length === 0) { strip.classList.add('hidden'); return; }
@@ -1682,6 +1727,13 @@ async function pollGroups() {
   } catch (e) {}
 }
 
+// =======================
+// MAIN LOOP
+// =======================
+loadPositions();
+setInterval(loadPositions, 1000);
+fetchGpxTrack();
+loadMode();
 pollGroups();
 setInterval(pollGroups, 5000);
 
