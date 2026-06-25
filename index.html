@@ -1414,7 +1414,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
       for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       const base64 = btoa(binary);
       apiBody = {
-        model: 'claude-sonnet-4-6', max_tokens: 1000,
+        model: 'claude-sonnet-4-6', max_tokens: 8000,
         messages: [{ role: 'user', content: [
           { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
           { type: 'text', text: aiPrompt(category) }
@@ -1431,7 +1431,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
         text = await file.text();
       }
       apiBody = {
-        model: 'claude-sonnet-4-6', max_tokens: 1000,
+        model: 'claude-sonnet-4-6', max_tokens: 8000,
         messages: [{ role: 'user', content: `${aiPrompt(category)}\n\n${text}` }]
       };
     }
@@ -1444,9 +1444,13 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     });
     if (!res.ok) throw new Error(`API-Fehler ${res.status}`);
     const data = await res.json();
-    const raw  = data.content.map(b => b.text || '').join('');
+    if (data.error) throw new Error('API: ' + (data.error.message || JSON.stringify(data.error)));
+    const raw  = (data.content || []).map(b => b.text || '').join('');
     const m    = raw.match(/\[[\s\S]*\]/);
-    if (!m) throw new Error('Keine Fahrerliste in der Antwort');
+    if (!m) {
+      const cut = data.stop_reason === 'max_tokens' ? ' (Antwort abgeschnitten – Datei zu groß)' : '';
+      throw new Error('Keine Fahrerliste in der Antwort' + cut + ': ' + raw.slice(0, 200));
+    }
     aiRiders = JSON.parse(m[0]);
 
     if (aiRiders.length === 0) {
