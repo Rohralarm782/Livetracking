@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Tracking</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2196F3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -680,8 +684,16 @@ async function toggleWakeLock() {
 document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
 
 document.addEventListener('visibilitychange', async () => {
-  if (!document.hidden && wakeLock) {
+  if (document.hidden) return;
+  // Wake Lock wiederherstellen
+  if (wakeLock) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+  // Auto-Tracker neu starten wenn "Mein Standort" aktiv war
+  if (document.getElementById('teamCarCheckbox').checked) {
+    stopTeamCarTracking();
+    startTeamCarTracking();
+    showToast('📍 Tracker neugestartet ✓');
   }
 });
 
@@ -1740,6 +1752,24 @@ fetchGpxTrack();
 loadMode();
 pollGroups();
 setInterval(pollGroups, 5000);
+
+// =======================
+// TOAST
+// =======================
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:white;padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;pointer-events:none;';
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 2500);
+}
+
+// =======================
+// SERVICE WORKER (PWA)
+// =======================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(e => console.error('SW:', e));
+}
 
 </script>
 </body>
