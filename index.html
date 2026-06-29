@@ -120,7 +120,9 @@
     #teamCarToggle.active { background: #fff3e0; color: #c62828; }
     #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
 
+    /* CHANGE 1: Status hidden but JS logic intact */
     #status {
+      display: none !important;
       position: absolute; top: 10px; right: 10px;
       z-index: 999; padding: 8px 14px; border-radius: 6px;
       font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
@@ -219,6 +221,10 @@
       transition: all 0.2s; width: auto;
     }
     #taktikBtn:hover { background: #f5f5f5; }
+    /* CHANGE 2: Override after base rule so desktop media query wins */
+    @media (min-width: 768px) {
+      #taktikBtn { top: 10px; right: 10px; bottom: auto; left: auto; width: auto; }
+    }
 
     /* ADVANCED SECTION */
     #advancedSection { background: #f9f9f9; border-top: 1px solid #eee; }
@@ -305,7 +311,7 @@
 <!-- LOGIN MODAL -->
 <div id="loginModal" class="hidden">
   <div class="loginBox">
-    <h2>🔐 Login</h2>
+    <h2>&#128272; Login</h2>
     <p id="loginReason">SpoLei- oder Betreuer-Passwort eingeben</p>
     <input type="password" id="passwordInput" placeholder="Passwort eingeben">
     <button id="loginBtn">Einloggen</button>
@@ -317,10 +323,10 @@
 <!-- BETREUER SHARE MODAL -->
 <div id="betreuerModal" class="hidden">
   <div class="loginBox">
-    <h2>📍 Standort teilen</h2>
-    <p>Dein Name erscheint als Label auf der Karte – z.B. mit Verpflegungszone-Info.</p>
-    <input type="text" id="betreuerNameInput" placeholder="z.B. Heinz – VP KM 45" maxlength="40">
-    <button id="betreuerConfirmBtn">📍 Jetzt teilen</button>
+    <h2>&#128205; Standort teilen</h2>
+    <p>Dein Name erscheint als Label auf der Karte &#8211; z.B. mit Verpflegungszone-Info.</p>
+    <input type="text" id="betreuerNameInput" placeholder="z.B. Heinz &#8211; VP KM 45" maxlength="40">
+    <button id="betreuerConfirmBtn">&#128205; Jetzt teilen</button>
     <div id="betreuerError" class="error"></div>
     <button id="betreuerCancelBtn" class="btnSecondary">Abbrechen</button>
   </div>
@@ -329,11 +335,11 @@
 <!-- KI-IMPORT MODAL -->
 <div id="aiImportModal" class="hidden">
   <div class="aiBox">
-    <h2>📂 Import</h2>
-    <p>Lade eine Startliste in beliebigem Format hoch – die KI extrahiert die Fahrer der gewünschten Kategorie automatisch.</p>
+    <h2>&#128194; Import</h2>
+    <p>Lade eine Startliste in beliebigem Format hoch &#8211; die KI extrahiert die Fahrer der gew&#252;nschten Kategorie automatisch.</p>
     <label>Kategorie</label>
-    <input type="text" id="aiCategory" placeholder="z.B. U17m, Junioren, Elite, U15 männlich">
-    <button class="aiBtnPrimary" id="aiFilePickBtn">📂 Datei wählen (PDF, Excel, CSV…)</button>
+    <input type="text" id="aiCategory" placeholder="z.B. U17m, Junioren, Elite, U15 m&#228;nnlich">
+    <button class="aiBtnPrimary" id="aiFilePickBtn">&#128194; Datei w&#228;hlen (PDF, Excel, CSV&#8230;)</button>
     <div id="aiStatus" style="display:none"></div>
     <div id="aiPreviewSection" style="display:none; margin-top:12px">
       <span id="aiRiderCount" style="font-size:13px;color:#2e7d32;font-weight:600"></span>
@@ -343,47 +349,47 @@
       </table>
       <label>Name der Startliste</label>
       <input type="text" id="aiListName" placeholder="z.B. U17m Schierke 2026">
-      <button class="aiBtnPrimary" id="aiSaveBtn">✅ Speichern</button>
+      <button class="aiBtnPrimary" id="aiSaveBtn">&#9989; Speichern</button>
     </div>
     <button class="aiBtnSecondary" id="aiCancelBtn">Abbrechen</button>
   </div>
 </div>
 
 <!-- OPTIONS BUTTON & MENU -->
-<button id="optionsBtn">⚙️ Optionen</button>
-<button id="taktikBtn">📊 Taktik</button>
+<button id="optionsBtn">&#9881;&#65039; Optionen</button>
+<button id="taktikBtn">&#128202; Taktik</button>
 
 <div id="optionsMenu" class="hidden">
-  <button class="btn primary" id="loginBtnTop">🔓 Login</button>
-  <button class="btn wakeLock" id="wakeLockBtn">💡 Bildschirm aktiv</button>
-  <button class="btn autoZoom active" id="autoZoomBtn">🎯 Auto-Zoom: Ein</button>
+  <button class="btn primary" id="loginBtnTop">&#128275; Login</button>
+  <button class="btn wakeLock" id="wakeLockBtn">&#128161; Bildschirm aktiv</button>
+  <button class="btn autoZoom active" id="autoZoomBtn">&#127919; Auto-Zoom: Ein</button>
 
   <!-- Betreuer-Level -->
-  <button class="btn hidden" id="betreuerBtn">📍 Standort teilen</button>
+  <button class="btn hidden" id="betreuerBtn">&#128205; Standort teilen</button>
 
   <!-- SpoLei-Level -->
-  <button class="btn hidden" id="gpxBtn">📂 GPX laden</button>
-  <button class="btn reset hidden" id="gpxRemoveBtn">🗑️ GPX entfernen</button>
+  <button class="btn hidden" id="gpxBtn">&#128194; GPX laden</button>
+  <button class="btn reset hidden" id="gpxRemoveBtn">&#128465;&#65039; GPX entfernen</button>
   <label id="teamCarToggle" class="hidden">
-    <input type="checkbox" id="teamCarCheckbox"> 🚗 Mein Standort
+    <input type="checkbox" id="teamCarCheckbox"> &#128663; Mein Standort
   </label>
-  <button class="btn hidden" id="advancedBtn">⚙️ Erweiterte Einstellungen ▸</button>
+  <button class="btn hidden" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#9658;</button>
 
   <!-- Erweiterte Einstellungen -->
   <div id="advancedSection" class="hidden">
     <div id="modeToggleRow">
       <div>
         <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
-        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend · 30s stehend</div>
+        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend &middot; 30s stehend</div>
       </div>
       <div id="modeSwitch" style="background:#2196F3;">
         <div id="modeThumb" style="left:22px;"></div>
       </div>
     </div>
-    <button id="resetBtn">🧹 Karte leeren</button>
+    <button id="resetBtn">&#129529; Karte leeren</button>
   </div>
 
-  <button class="btn logout hidden" id="logoutBtn">🚪 Logout</button>
+  <button class="btn logout hidden" id="logoutBtn">&#128682; Logout</button>
 </div>
 
 
@@ -395,13 +401,13 @@
 <!-- TAKTIK VOLLANSICHT -->
 <div id="taktikView" class="hidden">
   <div class="tk-header">
-    <span style="font-size:16px;font-weight:500">📊 Taktik</span>
-    <button id="closeTaktikBtn" class="btn" style="padding:6px 12px">✕ Karte</button>
+    <span style="font-size:16px;font-weight:500">&#128202; Taktik</span>
+    <button id="closeTaktikBtn" class="btn" style="padding:6px 12px">&#10005; Karte</button>
   </div>
   <div class="tk-body" id="taktikBody"></div>
 </div>
 
-<div id="status" class="warn">⚪ Verbindung wird aufgebaut…</div>
+<div id="status" class="warn">&#9898; Verbindung wird aufgebaut&#8230;</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -438,7 +444,7 @@ function showBetreuerElements() {
 function hideAdminElements() {
   document.getElementById('advancedBtn').classList.add('hidden');
   document.getElementById('advancedSection').classList.add('hidden');
-  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+  document.getElementById('advancedBtn').textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8';
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('gpxBtn').classList.add('hidden');
@@ -455,7 +461,7 @@ function saveToken(token, level) {
   document.getElementById('loginModal').classList.add('hidden');
   if (level === 'spolei') showAdminElements();
   else                    showBetreuerElements();
-  console.log(`✅ Eingeloggt als ${level}`);
+  console.log(`\u2705 Eingeloggt als ${level}`);
 }
 
 function loadToken() {
@@ -481,7 +487,7 @@ function logout() {
   document.getElementById('teamCarCheckbox').checked = false;
   document.getElementById('loginModal').classList.add('hidden');
   hideAdminElements();
-  console.log("🚪 Abgemeldet");
+  console.log("\u{1F6AA} Abgemeldet");
 }
 
 function showLoginModal(reason) {
@@ -496,7 +502,7 @@ document.getElementById('loginBtnTop').addEventListener('click', () => showLogin
 document.getElementById('loginBtn').addEventListener('click', async () => {
   const password = document.getElementById('passwordInput').value;
   const errorEl  = document.getElementById('loginError');
-  if (!password) { errorEl.textContent = '❌ Passwort erforderlich'; return; }
+  if (!password) { errorEl.textContent = '\u274C Passwort erforderlich'; return; }
   try {
     const res  = await fetch(`${SERVER}/login`, {
       method: 'POST',
@@ -504,12 +510,12 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       body: JSON.stringify({ password })
     });
     const data = await res.json();
-    if (!res.ok) { errorEl.textContent = '❌ Falsches Passwort'; return; }
+    if (!res.ok) { errorEl.textContent = '\u274C Falsches Passwort'; return; }
     saveToken(data.token, data.level);
     document.getElementById('passwordInput').value = '';
     errorEl.textContent = '';
     closeOptionsMenu();
-  } catch (err) { errorEl.textContent = '❌ Fehler: ' + err.message; }
+  } catch (err) { errorEl.textContent = '\u274C Fehler: ' + err.message; }
 });
 
 document.getElementById('passwordInput').addEventListener('keypress', e => {
@@ -520,7 +526,7 @@ document.getElementById('logoutBtn').addEventListener('click', logout);
 loadToken();
 
 // =======================
-// BETREUER – STANDORT TEILEN
+// BETREUER
 // =======================
 let betreuerSharedName = '';
 
@@ -528,7 +534,7 @@ function showBetreuerShareModal() {
   closeOptionsMenu();
   document.getElementById('betreuerNameInput').value = betreuerSharedName;
   document.getElementById('betreuerError').textContent = '';
-  document.getElementById('betreuerConfirmBtn').textContent = '📍 Jetzt teilen';
+  document.getElementById('betreuerConfirmBtn').textContent = '\u{1F4CD} Jetzt teilen';
   document.getElementById('betreuerConfirmBtn').disabled = false;
   document.getElementById('betreuerModal').classList.remove('hidden');
   setTimeout(() => document.getElementById('betreuerNameInput').focus(), 50);
@@ -537,9 +543,9 @@ function showBetreuerShareModal() {
 async function confirmBetreuerShare() {
   const name    = document.getElementById('betreuerNameInput').value.trim();
   const errorEl = document.getElementById('betreuerError');
-  if (!name) { errorEl.textContent = '❌ Name erforderlich'; return; }
+  if (!name) { errorEl.textContent = '\u274C Name erforderlich'; return; }
   const btn = document.getElementById('betreuerConfirmBtn');
-  btn.textContent = '⏳ GPS wird abgerufen…';
+  btn.textContent = '\u23F3 GPS wird abgerufen\u2026';
   btn.disabled    = true;
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
@@ -552,17 +558,17 @@ async function confirmBetreuerShare() {
         if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Fehler'); }
         betreuerSharedName = name;
         document.getElementById('betreuerModal').classList.add('hidden');
-        document.getElementById('betreuerBtn').textContent = '🔄 Standort aktualisieren';
+        document.getElementById('betreuerBtn').textContent = '\u{1F504} Standort aktualisieren';
         errorEl.textContent = '';
       } catch (err) {
-        errorEl.textContent = '❌ ' + err.message;
-        btn.textContent = '📍 Jetzt teilen';
+        errorEl.textContent = '\u274C ' + err.message;
+        btn.textContent = '\u{1F4CD} Jetzt teilen';
         btn.disabled    = false;
       }
     },
     (err) => {
-      errorEl.textContent = '❌ GPS: ' + err.message;
-      btn.textContent = '📍 Jetzt teilen';
+      errorEl.textContent = '\u274C GPS: ' + err.message;
+      btn.textContent = '\u{1F4CD} Jetzt teilen';
       btn.disabled    = false;
     },
     { enableHighAccuracy: true, timeout: 15000 }
@@ -589,12 +595,12 @@ function applyMode(mode) {
   const thumb = document.getElementById('modeThumb');
   if (mode === 'race') {
     label.textContent   = 'Renn-Modus';
-    sub.textContent     = '2s bewegend · 30s stehend';
+    sub.textContent     = '2s bewegend \u00B7 30s stehend';
     sw.style.background = '#2196F3';
     thumb.style.left    = '22px';
   } else {
     label.textContent   = 'Training-Modus';
-    sub.textContent     = '10s bewegend · 60s stehend';
+    sub.textContent     = '10s bewegend \u00B7 60s stehend';
     sw.style.background = '#bbb';
     thumb.style.left    = '2px';
   }
@@ -622,8 +628,6 @@ document.getElementById('modeSwitch').addEventListener('click', async () => {
   } catch (err) { console.error('Mode switch:', err); }
 });
 
-
-
 // =======================
 // OPTIONS MENU
 // =======================
@@ -633,7 +637,7 @@ const optionsMenu = document.getElementById('optionsMenu');
 function closeOptionsMenu() {
   optionsMenu.classList.add('hidden');
   document.getElementById('advancedSection').classList.add('hidden');
-  document.getElementById('advancedBtn').textContent = '⚙️ Erweiterte Einstellungen ▸';
+  document.getElementById('advancedBtn').textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8';
 }
 
 optionsBtn.addEventListener('click', e => {
@@ -659,8 +663,8 @@ document.getElementById('advancedBtn').addEventListener('click', () => {
   const section = document.getElementById('advancedSection');
   const btn     = document.getElementById('advancedBtn');
   const isOpen  = !section.classList.contains('hidden');
-  if (isOpen) { section.classList.add('hidden');    btn.textContent = '⚙️ Erweiterte Einstellungen ▸'; }
-  else         { section.classList.remove('hidden'); btn.textContent = '⚙️ Erweiterte Einstellungen ▾'; }
+  if (isOpen) { section.classList.add('hidden');    btn.textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8'; }
+  else         { section.classList.remove('hidden'); btn.textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25BE'; }
 });
 
 // =======================
@@ -685,15 +689,13 @@ document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock)
 
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden) return;
-  // Wake Lock wiederherstellen
   if (wakeLock) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   }
-  // Auto-Tracker neu starten wenn "Mein Standort" aktiv war
   if (document.getElementById('teamCarCheckbox').checked) {
     stopTeamCarTracking();
     startTeamCarTracking();
-    showToast('📍 Tracker neugestartet ✓');
+    showToast('\u{1F4CD} Tracker neugestartet \u2713');
   }
 });
 
@@ -723,7 +725,6 @@ const teamCarIcon = L.divIcon({
   iconSize: [28, 28], iconAnchor: [14, 28], tooltipAnchor: [0, -28]
 });
 
-// 🟠 Betreuer (oranges Quadrat)
 const betreuerIcon = L.divIcon({
   className: '',
   html: `<div style="background:#ff9800;border:3px solid white;border-radius:4px;width:22px;height:22px;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
@@ -736,12 +737,12 @@ let teamCarAccCircle = null;
 
 function startTeamCarTracking() {
   if (!authToken) {
-    showLoginModal('🚗 Zum Aktivieren des Teamauto-Trackings');
+    showLoginModal('\u{1F697} Zum Aktivieren des Teamauto-Trackings');
     document.getElementById('teamCarCheckbox').checked = false;
     return;
   }
   if (!navigator.geolocation) {
-    alert("GPS wird von diesem Browser nicht unterstützt.");
+    alert("GPS wird von diesem Browser nicht unterst\u00FCtzt.");
     document.getElementById('teamCarCheckbox').checked = false;
     return;
   }
@@ -800,13 +801,13 @@ const statusEl = document.getElementById('status');
 function updateStatus() {
   if (!lastDataTime) {
     statusEl.className   = 'warn';
-    statusEl.textContent = '⚪ Warte auf Daten…';
+    statusEl.textContent = '\u26AA Warte auf Daten\u2026';
     return;
   }
   const ago = (Date.now() - lastDataTime) / 1000;
   if (ago >= 5) {
     statusEl.className   = 'warn';
-    statusEl.textContent = `🔴 Offline (${Math.round(ago)}s)`;
+    statusEl.textContent = `\u{1F534} Offline (${Math.round(ago)}s)`;
     return;
   }
   const modes = Object.keys(lastPositions)
@@ -816,10 +817,10 @@ function updateStatus() {
   const inTraining = modes.some(m => m === 'training');
   if (inTraining) {
     statusEl.className   = 'training';
-    statusEl.textContent = '🟡 Verbunden · Training';
+    statusEl.textContent = '\u{1F7E1} Verbunden \u00B7 Training';
   } else {
     statusEl.className   = 'ok';
-    statusEl.textContent = '🟢 Verbunden · Rennen';
+    statusEl.textContent = '\u{1F7E2} Verbunden \u00B7 Rennen';
   }
 }
 setInterval(updateStatus, 1000);
@@ -845,7 +846,7 @@ function animateMarker(marker, from, to, duration = 800) {
 function batLabel(bat) {
   if (typeof bat !== 'number') return '';
   const color = bat >= 60 ? '#2e7d32' : bat >= 30 ? '#e65100' : '#c62828';
-  const icon  = bat >= 60 ? '🟢'      : bat >= 30 ? '🟡'      : '🔴';
+  const icon  = bat >= 60 ? '\u{1F7E2}' : bat >= 30 ? '\u{1F7E1}' : '\u{1F534}';
   return ` <span style="color:${color};font-size:11px">${icon} ${bat}%</span>`;
 }
 
@@ -866,10 +867,10 @@ function showMarkerMenu(e, markerId) {
   container.style.top  = e.pageY + 'px';
 
   const input = document.createElement('input');
-  input.type = 'text'; input.placeholder = 'Neuer Name…'; input.value = markerId;
+  input.type = 'text'; input.placeholder = 'Neuer Name\u2026'; input.value = markerId;
 
   const renameBtn = document.createElement('button');
-  renameBtn.textContent = '✏️ Umbenennen';
+  renameBtn.textContent = '\u270F\uFE0F Umbenennen';
   renameBtn.addEventListener('click', async () => {
     const newName = input.value.trim();
     if (!newName || newName === markerId) { container.remove(); return; }
@@ -879,7 +880,7 @@ function showMarkerMenu(e, markerId) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ trackerId: markerId, newName })
       });
-      if (!res.ok) { alert('❌ Fehler beim Umbenennen'); return; }
+      if (!res.ok) { alert('\u274C Fehler beim Umbenennen'); return; }
       if (markers[markerId]) {
         markers[newName] = markers[markerId]; delete markers[markerId];
         if (lastPositions[markerId]) { lastPositions[newName] = lastPositions[markerId]; delete lastPositions[markerId]; }
@@ -887,7 +888,7 @@ function showMarkerMenu(e, markerId) {
         markers[newName].setTooltipContent(newName);
       }
       container.remove();
-    } catch (err) { alert('❌ Fehler: ' + err.message); }
+    } catch (err) { alert('\u274C Fehler: ' + err.message); }
   });
 
   container.appendChild(input);
@@ -903,7 +904,7 @@ function showMarkerMenu(e, markerId) {
 document.getElementById('autoZoomBtn').addEventListener('click', () => {
   autoZoom = !autoZoom;
   const btn = document.getElementById('autoZoomBtn');
-  btn.textContent = autoZoom ? '🎯 Auto-Zoom: Ein' : '🎯 Auto-Zoom: Aus';
+  btn.textContent = autoZoom ? '\u{1F3AF} Auto-Zoom: Ein' : '\u{1F3AF} Auto-Zoom: Aus';
   btn.classList.toggle('active', autoZoom);
 });
 
@@ -927,10 +928,8 @@ async function loadPositions() {
       const displayName = pos.displayName || id;
       const isBetreuer  = pos.type === 'betreuer';
 
-      // TEAMAUTO überspringen wenn lokaler Marker aktiv (verhindert Doppeldarstellung)
       if (id === 'TEAMAUTO' && teamCarMarker !== null) return;
 
-      // Trail
       if (!trails[id]) {
         const color = id === 'TEAMAUTO' ? '#e53935'
                     : isBetreuer        ? '#ff9800'
@@ -947,12 +946,11 @@ async function loadPositions() {
                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                      });
 
-        const label = isBetreuer ? `👤 ${pos.name || id}` : tooltipContent(displayName, bat);
+        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat);
 
         const marker = L.marker(latlng, { icon }).addTo(map)
           .bindTooltip(label, { permanent: true, direction: 'top' });
 
-        // Rechtsklick-Umbenennen nur für GPS-Tracker (nicht Betreuer / Teamauto)
         if (id !== 'TEAMAUTO' && !isBetreuer) {
           marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
         }
@@ -964,7 +962,6 @@ async function loadPositions() {
         if (firstDevice && !isBetreuer) { map.setView(latlng, 15); firstDevice = false; }
 
       } else {
-        // Betreuer-Marker: kein Smooth-Animate (stehen still)
         if (isBetreuer) {
           markers[id].setLatLng(latlng);
         } else {
@@ -978,14 +975,12 @@ async function loadPositions() {
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
 
-        // Tooltip nur für GPS-Tracker aktualisieren
         if (!isBetreuer && id !== 'TEAMAUTO') {
           markers[id].setTooltipContent(tooltipContent(displayName, bat));
         }
       }
     });
 
-    // Auto-Zoom: alle sichtbaren Marker + Teamauto einschließen
     if (autoZoom) {
       const allLatLngs = Object.values(lastPositions);
       if (teamCarMarker) {
@@ -993,10 +988,8 @@ async function loadPositions() {
         allLatLngs.push([tc.lat, tc.lng]);
       }
       if (allLatLngs.length === 1) {
-        // Einzelner Marker: sanft nachführen
         map.panTo(allLatLngs[0], { animate: true, duration: 0.5 });
       } else if (allLatLngs.length >= 2) {
-        // Mehrere Marker: alle gleichzeitig sichtbar halten
         map.fitBounds(allLatLngs, { padding: [50, 50], animate: true, duration: 0.3 });
       }
     }
@@ -1008,7 +1001,7 @@ async function loadPositions() {
 // RESET
 // =======================
 async function clearMap() {
-  if (!confirm('🚨 Wirklich ALLE Positionen löschen?')) return;
+  if (!confirm('\u{1F6A8} Wirklich ALLE Positionen l\u00F6schen?')) return;
   try {
     await fetch(`${SERVER}/positions`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1017,16 +1010,15 @@ async function clearMap() {
     Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
     Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
     lastDataTime = null; firstDevice = true; updateStatus();
-  } catch (err) { alert('❌ Fehler: ' + err.message); }
+  } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
 document.getElementById("resetBtn").addEventListener("click", clearMap);
 
 // =======================
-// 📂 GPX TRACKS
+// GPX TRACKS
 // =======================
 let gpxLayer = null;
 
-// Beim Laden: GPX vom Server holen (für alle sichtbar)
 async function fetchGpxTrack() {
   try {
     const res  = await fetch(`${SERVER}/gpx`);
@@ -1058,14 +1050,12 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
     try {
       const coords = parseGpx(e.target.result);
       drawGpxLayer(coords);
-      // Global speichern
       await fetch(`${SERVER}/gpx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ coords, name: file.name })
       });
-      console.log(`📂 GPX gespeichert: ${file.name} (${coords.length} Punkte)`);
-    } catch (err) { alert('❌ ' + err.message); }
+    } catch (err) { alert('\u274C ' + err.message); }
     this.value = '';
   };
   reader.readAsText(file);
@@ -1074,8 +1064,7 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
 function parseGpx(xmlText) {
   const parser = new DOMParser();
   const xml    = parser.parseFromString(xmlText, 'application/xml');
-  if (xml.querySelector('parsererror')) throw new Error('Ungültige GPX-Datei');
-
+  if (xml.querySelector('parsererror')) throw new Error('Ung\u00FCltige GPX-Datei');
   const coords = [];
   xml.querySelectorAll('trkpt').forEach(pt => {
     const lat = parseFloat(pt.getAttribute('lat'));
@@ -1212,7 +1201,7 @@ function startSplit(gid) { splittingGid = gid; splitNrs.clear(); renderTaktikBod
 function cancelSplit()    { splittingGid = null; splitNrs.clear(); renderTaktikBody(); }
 
 async function confirmSplit(gid, direction = 'before') {
-  if (splitNrs.size === 0) { alert('Keine Fahrer ausgewählt'); return; }
+  if (splitNrs.size === 0) { alert('Keine Fahrer ausgew\u00E4hlt'); return; }
   const g = taktikGroups.find(g => g.id === gid);
   if (!g) return;
   const nr = r => r.nr !== undefined ? r.nr : r;
@@ -1221,8 +1210,8 @@ async function confirmSplit(gid, direction = 'before') {
   g.riders = remainRiders;
   const used     = taktikGroups.map(g => g.name);
   const namePool = direction === 'before'
-    ? ['Spitzengruppe','Ausreißer','Spitze 2','Vorne']
-    : ['Verfolger','Nachzügler','Feld 2','Hinten'];
+    ? ['Spitzengruppe','Ausr\u00FC\u00DFer','Spitze 2','Vorne']
+    : ['Verfolger','Nachz\u00FCgler','Feld 2','Hinten'];
   const newName  = namePool.find(n => !used.includes(n)) || 'Neue Gruppe';
   const usedCols = taktikGroups.map(g => g.color);
   const newColor = GROUP_COLORS.find(c => !usedCols.includes(c)) || GROUP_COLORS[0];
@@ -1251,8 +1240,8 @@ function trendArrow(cur, prev) {
   const c = gapToSec(cur), p = gapToSec(prev);
   if (c === null || p === null || c === p) return '';
   return c > p
-    ? '<span style="color:#e53935;font-size:10px">↑</span>'
-    : '<span style="color:#2e7d32;font-size:10px">↓</span>';
+    ? '<span style="color:#e53935;font-size:10px">\u2191</span>'
+    : '<span style="color:#2e7d32;font-size:10px">\u2193</span>';
 }
 function adjustGap(gid, deltaSec) {
   const g = taktikGroups.find(g => g.id === gid);
@@ -1319,7 +1308,7 @@ async function removeRider(gid, nr) {
 }
 
 async function neuesRennen() {
-  if (!confirm('🚨 Gruppen und Positionen löschen?')) return;
+  if (!confirm('\u{1F6A8} Gruppen und Positionen l\u00F6schen?')) return;
   try {
     await Promise.all([
       fetch(`${SERVER}/groups`,    { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } }),
@@ -1331,7 +1320,7 @@ async function neuesRennen() {
     Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
     lastDataTime = null; firstDevice = true; updateStatus();
     renderTaktikBody(); renderStrip([]);
-  } catch (e) { alert('❌ ' + e.message); }
+  } catch (e) { alert('\u274C ' + e.message); }
 }
 
 async function activateStartlist(id) {
@@ -1344,7 +1333,7 @@ async function activateStartlist(id) {
 }
 
 async function deleteStartlist(id) {
-  if (!confirm('Startliste löschen?')) return;
+  if (!confirm('Startliste l\u00F6schen?')) return;
   await fetch(`${SERVER}/startlists/${id}`, {
     method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
   }).catch(e => console.error(e));
@@ -1380,7 +1369,7 @@ document.getElementById('aiSaveBtn').addEventListener('click', async () => {
   const name = document.getElementById('aiListName').value.trim();
   if (!name || aiRiders.length === 0) return;
   const btn = document.getElementById('aiSaveBtn');
-  btn.disabled = true; btn.textContent = '⏳ Speichern…';
+  btn.disabled = true; btn.textContent = '\u23F3 Speichern\u2026';
   try {
     const res = await fetch(`${SERVER}/startlists`, {
       method: 'POST',
@@ -1392,14 +1381,14 @@ document.getElementById('aiSaveBtn').addEventListener('click', async () => {
     await loadStartlists();
     renderTaktikBody();
   } catch (err) {
-    alert('❌ ' + err.message);
+    alert('\u274C ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = '✅ Speichern';
+    btn.disabled = false; btn.textContent = '\u2705 Speichern';
   }
 });
 
 function aiPrompt(category) {
-  return `Extrahiere alle Fahrer der Kategorie "${category}" aus dieser Startliste.\n\nAntworte NUR mit einem JSON-Array, ohne Text, ohne Backticks:\n[{"nr": null, "name": "NACHNAME Vorname", "team": "Teamname"}, ...]\n\nFalls Startnummern vorhanden sind, trage sie als Zahl ein. Sonst null.\nFalls keine Fahrer für diese Kategorie gefunden werden: []`;
+  return `Extrahiere alle Fahrer der Kategorie "${category}" aus dieser Startliste.\n\nAntworte NUR mit einem JSON-Array, ohne Text, ohne Backticks:\n[{"nr": null, "name": "NACHNAME Vorname", "team": "Teamname"}, ...]\n\nFalls Startnummern vorhanden sind, trage sie als Zahl ein. Sonst null.\nFalls keine Fahrer f\u00FCr diese Kategorie gefunden werden: []`;
 }
 
 document.getElementById('startlistFileInput').addEventListener('change', async function () {
@@ -1408,10 +1397,10 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
   this.value = '';
 
   const category  = document.getElementById('aiCategory').value.trim();
-  const statusEl  = document.getElementById('aiStatus');
+  const statusEl2 = document.getElementById('aiStatus');
   const previewEl = document.getElementById('aiPreviewSection');
   aiRiders = [];
-  statusEl.style.display = 'block';
+  statusEl2.style.display = 'block';
   previewEl.style.display = 'none';
 
   try {
@@ -1419,7 +1408,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     let apiBody;
 
     if (ext === 'pdf') {
-      statusEl.textContent = '⏳ PDF wird gelesen…';
+      statusEl2.textContent = '\u23F3 PDF wird gelesen\u2026';
       const ab    = await file.arrayBuffer();
       const bytes = new Uint8Array(ab);
       let binary  = '';
@@ -1433,7 +1422,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
         ]}]
       };
     } else {
-      statusEl.textContent = '⏳ Datei wird gelesen…';
+      statusEl2.textContent = '\u23F3 Datei wird gelesen\u2026';
       let text;
       if (ext === 'xlsx' || ext === 'xls') {
         const ab = await file.arrayBuffer();
@@ -1448,7 +1437,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
       };
     }
 
-    statusEl.textContent = '🤖 KI analysiert…';
+    statusEl2.textContent = '\u{1F916} KI analysiert\u2026';
     const res  = await fetch(`${SERVER}/api/claude`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
@@ -1460,31 +1449,31 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     const raw  = (data.content || []).map(b => b.text || '').join('');
     const m    = raw.match(/\[[\s\S]*\]/);
     if (!m) {
-      const cut = data.stop_reason === 'max_tokens' ? ' (Antwort abgeschnitten – Datei zu groß)' : '';
+      const cut = data.stop_reason === 'max_tokens' ? ' (Antwort abgeschnitten \u2013 Datei zu gro\u00DF)' : '';
       throw new Error('Keine Fahrerliste in der Antwort' + cut + ': ' + raw.slice(0, 200));
     }
     aiRiders = JSON.parse(m[0]);
 
     if (aiRiders.length === 0) {
-      statusEl.textContent = `⚠️ Keine Fahrer für „${category}" gefunden – Bezeichnung prüfen.`;
+      statusEl2.textContent = `\u26A0\uFE0F Keine Fahrer f\u00FCr \u201E${category}\u201C gefunden \u2013 Bezeichnung pr\u00FCfen.`;
       return;
     }
 
-    statusEl.style.display = 'none';
-    document.getElementById('aiRiderCount').textContent = `✅ ${aiRiders.length} Fahrer gefunden`;
-    document.getElementById('aiListName').value = `${category} – ${file.name.replace(/\.[^.]+$/, '')}`;
+    statusEl2.style.display = 'none';
+    document.getElementById('aiRiderCount').textContent = `\u2705 ${aiRiders.length} Fahrer gefunden`;
+    document.getElementById('aiListName').value = `${category} \u2013 ${file.name.replace(/\.[^.]+$/, '')}`;
     document.getElementById('aiPreviewBody').innerHTML = aiRiders.map(r =>
-      `<tr><td>${r.nr ?? '–'}</td><td>${escH(r.name)}</td><td>${escH(r.team || '')}</td></tr>`
+      `<tr><td>${r.nr ?? '\u2013'}</td><td>${escH(r.name)}</td><td>${escH(r.team || '')}</td></tr>`
     ).join('');
     previewEl.style.display = 'block';
 
   } catch (err) {
-    statusEl.textContent = '❌ ' + err.message;
+    statusEl2.textContent = '\u274C ' + err.message;
   }
 });
 
 // =======================
-// TAKTIK – EVENT DELEGATION
+// TAKTIK EVENT DELEGATION
 // =======================
 const tkBody = document.getElementById('taktikBody');
 
@@ -1522,8 +1511,8 @@ tkBody.addEventListener('change', function (e) {
   if (e.target.checked) splitNrs.add(nr); else splitNrs.delete(nr);
   tkBody.querySelectorAll('[data-action="confirm-split"]').forEach(btn => {
     btn.textContent = btn.dataset.direction === 'before'
-      ? `↑ Vorne (${splitNrs.size})`
-      : `↓ Hinten (${splitNrs.size})`;
+      ? `\u2191 Vorne (${splitNrs.size})`
+      : `\u2193 Hinten (${splitNrs.size})`;
   });
 });
 
@@ -1551,7 +1540,7 @@ tkBody.addEventListener('keydown', function (e) {
 });
 
 // =======================
-// TAKTIK – RENDER
+// TAKTIK RENDER
 // =======================
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
@@ -1565,7 +1554,7 @@ function renderStrip(grps) {
     const conn     = i < grps.length - 1
       ? `<div class="strip-conn">
            <div class="strip-line"></div>
-           <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '–'}${trendArrow(nextGap, nextPrev)}</div>
+           <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '\u2013'}${trendArrow(nextGap, nextPrev)}</div>
            <div class="strip-line"></div>
          </div>` : '';
     return `<div class="strip-grp">
@@ -1582,7 +1571,7 @@ function renderTaktikBody() {
     const active = startlistMeta.find(s => s.id === activeSlId);
     html += `<div class="sl-panel">
       <div style="padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0">
-        <span style="font-size:13px;font-weight:500;color:#333">📋 Starterliste</span>
+        <span style="font-size:13px;font-weight:500;color:#333">\u{1F4CB} Starterliste</span>
         <span style="font-size:12px;color:${active ? '#2e7d32' : '#999'}">${active ? escH(active.name) : 'Keine aktiv'}</span>
       </div>`;
     startlistMeta.forEach(sl => {
@@ -1591,20 +1580,20 @@ function renderTaktikBody() {
         <span style="font-size:13px;color:#333;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(sl.name)}</span>
         <span style="font-size:11px;color:#aaa;flex-shrink:0">${sl.riderCount}</span>
         <button class="btn" data-action="activate-list" data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0">Aktiv</button>
-        <button class="btn" data-action="delete-list"   data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:#f44336">✕</button>
+        <button class="btn" data-action="delete-list"   data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:#f44336">\u2715</button>
       </div>`;
     });
     html += `<div style="padding:10px 14px">
-      <button class="btn" data-action="upload-startlist" style="width:100%">📂 Import</button>
+      <button class="btn" data-action="upload-startlist" style="width:100%">\u{1F4C2} Import</button>
     </div></div>`;
     html += `<div style="display:flex;gap:8px;margin-bottom:12px">
-      <button class="btn" data-action="add-group" style="flex:1">＋ Gruppe</button>
-      <button class="btn" data-action="new-race"  style="flex:1;color:#f44336">🚨 Neues Rennen</button>
+      <button class="btn" data-action="add-group" style="flex:1">\uFF0B Gruppe</button>
+      <button class="btn" data-action="new-race"  style="flex:1;color:#f44336">\u{1F6A8} Neues Rennen</button>
     </div>`;
   }
   if (taktikGroups.length === 0) {
     html += `<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">
-      ${authToken ? 'Noch keine Gruppen – oben auf ＋ Gruppe tippen' : 'Noch keine Gruppen angelegt'}
+      ${authToken ? 'Noch keine Gruppen \u2013 oben auf \uFF0B Gruppe tippen' : 'Noch keine Gruppen angelegt'}
     </div>`;
   } else {
     taktikGroups.forEach((g, idx) => {
@@ -1624,15 +1613,15 @@ function renderTaktikBody() {
         html += `<div class="gc" style="border-color:#bbdefb">
           <div style="height:3px;background:${g.color}"></div>
           <div class="gc-hdr" style="background:#e3f2fd">
-            <span style="font-size:13px;font-weight:500;color:#1565c0">✂ ${escH(g.name)} aufteilen</span>
-            <button class="btn" data-action="cancel-split" style="padding:3px 8px;font-size:11px">✕</button>
+            <span style="font-size:13px;font-weight:500;color:#1565c0">\u2702 ${escH(g.name)} aufteilen</span>
+            <button class="btn" data-action="cancel-split" style="padding:3px 8px;font-size:11px">\u2715</button>
           </div>
-          <div class="gc-sec"><div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer wählen, die sich absetzen:</div>${rows}</div>
+          <div class="gc-sec"><div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer w\u00E4hlen, die sich absetzen:</div>${rows}</div>
           <div class="gc-sec" style="display:flex;gap:6px">
             <button class="btn" data-action="confirm-split" data-gid="${g.id}" data-direction="before"
-              style="flex:1;background:#e3f2fd;color:#1565c0;border-color:#90caf9;font-size:12px">↑ Vorne (0)</button>
+              style="flex:1;background:#e3f2fd;color:#1565c0;border-color:#90caf9;font-size:12px">\u2191 Vorne (0)</button>
             <button class="btn" data-action="confirm-split" data-gid="${g.id}" data-direction="after"
-              style="flex:1;background:#fce4ec;color:#880e4f;border-color:#f48fb1;font-size:12px">↓ Hinten (0)</button>
+              style="flex:1;background:#fce4ec;color:#880e4f;border-color:#f48fb1;font-size:12px">\u2193 Hinten (0)</button>
           </div>
         </div>`;
         return;
@@ -1641,8 +1630,8 @@ function renderTaktikBody() {
         html += `<div class="gc" style="border-color:#ffe0b2">
           <div style="height:3px;background:${g.color}"></div>
           <div class="gc-hdr" style="background:#fff3e0">
-            <span style="font-size:13px;font-weight:500;color:#e65100">⊕ ${escH(g.name)} zusammenführen</span>
-            <button class="btn" data-action="cancel-merge" style="padding:3px 8px;font-size:11px">✕</button>
+            <span style="font-size:13px;font-weight:500;color:#e65100">\u2295 ${escH(g.name)} zusammenf\u00FChren</span>
+            <button class="btn" data-action="cancel-merge" style="padding:3px 8px;font-size:11px">\u2715</button>
           </div>
           <div class="gc-sec">
             <div style="font-size:11px;color:#999;margin-bottom:8px">Fahrer in welche Gruppe verschieben?</div>
@@ -1657,10 +1646,10 @@ function renderTaktikBody() {
       }
       const trend   = trendArrow(g.gap, g.gapPrev);
       const gapHtml = isLeading
-        ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e8f5e9;color:#2e7d32">Führend</span>`
+        ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e8f5e9;color:#2e7d32">F\u00FChrend</span>`
         : authToken
           ? `<div style="display:flex;align-items:center;gap:2px">
-               <button data-action="gap-minus" data-gid="${g.id}" style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">−</button>
+               <button data-action="gap-minus" data-gid="${g.id}" style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">\u2212</button>
                <input class="gap-inp" data-gid="${g.id}" value="${escH(g.gap||'')}" placeholder="0:00"
                  style="width:46px;font-size:13px;padding:3px 5px;border:1px solid #ddd;border-radius:6px;text-align:center">
                <button data-action="gap-plus" data-gid="${g.id}" style="padding:2px 7px;font-size:16px;color:#666;min-width:unset;flex:0">+</button>
@@ -1677,18 +1666,18 @@ function renderTaktikBody() {
         if (authToken && movingRider.gid === g.id && movingRider.nr === nr) {
           return `<div class="r-row" style="background:#f9f9f9;border-radius:6px;padding:5px;flex-wrap:wrap;gap:4px">
             <span class="r-nr">${nr}</span>
-            <span style="font-size:11px;color:#999;flex-shrink:0">→</span>
+            <span style="font-size:11px;color:#999;flex-shrink:0">\u2192</span>
             ${others.map(tg => `
               <button class="btn" data-action="confirm-move-rider" data-target="${tg.id}"
                 style="display:flex;align-items:center;gap:4px;padding:3px 7px;font-size:11px;flex-shrink:0">
                 <div style="width:7px;height:7px;border-radius:50%;background:${tg.color};flex-shrink:0"></div>
                 ${escH(tg.name.length > 9 ? tg.name.slice(0,8)+'.' : tg.name)}</button>`).join('')}
-            <button class="btn" data-action="cancel-move-rider" style="padding:3px 7px;font-size:11px;flex-shrink:0">✕</button>
+            <button class="btn" data-action="cancel-move-rider" style="padding:3px 7px;font-size:11px;flex-shrink:0">\u2715</button>
           </div>`;
         }
         return `<div class="r-row">
           ${authToken ? `<button class="btn" data-action="remove-rider" data-gid="${g.id}" data-nr="${nr}"
-            style="padding:1px 5px;font-size:11px;color:#f44336;min-width:unset;flex:0">✕</button>` : ''}
+            style="padding:1px 5px;font-size:11px;color:#f44336;min-width:unset;flex:0">\u2715</button>` : ''}
           <span class="r-nr">${nr}</span>
           <div style="flex:1">${r.name
             ? `<div class="r-name">${escH(r.name)}</div><div class="r-team">${escH(r.team||'')}</div>`
@@ -1696,21 +1685,21 @@ function renderTaktikBody() {
           }</div>
           ${(authToken && others.length > 0) ? `
             <button class="btn" data-action="start-move-rider" data-gid="${g.id}" data-nr="${nr}"
-              style="padding:2px 6px;font-size:12px;color:#666;min-width:unset;flex:0" title="Fahrer verschieben">→</button>` : ''}
+              style="padding:2px 6px;font-size:12px;color:#666;min-width:unset;flex:0" title="Fahrer verschieben">\u2192</button>` : ''}
         </div>`;
       }).join('');
       const extraBtns = authToken ? [
         riders.length >= 2 ? `<button class="btn" data-action="start-split" data-gid="${g.id}"
-          style="flex:1;font-size:12px;color:#555">✂ Aufteilen</button>` : '',
+          style="flex:1;font-size:12px;color:#555">\u2702 Aufteilen</button>` : '',
         others.length > 0 ? `<button class="btn" data-action="start-merge" data-gid="${g.id}"
-          style="flex:1;font-size:12px;color:#555">⊕ Zusammenführen</button>` : ''
+          style="flex:1;font-size:12px;color:#555">\u2295 Zusammenf\u00FChren</button>` : ''
       ].filter(Boolean).join('') : '';
       const footer = authToken ? `
         <div class="gc-sec" style="display:flex;gap:8px">
           <input type="number" class="add-rider-input" data-gid="${g.id}" min="1" placeholder="Nr."
             style="flex:1;min-width:60px;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px">
-          <button class="btn" data-action="add-rider"    data-gid="${g.id}" style="flex:1">＋ Fahrer</button>
-          <button class="btn" data-action="delete-group" data-gid="${g.id}" style="flex:0;padding:7px 10px;color:#f44336">🗑</button>
+          <button class="btn" data-action="add-rider"    data-gid="${g.id}" style="flex:1">\uFF0B Fahrer</button>
+          <button class="btn" data-action="delete-group" data-gid="${g.id}" style="flex:0;padding:7px 10px;color:#f44336">\u{1F5D1}</button>
         </div>
         ${extraBtns ? `<div class="gc-sec" style="border-top:1px dashed #f0f0f0;padding-top:6px;padding-bottom:6px;display:flex;gap:6px">${extraBtns}</div>` : ''}
       ` : '';
