@@ -915,6 +915,7 @@ async function loadPositions() {
   try {
     const res  = await fetch(`${SERVER}/positions`);
     const data = await res.json();
+    lastPosData = data;
     const ids  = Object.keys(data);
     if (ids.length === 0) return;
 
@@ -1097,6 +1098,8 @@ document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
 // TAKTIK
 // =======================
 const GROUP_COLORS = ['#EF9F27', '#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#888780'];
+let lastPosData    = {};   // letzte Antwort von GET /positions
+let displayTexts   = {};   // aktueller Text je Tracker
 let taktikGroups   = [];
 let startlistMeta  = [];
 let activeSlId     = null;
@@ -1125,6 +1128,7 @@ document.getElementById('closeTaktikBtn').addEventListener('click', closeTaktikV
 
 async function loadTaktikView() {
   await loadGroups();
+  await loadDisplays();
   if (authToken) await loadStartlists();
   if (taktikGroups.length === 0 && authToken) {
     taktikGroups.push({
@@ -1137,6 +1141,13 @@ async function loadTaktikView() {
     await saveGroups();
   }
   renderTaktikBody();
+}
+
+async function loadDisplays() {
+  try {
+    const res = await fetch(`${SERVER}/displays`);
+    displayTexts = await res.json();
+  } catch (e) { console.error('Displays:', e); }
 }
 
 async function loadGroups() {
@@ -1499,6 +1510,7 @@ tkBody.addEventListener('click', function (e) {
     case 'start-move-rider':   startMoveRider(gid, parseInt(nr)); break;
     case 'cancel-move-rider':  cancelMoveRider();                 break;
     case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
+    case 'send-display':       sendDisplay(id);                   break;
     case 'activate-list':      activateStartlist(id);             break;
     case 'delete-list':        deleteStartlist(id);               break;
     case 'upload-startlist':   openAiImport();                    break;
@@ -1537,6 +1549,7 @@ tkBody.addEventListener('keydown', function (e) {
   if (e.key !== 'Enter') return;
   if (e.target.classList.contains('add-rider-input')) { e.preventDefault(); addRider(e.target.dataset.gid); }
   if (e.target.classList.contains('gap-inp') || e.target.classList.contains('name-inp')) { e.target.blur(); }
+  if (e.target.classList.contains('disp-inp')) { e.preventDefault(); sendDisplay(e.target.dataset.id); }
 });
 
 // =======================
@@ -1717,7 +1730,77 @@ function renderTaktikBody() {
       </div>`;
     });
   }
+  html += renderDisplayPanel();
   tkBody.innerHTML = html;
+}
+
+// =======================
+// DISPLAY-NACHRICHTEN
+// Ein Feld je Tracker. Das Eingabefeld enthaelt den aktuell
+// aktiven Text, damit man ihn abaendern statt neu tippen kann.
+// =======================
+function renderDisplayPanel() {
+  if (!authToken || authLevel !== 'spolei') return '';
+
+  const ids = Object.keys(lastPosData)
+    .filter(id => id !== 'TEAMAUTO' && lastPosData[id].type !== 'betreuer')
+    .sort();
+
+  if (ids.length === 0) {
+    return `<div class="sl-panel"><div style="padding:11px 14px;border-bottom:1px solid #f0f0f0">
+      <span style="font-size:13px;font-weight:500;color:#333">\u{1F4DF} Displays</span></div>
+      <div style="padding:16px 14px;text-align:center;color:#bbb;font-size:13px">Noch keine Tracker</div></div>`;
+  }
+
+  let h = `<div class="sl-panel"><div style="padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0">
+    <span style="font-size:13px;font-weight:500;color:#333">\u{1F4DF} Displays</span>
+    <span style="font-size:12px;color:#999">${ids.length} Tracker</span></div>`;
+
+  ids.forEach(id => {
+    const pos    = lastPosData[id] || {};
+    const name   = pos.displayName || id;
+    const ageSec = pos.timestamp ? Math.round((Date.now() - pos.timestamp) / 1000) : 99999;
+    const online = ageSec < 60;
+    const txt    = displayTexts[id] || '';
+    h += `<div style="padding:9px 14px;border-bottom:1px solid #f0f0f0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:500;color:#333">${escH(name)}</span>
+        <span style="font-size:11px;color:${online ? '#2e7d32' : '#bbb'}">${online ? 'aktiv' : 'offline'}</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <input type="text" class="disp-inp" data-id="${escH(id)}" maxlength="20"
+          value="${escH(txt)}" placeholder="Nachricht\u2026"
+          style="flex:1;min-width:0;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:monospace">
+        <button class="btn" data-action="send-display" data-id="${escH(id)}"
+          style="flex:0;padding:7px 12px">\u27A4</button>
+      </div>
+    </div>`;
+  });
+
+  h += `<div style="padding:8px 14px;font-size:11px;color:#aaa;line-height:1.5">
+    Max. 20 Zeichen. Semikolon erzeugt einen Zeilenumbruch, z.B. P3;0:15;0:20.
+    Leeres Feld senden l\u00F6scht die Anzeige.</div></div>`;
+  return h;
+}
+
+async function sendDisplay(id) {
+  const inp = document.querySelector(`.disp-inp[data-id="${id}"]`);
+  if (!inp) return;
+  const text = inp.value;
+  try {
+    const res = await fetch(`${SERVER}/display`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ id, text })
+    });
+    if (!res.ok) { alert('\u274C Senden fehlgeschlagen'); return; }
+    const data = await res.json();
+    if (data.text && data.text.length > 0) displayTexts[id] = data.text;
+    else                                    delete displayTexts[id];
+    inp.value = data.text || '';
+    inp.style.borderColor = '#4caf50';
+    setTimeout(() => { inp.style.borderColor = '#ddd'; }, 1200);
+  } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
 
 function escH(s) {
