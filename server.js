@@ -32,6 +32,24 @@ let currentMode = 'race'; // 'race' | 'training'
 // Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
 const trackerDisplayNames = Object.create(null);
 
+// Aktuell auf den Garmin-Displays stehende Texte, je Tracker-ID.
+// Quelle der Wahrheit ist der Broker (retained) - wir lesen sie beim
+// Verbinden zurueck und ueberleben damit auch einen Cold Start.
+const displayTexts = Object.create(null);
+
+// Nur druckbares ASCII, max. 20 Zeichen.
+// 20 = BLE-Standard-MTU 23 Byte minus 3 Byte ATT-Header.
+// Umlaute oder Emoji wuerden auf dem Garmin als leere Kaestchen landen.
+function sanitizeDisplay(text) {
+  let out = '';
+  const src = String(text == null ? '' : text);
+  for (let i = 0; i < src.length && out.length < 20; i++) {
+    const c = src.charCodeAt(i);
+    if (c >= 32 && c <= 126) out += src[i];
+  }
+  return out.trim();
+}
+
 // =======================
 // STARTLISTEN (persistent auf Disk)
 // =======================
@@ -322,6 +340,31 @@ app.post('/startlists/:id/activate', requireSpolei, (req, res) => {
 });
 
 // =======================
+// DISPLAY-NACHRICHTEN
+// =======================
+app.get('/displays', (req, res) => {
+  res.json(displayTexts);
+});
+
+app.post('/display', requireSpolei, (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: 'id erforderlich' });
+
+  const text = sanitizeDisplay(req.body.text);
+  if (!mqttClient || !mqttClient.connected) {
+    return res.status(503).json({ error: 'MQTT nicht verbunden' });
+  }
+
+  // Leerer Text loescht die retained Message beim Broker.
+  mqttClient.publish(`livetracking-fq4l/display/${id}`, text, { retain: true, qos: 0 });
+  if (text.length > 0) displayTexts[id] = text;
+  else                 delete displayTexts[id];
+
+  console.log(`\u{1F4DF} Display ${id} \u2192 "${text}"`);
+  res.json({ ok: true, text });
+});
+
+// =======================
 // GRUPPEN ENDPOINTS
 // =======================
 app.get('/groups', (req, res) => {
@@ -354,8 +397,9 @@ app.delete('/groups', requireSpolei, (req, res) => {
 // =======================
 // MQTT BRIDGE
 // =======================
-const MQTT_BROKER = 'mqtt://broker.emqx.io:1883';
-const MQTT_TOPIC  = 'livetracking-fq4l/positions';
+const MQTT_BROKER   = 'mqtt://broker.emqx.io:1883';
+const MQTT_TOPIC    = 'livetracking-fq4l/positions';
+const MQTT_DISPLAYS = 'livetracking-fq4l/display/+';
 
 let mqttClient = null;
 
@@ -373,11 +417,26 @@ function connectMqtt() {
       if (err) console.error('❌ MQTT Subscribe Fehler:', err.message);
       else     console.log(`📡 MQTT subscribed: ${MQTT_TOPIC}`);
     });
+    // Eigene Display-Topics mitlesen: der Broker liefert die retained
+    // Messages sofort, damit kennen wir nach jedem Neustart wieder den
+    // aktuellen Stand jedes Garmin-Displays.
+    mqttClient.subscribe(MQTT_DISPLAYS, err => {
+      if (err) console.error('❌ MQTT Subscribe Fehler:', err.message);
+      else     console.log(`📡 MQTT subscribed: ${MQTT_DISPLAYS}`);
+    });
     // Retained config-Nachricht beim (Re-)Connect wiederherstellen
     mqttClient.publish('livetracking-fq4l/config', currentMode, { retain: true, qos: 0 });
   });
 
   mqttClient.on('message', (topic, message) => {
+    // Display-Topics zuerst: die tragen reinen Text, kein JSON
+    if (topic.startsWith('livetracking-fq4l/display/')) {
+      const id   = topic.slice('livetracking-fq4l/display/'.length);
+      const text = message.toString();
+      if (text.length > 0) displayTexts[id] = text;
+      else                 delete displayTexts[id];
+      return;
+    }
     try {
       const data = JSON.parse(message.toString());
       const { id, lat, lon, bat, mode } = data;
