@@ -1100,6 +1100,8 @@ document.getElementById('gpxRemoveBtn').addEventListener('click', async () => {
 const GROUP_COLORS = ['#EF9F27', '#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#888780'];
 let lastPosData    = {};   // letzte Antwort von GET /positions
 let displayTexts   = {};   // aktueller Text je Tracker
+let displayAuto    = {};   // Tracker im Automatik-Modus
+let displayPreview = '';   // Text, den die Automatik gerade erzeugen wuerde
 let taktikGroups   = [];
 let startlistMeta  = [];
 let activeSlId     = null;
@@ -1145,9 +1147,27 @@ async function loadTaktikView() {
 
 async function loadDisplays() {
   try {
-    const res = await fetch(`${SERVER}/displays`);
-    displayTexts = await res.json();
+    const res  = await fetch(`${SERVER}/displays`);
+    const data = await res.json();
+    displayTexts   = data.texts   || {};
+    displayAuto    = data.auto    || {};
+    displayPreview = data.preview || '';
   } catch (e) { console.error('Displays:', e); }
+}
+
+async function toggleAuto(id) {
+  const on = !displayAuto[id];
+  try {
+    const res = await fetch(`${SERVER}/display-auto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ id, auto: on })
+    });
+    if (!res.ok) { alert('\u274C Umschalten fehlgeschlagen'); return; }
+    if (on) displayAuto[id] = true; else delete displayAuto[id];
+    await loadDisplays();
+    renderTaktikBody();
+  } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
 
 async function loadGroups() {
@@ -1511,6 +1531,7 @@ tkBody.addEventListener('click', function (e) {
     case 'cancel-move-rider':  cancelMoveRider();                 break;
     case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
     case 'send-display':       sendDisplay(id);                   break;
+    case 'toggle-auto':        toggleAuto(id);                    break;
     case 'activate-list':      activateStartlist(id);             break;
     case 'delete-list':        deleteStartlist(id);               break;
     case 'upload-startlist':   openAiImport();                    break;
@@ -1762,24 +1783,32 @@ function renderDisplayPanel() {
     const ageSec = pos.timestamp ? Math.round((Date.now() - pos.timestamp) / 1000) : 99999;
     const online = ageSec < 60;
     const txt    = displayTexts[id] || '';
+    const auto   = displayAuto[id] === true;
     h += `<div style="padding:9px 14px;border-bottom:1px solid #f0f0f0">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:13px;font-weight:500;color:#333">${escH(name)}</span>
-        <span style="font-size:11px;color:${online ? '#2e7d32' : '#bbb'}">${online ? 'aktiv' : 'offline'}</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+        <span style="font-size:13px;font-weight:500;color:#333;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(name)}</span>
+        <span style="font-size:11px;color:${online ? '#2e7d32' : '#bbb'};flex-shrink:0">${online ? 'aktiv' : 'offline'}</span>
+        <button class="btn" data-action="toggle-auto" data-id="${escH(id)}"
+          style="flex-shrink:0;padding:3px 9px;font-size:11px;${auto ? 'background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7' : ''}">
+          ${auto ? '\u{1F916} Auto' : '\u270D Manuell'}</button>
       </div>
-      <div style="display:flex;gap:6px">
-        <input type="text" class="disp-inp" data-id="${escH(id)}" maxlength="20"
+      ${auto
+        ? `<div style="padding:7px 10px;background:#f5f5f5;border-radius:6px;font-size:13px;font-family:monospace;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(txt || '\u2013')}</div>`
+        : `<div style="display:flex;gap:6px">
+        <input type="text" class="disp-inp" data-id="${escH(id)}" maxlength="60"
           value="${escH(txt)}" placeholder="Nachricht\u2026"
           style="flex:1;min-width:0;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:monospace">
         <button class="btn" data-action="send-display" data-id="${escH(id)}"
           style="flex:0;padding:7px 12px">\u27A4</button>
-      </div>
+      </div>`}
     </div>`;
   });
 
   h += `<div style="padding:8px 14px;font-size:11px;color:#aaa;line-height:1.5">
-    Max. 20 Zeichen. Semikolon erzeugt einen Zeilenumbruch, z.B. P3;0:15;0:20.
-    Leeres Feld senden l\u00F6scht die Anzeige.</div></div>`;
+    Max. 60 Zeichen. <b>;</b> neue Zeile, <b>~</b> neue Zeile die bei wenig Platz entf\u00E4llt.
+    Leeres Feld senden l\u00F6scht die Anzeige.<br>
+    Automatik sendet: <span style="font-family:monospace;color:#777">${escH(displayPreview || '\u2013')}</span>
+  </div></div>`;
   return h;
 }
 
