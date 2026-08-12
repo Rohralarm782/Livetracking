@@ -252,6 +252,7 @@
 
     /* STATUS TRAINING */
     #status.training { border-color: #f9a825; color: #e65100; background: #fffde7; }
+    #status.searching { border-color: #90a4ae; color: #455a64; background: #eceff1; }
 
     /* TAKTIK STRIP */
     #taktikStrip {
@@ -715,6 +716,9 @@ let currentMarkerMenu = null;
 let firstDevice  = true;
 let lastDataTime = null;
 let autoZoom     = true;
+// Tracker, die online sind, aber noch keinen GPS-Fix haben.
+// [{ id, displayName, sats, since, timestamp }]
+let pendingTrackers = [];
 
 // =======================
 // TEAMAUTO MARKER
@@ -799,6 +803,8 @@ document.getElementById('teamCarCheckbox').addEventListener('change', function (
 const statusEl = document.getElementById('status');
 
 function updateStatus() {
+  const searching = pendingTrackers.length;
+
   if (!lastDataTime) {
     statusEl.className   = 'warn';
     statusEl.textContent = '\u26AA Warte auf Daten\u2026';
@@ -810,17 +816,29 @@ function updateStatus() {
     statusEl.textContent = `\u{1F534} Offline (${Math.round(ago)}s)`;
     return;
   }
-  const modes = Object.keys(lastPositions)
-    .filter(id => id !== 'TEAMAUTO' && !id.startsWith('betreuer-'))
+  const trackerIds = Object.keys(lastPositions)
+    .filter(id => id !== 'TEAMAUTO' && !id.startsWith('betreuer-'));
+
+  // Noch gar keine Position, aber jemand sucht: eigener Zustand.
+  // Ohne das stuende hier "Verbunden \u00B7 Rennen", obwohl noch
+  // kein einziger Punkt auf der Karte ist.
+  if (trackerIds.length === 0 && searching > 0) {
+    statusEl.className   = 'searching';
+    statusEl.textContent = `\u{1F6F0} Sucht GPS (${searching})`;
+    return;
+  }
+
+  const suffix = searching > 0 ? ` \u00B7 ${searching}\u00D7 sucht GPS` : '';
+  const modes = trackerIds
     .map(id => lastPositions[id] && lastPositions[id].trackerMode)
     .filter(Boolean);
   const inTraining = modes.some(m => m === 'training');
   if (inTraining) {
     statusEl.className   = 'training';
-    statusEl.textContent = '\u{1F7E1} Verbunden \u00B7 Training';
+    statusEl.textContent = '\u{1F7E1} Verbunden \u00B7 Training' + suffix;
   } else {
     statusEl.className   = 'ok';
-    statusEl.textContent = '\u{1F7E2} Verbunden \u00B7 Rennen';
+    statusEl.textContent = '\u{1F7E2} Verbunden \u00B7 Rennen' + suffix;
   }
 }
 setInterval(updateStatus, 1000);
@@ -999,6 +1017,38 @@ async function loadPositions() {
 }
 
 // =======================
+// LOAD PENDING (Tracker ohne Fix)
+// Eigener Endpoint, eigener Takt: der Heartbeat kommt nur alle
+// 10 s, 3 s Polling reichen voellig.
+// =======================
+async function loadPending() {
+  try {
+    const res  = await fetch(`${SERVER}/pending`);
+    const data = await res.json();
+    const next = Array.isArray(data.pending) ? data.pending : [];
+
+    const before = pendingTrackers.map(p => p.id).join(',');
+    const after  = next.map(p => p.id).join(',');
+    pendingTrackers = next;
+
+    // Nur wenn sonst nichts reinkommt, gilt ein Suchender als
+    // Lebenszeichen. Sonst wuerde ein suchender Tracker die
+    // Offline-Erkennung eines fahrenden Trackers ueberdecken.
+    if (next.length > 0 && Object.keys(lastPositions).length === 0) {
+      lastDataTime = Date.now();
+    }
+    updateStatus();
+
+    // Taktik nur bei echter Aenderung neu zeichnen - und nie,
+    // waehrend jemand gerade in ein Nachrichtenfeld tippt.
+    if (taktikOpen && before !== after) {
+      const el = document.activeElement;
+      if (!el || !el.classList || !el.classList.contains('disp-inp')) renderTaktikBody();
+    }
+  } catch (err) { console.error('Pending:', err); }
+}
+
+// =======================
 // RESET
 // =======================
 async function clearMap() {
@@ -1131,6 +1181,7 @@ document.getElementById('closeTaktikBtn').addEventListener('click', closeTaktikV
 async function loadTaktikView() {
   await loadGroups();
   await loadDisplays();
+  await loadPending();
   if (authToken) await loadStartlists();
   if (taktikGroups.length === 0 && authToken) {
     taktikGroups.push({
@@ -1763,9 +1814,16 @@ function renderTaktikBody() {
 function renderDisplayPanel() {
   if (!authToken || authLevel !== 'spolei') return '';
 
-  const ids = Object.keys(lastPosData)
-    .filter(id => id !== 'TEAMAUTO' && lastPosData[id].type !== 'betreuer')
-    .sort();
+  const posIds = Object.keys(lastPosData)
+    .filter(id => id !== 'TEAMAUTO' && lastPosData[id].type !== 'betreuer');
+
+  // Tracker ohne Fix mitnehmen: sie sind online und adressierbar,
+  // es fehlt nur die Position. Genau dafuer ist das hier da.
+  const pendMap = Object.create(null);
+  pendingTrackers.forEach(p => { pendMap[p.id] = p; });
+  const pendIds = pendingTrackers.map(p => p.id).filter(id => posIds.indexOf(id) < 0);
+
+  const ids = posIds.concat(pendIds).sort();
 
   if (ids.length === 0) {
     return `<div class="sl-panel"><div style="padding:11px 14px;border-bottom:1px solid #f0f0f0">
@@ -1779,15 +1837,19 @@ function renderDisplayPanel() {
 
   ids.forEach(id => {
     const pos    = lastPosData[id] || {};
-    const name   = pos.displayName || id;
+    const pend   = pendMap[id] || null;
+    const name   = pos.displayName || (pend && pend.displayName) || id;
     const ageSec = pos.timestamp ? Math.round((Date.now() - pos.timestamp) / 1000) : 99999;
     const online = ageSec < 60;
     const txt    = displayTexts[id] || '';
     const auto   = displayAuto[id] === true;
+    const state  = pend
+      ? `<span style="font-size:11px;color:#546e7a;flex-shrink:0">\u{1F6F0} sucht GPS \u00B7 ${fmtDur(pend.since)}${pend.sats === null || pend.sats === undefined ? '' : ' \u00B7 ' + pend.sats + ' Sat'}</span>`
+      : `<span style="font-size:11px;color:${online ? '#2e7d32' : '#bbb'};flex-shrink:0">${online ? 'aktiv' : 'offline'}</span>`;
     h += `<div style="padding:9px 14px;border-bottom:1px solid #f0f0f0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
         <span style="font-size:13px;font-weight:500;color:#333;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(name)}</span>
-        <span style="font-size:11px;color:${online ? '#2e7d32' : '#bbb'};flex-shrink:0">${online ? 'aktiv' : 'offline'}</span>
+        ${state}
         <button class="btn" data-action="toggle-auto" data-id="${escH(id)}"
           style="flex-shrink:0;padding:3px 9px;font-size:11px;${auto ? 'background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7' : ''}">
           ${auto ? '\u{1F916} Auto' : '\u270D Manuell'}</button>
@@ -1832,6 +1894,12 @@ async function sendDisplay(id) {
   } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
 
+// m:ss seit einem Zeitstempel - fuer die Suchdauer
+function fmtDur(since) {
+  const sec = Math.max(0, Math.round((Date.now() - since) / 1000));
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+
 function escH(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1849,6 +1917,8 @@ async function pollGroups() {
 // =======================
 loadPositions();
 setInterval(loadPositions, 1000);
+loadPending();
+setInterval(loadPending, 3000);
 fetchGpxTrack();
 loadMode();
 pollGroups();
