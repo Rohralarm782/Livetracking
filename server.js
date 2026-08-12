@@ -32,6 +32,16 @@ let currentMode = 'race'; // 'race' | 'training'
 // Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
 const trackerDisplayNames = Object.create(null);
 
+// Tracker, die sich gemeldet haben, aber noch keinen GPS-Fix haben.
+// id -> { since, timestamp, sats }
+//   since     = erste Meldung DIESER Suchphase (fuer die Laufzeit-Anzeige)
+//   timestamp = letzte Meldung (fuer den Timeout)
+// Bewusst getrennt von positions{}: dort haengt die komplette Karten-
+// und Marker-Logik dran, die mit einem Eintrag ohne lat/lon nichts
+// anfangen kann.
+const pending            = Object.create(null);
+const PENDING_TIMEOUT_MS = 90000;
+
 // Aktuell auf den Garmin-Displays stehende Texte, je Tracker-ID.
 // Quelle der Wahrheit ist der Broker (retained) - wir lesen sie beim
 // Verbinden zurueck und ueberleben damit auch einen Cold Start.
@@ -240,8 +250,35 @@ app.get('/positions', (req, res) => {
   res.json(enriched);
 });
 
+// Tracker ohne Fix. Bewusst ein eigener Endpoint statt eines
+// zusaetzlichen Schluessels in /positions: das Frontend iteriert
+// dort mit Object.keys() ueber ALLE Eintraege, ein Sonderschluessel
+// "pending" waere dort als Tracker interpretiert worden.
+app.get('/pending', (req, res) => {
+  const now = Date.now();
+  const out = [];
+  for (const [id, p] of Object.entries(pending)) {
+    // Laenger als PENDING_TIMEOUT_MS nichts gehoert -> wirklich weg
+    if (now - p.timestamp > PENDING_TIMEOUT_MS) { delete pending[id]; continue; }
+    // Letzte echte Position ist neuer als die letzte Suchmeldung
+    // -> Tracker hat inzwischen Fix
+    const pos = positions[id];
+    if (pos && pos.timestamp >= p.timestamp) { delete pending[id]; continue; }
+    out.push({
+      id,
+      displayName: trackerDisplayNames[id] || id,
+      sats:        p.sats,
+      since:       p.since,
+      timestamp:   p.timestamp
+    });
+  }
+  out.sort((a, b) => a.id.localeCompare(b.id));
+  res.json({ pending: out });
+});
+
 app.delete('/positions', requireSpolei, (req, res) => {
   for (const key of Object.keys(positions)) delete positions[key];
+  for (const key of Object.keys(pending))   delete pending[key];
   console.log("🧹 Positionen gelöscht");
   res.json({ ok: true });
 });
@@ -524,7 +561,27 @@ function connectMqtt() {
     try {
       const data = JSON.parse(message.toString());
       const { id, lat, lon, bat, mode } = data;
-      if (!id || typeof lat !== 'number' || typeof lon !== 'number') return;
+      if (!id) return;
+
+      // Status-Heartbeat ohne Koordinaten: Tracker ist online, sucht
+      // aber noch GPS. Kommt NICHT nach positions{} - ein Eintrag ohne
+      // lat/lon wuerde die Kartenlogik im Frontend zerlegen.
+      if (typeof lat !== 'number' || typeof lon !== 'number') {
+        if (data.fix === 0) {
+          const prev = pending[id];
+          pending[id] = {
+            // since nur beim ersten Beat setzen: sonst zaehlt die
+            // Suchdauer bei jeder Meldung wieder von vorn los
+            since:     prev ? prev.since : Date.now(),
+            timestamp: Date.now(),
+            sats:      typeof data.sats === 'number' ? data.sats : null
+          };
+          console.log(`🛰️ Sucht GPS: ${id} [${data.sats === undefined ? '?' : data.sats} Sat]`);
+        }
+        return;
+      }
+
+      delete pending[id];   // Fix da -> raus aus der Warteliste
       positions[id] = { lat, lon, timestamp: Date.now() };
       if (typeof bat === 'number') positions[id].bat = bat;
       if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;
