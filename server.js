@@ -37,17 +37,79 @@ const trackerDisplayNames = Object.create(null);
 // Verbinden zurueck und ueberleben damit auch einen Cold Start.
 const displayTexts = Object.create(null);
 
-// Nur druckbares ASCII, max. 20 Zeichen.
-// 20 = BLE-Standard-MTU 23 Byte minus 3 Byte ATT-Header.
-// Umlaute oder Emoji wuerden auf dem Garmin als leere Kaestchen landen.
+// Tracker im Automatik-Modus: Text wird aus den Gruppen gebaut.
+// id -> true. Fehlt der Eintrag, gilt manuell.
+const autoDisplay = Object.create(null);
+
+// Max. 60 Zeichen - passt unter die ausgehandelte BLE-MTU.
+// Nur druckbares ASCII: Umlaute oder Emoji wuerden auf dem
+// Garmin als leere Kaestchen erscheinen.
 function sanitizeDisplay(text) {
   let out = '';
   const src = String(text == null ? '' : text);
-  for (let i = 0; i < src.length && out.length < 20; i++) {
+  for (let i = 0; i < src.length && out.length < 60; i++) {
     const c = src.charCodeAt(i);
     if (c >= 32 && c <= 126) out += src[i];
   }
   return out.trim();
+}
+
+// Baut den Anzeigetext aus dem aktuellen Gruppenstand.
+// Format je Gruppe: "<Anzahl> <Abstand nach hinten>"
+// gefolgt von "~<Startnummern>" (optional, darf wegfallen).
+// Die letzte Gruppe ist das Feld und bekommt "...".
+//
+// Der Abstand steht in groups[i].gap und meint den Rueckstand
+// AUF DIE GRUPPE DAVOR. Fuer "Abstand nach hinten" brauchen
+// wir daher den gap der FOLGENDEN Gruppe.
+function buildAutoText() {
+  if (!Array.isArray(groups) || groups.length === 0) return '';
+  const parts = [];
+  for (let i = 0; i < groups.length; i++) {
+    const g     = groups[i];
+    const riders = Array.isArray(g.riders) ? g.riders : [];
+    const isLast = (i === groups.length - 1);
+
+    // Letzte Gruppe ohne Fahrer = das Feld
+    if (isLast && riders.length === 0) { parts.push('...'); break; }
+
+    const next = groups[i + 1];
+    const gap  = next && next.gap ? String(next.gap).trim() : '';
+    let seg = String(riders.length);
+    if (gap.length > 0) seg += ' ' + gap;
+    parts.push(seg);
+
+    // Startnummern als optionaler Teil, maximal drei
+    const nrs = riders
+      .map(r => (r && r.nr !== undefined) ? r.nr : r)
+      .filter(n => n !== undefined && n !== null)
+      .slice(0, 3);
+    if (nrs.length > 0) parts.push('~' + nrs.join(' '));
+  }
+  // '~' leitet seinen Abschnitt selbst ein, davor kein ';'
+  let out = '';
+  for (const p of parts) {
+    if (out.length === 0)        out = p;
+    else if (p.startsWith('~'))  out += p;
+    else                         out += ';' + p;
+  }
+  return sanitizeDisplay(out);
+}
+
+// Automatik-Tracker mit dem aktuellen Stand versorgen.
+// Publiziert nur bei echter Aenderung - sonst produziert jeder
+// Taktik-Klick Funkverkehr auf allen Trackern.
+function pushAutoDisplays() {
+  if (!mqttClient || !mqttClient.connected) return;
+  const text = buildAutoText();
+  for (const id of Object.keys(autoDisplay)) {
+    if (!autoDisplay[id]) continue;
+    if (displayTexts[id] === text) continue;
+    mqttClient.publish(`livetracking-fq4l/display/${id}`, text, { retain: true, qos: 0 });
+    if (text.length > 0) displayTexts[id] = text;
+    else                 delete displayTexts[id];
+    console.log(`\u{1F916} Auto ${id} \u2192 "${text}"`);
+  }
 }
 
 // =======================
@@ -343,7 +405,18 @@ app.post('/startlists/:id/activate', requireSpolei, (req, res) => {
 // DISPLAY-NACHRICHTEN
 // =======================
 app.get('/displays', (req, res) => {
-  res.json(displayTexts);
+  res.json({ texts: displayTexts, auto: autoDisplay, preview: buildAutoText() });
+});
+
+// Automatik pro Tracker ein-/ausschalten
+app.post('/display-auto', requireSpolei, (req, res) => {
+  const { id, auto } = req.body;
+  if (!id) return res.status(400).json({ error: 'id erforderlich' });
+  if (auto) autoDisplay[id] = true;
+  else      delete autoDisplay[id];
+  console.log(`\u{1F916} Auto ${id}: ${auto ? 'an' : 'aus'}`);
+  if (auto) pushAutoDisplays();
+  res.json({ ok: true, auto: !!auto });
 });
 
 app.post('/display', requireSpolei, (req, res) => {
@@ -354,6 +427,8 @@ app.post('/display', requireSpolei, (req, res) => {
   if (!mqttClient || !mqttClient.connected) {
     return res.status(503).json({ error: 'MQTT nicht verbunden' });
   }
+  // Manuelles Senden hebt die Automatik fuer diesen Tracker auf
+  delete autoDisplay[id];
 
   // Leerer Text loescht die retained Message beim Broker.
   mqttClient.publish(`livetracking-fq4l/display/${id}`, text, { retain: true, qos: 0 });
@@ -385,11 +460,13 @@ app.post('/groups', requireSpolei, (req, res) => {
   const { groups: g } = req.body;
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
   groups = g;
+  pushAutoDisplays();          // Automatik-Tracker sofort nachziehen
   res.json({ ok: true });
 });
 
 app.delete('/groups', requireSpolei, (req, res) => {
   groups = [];
+  pushAutoDisplays();
   console.log('🧹 Gruppen gelöscht');
   res.json({ ok: true });
 });
