@@ -55,7 +55,11 @@ function sanitizeDisplay(text) {
 }
 
 // Baut den Anzeigetext aus dem aktuellen Gruppenstand.
-// Format je Gruppe: "<Anzahl> <Abstand nach hinten>"
+// Format je Gruppe: "<Anzahl>x <Abstand nach hinten>"
+// Das 'x' klebt an der Zahl und macht sie als Stueckzahl kenntlich -
+// ohne das liest sich "6 0:15" wie zwei gleichrangige Zahlen.
+// Muss ASCII bleiben: bytesToLines() im Datenfeld filtert auf 32-126,
+// ein typografisches Mal-Zeichen wuerde stillschweigend verschluckt.
 // gefolgt von "~<Startnummern>" (optional, darf wegfallen).
 // Die letzte Gruppe ist das Feld und bekommt "...".
 //
@@ -75,7 +79,7 @@ function buildAutoText() {
 
     const next = groups[i + 1];
     const gap  = next && next.gap ? String(next.gap).trim() : '';
-    let seg = String(riders.length);
+    let seg = String(riders.length) + 'x';
     if (gap.length > 0) seg += ' ' + gap;
     parts.push(seg);
 
