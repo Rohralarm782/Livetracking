@@ -83,12 +83,15 @@ function buildAutoText() {
     if (gap.length > 0) seg += ' ' + gap;
     parts.push(seg);
 
-    // Startnummern als optionaler Teil, maximal drei
+    // Startnummern als optionaler Teil, maximal drei.
+    // Komma statt Leerzeichen: in der kleinen Schrift der optionalen
+    // Zeile ist ein Leerzeichen zu schmal, "8 9" liest sich sonst als
+    // "89". Kostet kein zusaetzliches Zeichen.
     const nrs = riders
       .map(r => (r && r.nr !== undefined) ? r.nr : r)
       .filter(n => n !== undefined && n !== null)
       .slice(0, 3);
-    if (nrs.length > 0) parts.push('~' + nrs.join(' '));
+    if (nrs.length > 0) parts.push('~' + nrs.join(','));
   }
   // '~' leitet seinen Abschnitt selbst ein, davor kein ';'
   let out = '';
