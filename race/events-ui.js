@@ -151,6 +151,11 @@ function renderEventsBody() {
             <input type="text" id="rcEditAk"    value="${escH(r.category || '')}" placeholder="AK, z.B. U17m">
             <input type="text" id="rcEditStart" value="${escH(fmtStart(r.startTime))}" placeholder="Start hh:mm">
           </div>
+          ${r.hasGpx ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="flex:1;min-width:0;font-size:12px;color:#e65100;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\u{1F5FA} ${escH(r.gpxName || 'Strecke')}</span>
+            <button class="btn" data-action="rc-gpx-del" data-id="${r.id}"
+              style="flex:0;padding:5px 10px;font-size:12px;color:#f44336">Strecke entfernen</button>
+          </div>` : ''}
           <div style="display:flex;gap:6px">
             <button class="btn" data-action="rc-edit-save" data-id="${r.id}" data-gid="${ev.id}" style="flex:1">\u2713 Speichern</button>
             <button class="btn" data-action="ev-cancel" style="flex:0;padding:7px 12px">\u2715</button>
@@ -163,11 +168,16 @@ function renderEventsBody() {
         <div class="sl-dot" style="background:${statusColor(r)}"></div>
         <div style="flex:1;min-width:0">
           <div class="ev-rname">${escH(r.name)}</div>
-          <div class="ev-meta">${r.riderCount} Fahrer${start ? ' \u00B7 ' + start : ''}${r.status === 'beendet' ? ' \u00B7 beendet' : ''}</div>
+          <div class="ev-meta">${r.riderCount} Fahrer${start ? ' \u00B7 ' + start : ''}${
+            r.hasGpx ? ' \u00B7 \u{1F5FA} ' + escH(r.gpxName || 'Strecke') : ''}${
+            r.status === 'beendet' ? ' \u00B7 beendet' : ''}</div>
         </div>
         ${r.category ? `<span class="ev-ak">${escH(r.category)}</span>` : ''}
         <button class="btn" data-action="rc-import" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px" title="Startliste importieren">\u{1F4C2}</button>
+        <button class="btn" data-action="rc-gpx" data-id="${r.id}"
+          style="flex:0;padding:4px 8px;font-size:12px${r.hasGpx ? ';color:#e65100' : ''}"
+          title="Strecke laden">\u{1F5FA}</button>
         <button class="btn" data-action="rc-edit" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px">\u270E</button>
         ${r.isActive
@@ -219,8 +229,9 @@ function renderEventsBody() {
 
   html += `<div style="padding:14px 4px;font-size:11px;color:#aaa;line-height:1.5">
     Ablauf: Veranstaltung anlegen, Rennen mit AK darin anlegen, Startliste
-    importieren, dann das Rennen aktiv schalten. Der Taktik-Stand geh\u00F6rt
-    zum Rennen \u2013 beim Wechsel bleibt er beim alten Rennen gespeichert.
+    importieren, Strecke \u{1F5FA} laden, dann das Rennen aktiv schalten.
+    Startliste, Strecke und Taktik-Stand geh\u00F6ren zum Rennen \u2013 beim
+    Wechsel bleiben sie beim alten Rennen gespeichert.
   </div>`;
 
   evBody.innerHTML = html;
@@ -327,6 +338,7 @@ evBody.addEventListener('click', function (e) {
         await activateRaceById(id);
         await loadGroups();
         renderStrip(taktikGroups);
+        await fetchGpxTrack();   // Strecke des neuen Rennens auf die Karte
       });
       break;
 
@@ -334,13 +346,27 @@ evBody.addEventListener('click', function (e) {
       openAiImport(id);
       break;
 
+    case 'rc-gpx':
+      // Oeffnet den Dateidialog; der Rest laeuft im change-Handler
+      // von map/gpx.js und ruft danach renderEventsBody().
+      pickGpxForRace(id);
+      break;
+
+    case 'rc-gpx-del': {
+      const r = findRace(id);
+      if (!r) return;
+      if (!confirm(`Strecke \u201E${r.gpxName || 'Strecke'}\u201C von \u201E${r.name}\u201C entfernen?`)) return;
+      guard(async () => { await removeGpxForRace(id); resetEventForms(); });
+      break;
+    }
+
     case 'rc-del': {
       const r = findRace(id);
       if (!r) return;
       if (!confirm(`Rennen \u201E${r.name}\u201C mit ${r.riderCount} Fahrern l\u00F6schen?`)) return;
       guard(async () => {
         await deleteRace(id);
-        if (r.isActive) { await loadGroups(); renderStrip(taktikGroups); }
+        if (r.isActive) { await loadGroups(); renderStrip(taktikGroups); clearGpxLayer(); }
         resetEventForms();
       });
       break;
