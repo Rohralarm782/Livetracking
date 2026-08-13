@@ -120,6 +120,11 @@ async function upsertEvent(ev) {
           [ev.id, ev.name, ev.ort || null, ev.dateFrom || null, ev.dateTo || null, ev.notes || null]);
 }
 
+async function getEvent(id) {
+  const r = await q('SELECT * FROM events WHERE id = $1', [id]);
+  return r.rows.length ? r.rows[0] : null;
+}
+
 async function deleteEvent(id) {
   await q('DELETE FROM events WHERE id = $1', [id]);
 }
@@ -154,6 +159,24 @@ async function upsertRace(race) {
            race.startTime || null, race.distanceKm || null, race.laps || null,
            race.status || 'geplant', JSON.stringify(race.riders || []),
            race.createdAt || null]);
+}
+
+// Nur die Startliste. Eigener Schreibpfad, damit ein Re-Import die
+// Stammdaten und den Taktik-Stand nicht anfasst.
+async function updateRaceRiders(raceId, riders) {
+  await q('UPDATE races SET riders_json = $2::jsonb, updated_at = now() WHERE id = $1',
+          [raceId, JSON.stringify(riders || [])]);
+}
+
+async function setRaceStatus(raceId, status) {
+  await q('UPDATE races SET status = $2, updated_at = now() WHERE id = $1',
+          [raceId, status]);
+}
+
+// Genau ein Rennen darf 'aktiv' sein. Wird vor dem Aktivieren gerufen,
+// damit ein abgestuerzter Wechsel keine zwei aktiven Rennen hinterlaesst.
+async function clearActiveStatus() {
+  await q(`UPDATE races SET status = 'beendet', updated_at = now() WHERE status = 'aktiv'`);
 }
 
 async function updateRaceGroups(raceId, groups) {
@@ -201,7 +224,8 @@ async function listGapHistory(raceId) {
 module.exports = {
   enabled, init,
   getSetting, setSetting,
-  listEvents, upsertEvent, deleteEvent,
-  listRaces, upsertRace, updateRaceGroups, updateRaceGpx, deleteRace,
+  listEvents, upsertEvent, getEvent, deleteEvent,
+  listRaces, upsertRace, updateRaceRiders, setRaceStatus, clearActiveStatus,
+  updateRaceGroups, updateRaceGpx, deleteRace,
   addGapSnapshot, listGapHistory
 };
