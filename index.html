@@ -60,6 +60,18 @@
   </div>
 </div>
 
+<!-- FAVORITEN MODAL -->
+<div id="favModal" class="hidden">
+  <div class="aiBox">
+    <h2>&#11088; Eigene Fahrer</h2>
+    <p>Markierte Fahrer erscheinen auf dem Garmin mit Startnummer &#8211; auch in gro&#223;en Gruppen und auch dann, wenn der Platz knapp wird.</p>
+    <input type="text" id="favFilter" placeholder="Nummer, Name oder Team suchen&#8230;">
+    <div id="favCount" style="font-size:12px;color:#888;margin-bottom:8px"></div>
+    <div id="favBody"></div>
+    <button class="aiBtnSecondary" id="favCloseBtn">Fertig</button>
+  </div>
+</div>
+
 <!-- OPTIONS BUTTON & MENU -->
 <button id="optionsBtn">&#9881;&#65039; Optionen</button>
 <button id="taktikBtn">&#128202; Taktik</button>
@@ -128,6 +140,7 @@
        map/gpx.js         Streckenanzeige
        race/taktik.js     Gruppenlogik
        race/events.js     Veranstaltungen und Rennen, Datenschicht
+       race/favorites.js  Eigene Fahrer markieren
        race/startlists.js Import
        race/taktik-ui.js  Rendern und Event-Delegation
        race/events-ui.js  Rennverwaltung im Taktik-Tab
@@ -139,6 +152,7 @@
 <script src="/map/gpx.js"></script>
 <script src="/race/taktik.js"></script>
 <script src="/race/events.js"></script>
+<script src="/race/favorites.js"></script>
 <script src="/race/startlists.js"></script>
 <script src="/race/taktik-ui.js"></script>
 <script src="/race/events-ui.js"></script>
