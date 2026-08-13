@@ -7,8 +7,6 @@ let displayTexts   = {};   // aktueller Text je Tracker
 let displayAuto    = {};   // Tracker im Automatik-Modus
 let displayPreview = '';   // Text, den die Automatik gerade erzeugen wuerde
 let taktikGroups   = [];
-let startlistMeta  = [];
-let activeSlId     = null;
 let taktikOpen     = false;
 let splittingGid   = null;
 const splitNrs     = new Set();
@@ -20,6 +18,7 @@ function openTaktikView() {
   document.getElementById('taktikView').classList.remove('hidden');
   document.getElementById('taktikStrip').classList.add('hidden');
   closeOptionsMenu();
+  if (eventsOpen) closeEventsPanel();   // immer auf der Taktik-Seite starten
   loadTaktikView();
 }
 
@@ -36,7 +35,7 @@ async function loadTaktikView() {
   await loadGroups();
   await loadDisplays();
   await loadPending();
-  if (authToken) await loadStartlists();
+  if (authToken) await loadEvents();
   if (taktikGroups.length === 0 && authToken) {
     taktikGroups.push({
       id:     'hauptfeld-' + Date.now().toString(36),
@@ -80,17 +79,6 @@ async function loadGroups() {
     const res  = await fetch(`${SERVER}/groups`);
     taktikGroups = await res.json();
   } catch (e) { console.error('Groups:', e); }
-}
-
-async function loadStartlists() {
-  try {
-    const res  = await fetch(`${SERVER}/startlists`, {
-      headers: { 'Authorization': `Bearer ${authToken}` }
-    });
-    const data = await res.json();
-    startlistMeta = data.lists    || [];
-    activeSlId    = data.activeId || null;
-  } catch (e) { console.error('Startlists:', e); }
 }
 
 async function saveGroups() {
@@ -243,37 +231,9 @@ async function removeRider(gid, nr) {
   renderTaktikBody(); renderStrip(taktikGroups);
 }
 
-async function neuesRennen() {
-  if (!confirm('\u{1F6A8} Gruppen und Positionen l\u00F6schen?')) return;
-  try {
-    await Promise.all([
-      fetch(`${SERVER}/groups`,    { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } }),
-      fetch(`${SERVER}/positions`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } })
-    ]);
-    taktikGroups = [];
-    Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
-    Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
-    Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
-    lastDataTime = null; firstDevice = true; updateStatus();
-    renderTaktikBody(); renderStrip([]);
-  } catch (e) { alert('\u274C ' + e.message); }
-}
-
-async function activateStartlist(id) {
-  await fetch(`${SERVER}/startlists/${id}/activate`, {
-    method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }
-  }).catch(e => console.error(e));
-  activeSlId = id;
-  await loadGroups(); await loadStartlists();
-  renderTaktikBody(); renderStrip(taktikGroups);
-}
-
-async function deleteStartlist(id) {
-  if (!confirm('Startliste l\u00F6schen?')) return;
-  await fetch(`${SERVER}/startlists/${id}`, {
-    method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
-  }).catch(e => console.error(e));
-  if (activeSlId === id) activeSlId = null;
-  await loadStartlists(); renderTaktikBody();
-}
-
+// Frueher standen hier neuesRennen(), activateStartlist() und
+// deleteStartlist(). Ersetzt durch:
+//   - Rennen aktivieren/loeschen  -> race/events-ui.js
+//   - Gruppen zuruecksetzen       -> passiert beim Rennenwechsel selbst
+//   - Positionen/Karte leeren     -> clearMap() in map/map.js
+//                                    ("Karte leeren", erweiterte Einstellungen)
