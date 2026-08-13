@@ -117,14 +117,25 @@
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/ui.js"></script>
-<script src="/js/map.js"></script>
-<script src="/js/gpx.js"></script>
-<script src="/js/taktik.js"></script>
-<script src="/js/startlists.js"></script>
-<script src="/js/taktik-ui.js"></script>
-<script src="/js/displays.js"></script>
+<!-- Ladereihenfolge ist bindend: klassische Scripts, gemeinsamer globaler
+     Scope. Eine Datei darf beim Laden nur benutzen, was weiter oben steht.
+       core/auth.js       SERVER-Konstante, Login, Rollen
+       core/ui.js         Betreuer, Modus, Optionsmenue, Wake Lock
+       map/map.js         Karte, Marker, Positionen, Status, Kontextmenue
+       map/gpx.js         Streckenanzeige
+       race/taktik.js     Gruppenlogik
+       race/startlists.js Import
+       race/taktik-ui.js  Rendern und Event-Delegation
+       race/displays.js   Garmin-Displays
+       app.js             Einstieg: Main Loop, Toast, Service Worker -->
+<script src="/js/core/auth.js"></script>
+<script src="/js/core/ui.js"></script>
+<script src="/js/map/map.js"></script>
+<script src="/js/map/gpx.js"></script>
+<script src="/js/race/taktik.js"></script>
+<script src="/js/race/startlists.js"></script>
+<script src="/js/race/taktik-ui.js"></script>
+<script src="/js/race/displays.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>
