@@ -119,6 +119,18 @@ async function deleteRace(id) {
   await loadEvents();
 }
 
+// Strecke setzen bzw. ersetzen. Das Rennen muss dafuer nicht aktiv
+// sein - so laesst sich ein ganzes Wochenende vorbereiten.
+async function setRaceGpx(id, coords, name) {
+  await apiSend(`/races/${id}/gpx`, 'PUT', { coords, name });
+  await loadEvents();
+}
+
+async function deleteRaceGpx(id) {
+  await apiSend(`/races/${id}/gpx`, 'DELETE');
+  await loadEvents();
+}
+
 // Fahrer des aktiven Rennens - fuer den Startlisten-Editor.
 async function loadActiveRiders() {
   try {
