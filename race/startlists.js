@@ -1,11 +1,20 @@
 // =======================
 // KI-IMPORT STARTLISTE
 // =======================
-let aiRiders = [];
+// Der Import fuellt immer ein bestehendes Rennen. Angelegt wird das
+// Rennen vorher in der Rennverwaltung - so bleibt ein Re-Import bei
+// korrigierter Startliste moeglich, ohne ein zweites Rennen zu erzeugen.
+let aiRiders       = [];
+let aiTargetRaceId = null;
 
-function openAiImport() {
-  aiRiders = [];
-  document.getElementById('aiCategory').value = '';
+function openAiImport(raceId) {
+  aiRiders       = [];
+  aiTargetRaceId = raceId || null;
+  const r = aiTargetRaceId ? findRace(aiTargetRaceId) : null;
+  if (!r) { alert('\u274C Kein Ziel-Rennen \u2013 bitte erst ein Rennen anlegen'); return; }
+  document.getElementById('aiTargetInfo').textContent =
+    `Ziel: ${r.name}` + (r.riderCount > 0 ? ` (ersetzt ${r.riderCount} Fahrer)` : '');
+  document.getElementById('aiCategory').value = r.category || '';
   document.getElementById('aiStatus').style.display = 'none';
   document.getElementById('aiPreviewSection').style.display = 'none';
   document.getElementById('aiImportModal').classList.remove('hidden');
@@ -23,24 +32,23 @@ document.getElementById('aiFilePickBtn').addEventListener('click', () => {
 });
 
 document.getElementById('aiSaveBtn').addEventListener('click', async () => {
-  const name = document.getElementById('aiListName').value.trim();
-  if (!name || aiRiders.length === 0) return;
+  if (!aiTargetRaceId || aiRiders.length === 0) return;
   const btn = document.getElementById('aiSaveBtn');
   btn.disabled = true; btn.textContent = '\u23F3 Speichern\u2026';
   try {
-    const res = await fetch(`${SERVER}/startlists`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-      body: JSON.stringify({ name, riders: aiRiders })
-    });
-    if (!res.ok) throw new Error('Server-Fehler');
+    await setRaceRiders(aiTargetRaceId, aiRiders);
+    // AK am Rennen nachziehen, falls im Modal korrigiert
+    const cat = document.getElementById('aiCategory').value.trim();
+    const r   = findRace(aiTargetRaceId);
+    if (cat && r && r.category !== cat) await updateRace(aiTargetRaceId, { category: cat });
     document.getElementById('aiImportModal').classList.add('hidden');
-    await loadStartlists();
-    renderTaktikBody();
+    // Namen in den Gruppen erscheinen nur, wenn es das aktive Rennen ist
+    if (aiTargetRaceId === activeRaceId) { await loadGroups(); renderStrip(taktikGroups); }
+    renderEventsBody();
   } catch (err) {
     alert('\u274C ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = '\u2705 Speichern';
+    btn.disabled = false; btn.textContent = '\u2705 Startliste \u00FCbernehmen';
   }
 });
 
@@ -118,7 +126,6 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
 
     statusEl2.style.display = 'none';
     document.getElementById('aiRiderCount').textContent = `\u2705 ${aiRiders.length} Fahrer gefunden`;
-    document.getElementById('aiListName').value = `${category} \u2013 ${file.name.replace(/\.[^.]+$/, '')}`;
     document.getElementById('aiPreviewBody').innerHTML = aiRiders.map(r =>
       `<tr><td>${r.nr ?? '\u2013'}</td><td>${escH(r.name)}</td><td>${escH(r.team || '')}</td></tr>`
     ).join('');
@@ -128,4 +135,3 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     statusEl2.textContent = '\u274C ' + err.message;
   }
 });
-
