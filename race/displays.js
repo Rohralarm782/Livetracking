@@ -58,10 +58,28 @@ function renderDisplayPanel() {
     </div>`;
   });
 
-  h += `<div style="padding:8px 14px;font-size:11px;color:#aaa;line-height:1.5">
-    Max. 60 Zeichen. <b>;</b> neue Zeile, <b>~</b> neue Zeile die bei wenig Platz entf\u00E4llt.
-    Leeres Feld senden l\u00F6scht die Anzeige.<br>
+  // Zaehler faerbt sich, sobald das Budget ausgereizt ist. Der Server
+  // kuerzt zwar selbst, aber dann fehlen Nummern - das soll man sehen.
+  const used  = displayPreview.length;
+  const tight = used > displayMaxLen - 6;
+
+  h += `<div style="padding:9px 14px;border-top:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:11px;color:#888;flex:1;min-width:130px">Fremdnummern je Gruppe</span>
+    <input type="number" class="ds-inp" data-key="foreignNrs" min="0" max="5" value="${displayCfg.foreignNrs}"
+      style="width:56px;padding:5px 6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center">
+  </div>
+  <div style="padding:9px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:11px;color:#888;flex:1;min-width:130px">Keine Fremdnummern ab Gruppengr\u00F6\u00DFe</span>
+    <input type="number" class="ds-inp" data-key="foreignNrsMaxSize" min="0" max="99" value="${displayCfg.foreignNrsMaxSize}"
+      style="width:56px;padding:5px 6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center">
+  </div>`;
+
+  h += `<div style="padding:8px 14px;font-size:11px;color:#aaa;line-height:1.5;border-top:1px solid #f0f0f0">
+    Max. ${displayMaxLen} Zeichen. <b>;</b> neue Zeile, <b>~</b> neue Zeile die bei wenig Platz entf\u00E4llt.
+    Leeres Feld senden l\u00F6scht die Anzeige. Favoriten \u2605 bleiben stehen,
+    wenn der Platz knapp wird, und ignorieren die Gruppengr\u00F6\u00DFe.<br>
     Automatik sendet: <span style="font-family:monospace;color:#777">${escH(displayPreview || '\u2013')}</span>
+    <span style="color:${tight ? '#e65100' : '#bbb'}">(${used}/${displayMaxLen})</span>
   </div></div>`;
   return h;
 }
@@ -103,4 +121,3 @@ async function pollGroups() {
     if (!taktikOpen) renderStrip(taktikGroups);
   } catch (e) {}
 }
-
