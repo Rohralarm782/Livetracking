@@ -131,36 +131,103 @@ function pushAutoDisplays() {
 }
 
 // =======================
-// STARTLISTEN (persistent auf Disk)
+// VERANSTALTUNGEN & RENNEN
 // =======================
-const STARTLISTS_FILE = path.join(__dirname, 'startlists.json');
-let startlists        = Object.create(null);
-let activeStartlistId = null;
+// Ein Rennen gehoert zu genau einer Veranstaltung und traegt seine
+// Startliste (riders) sowie seinen Taktik-Stand (groups) selbst.
+// Rennen ohne echte Veranstaltung landen im Sammel-Event FALLBACK_EVENT.
+//
+// Quelle der Wahrheit ist die Datenbank. Die Disk-Datei wird nur noch
+// ohne DATABASE_URL geschrieben - sonst haetten wir zwei Quellen.
+const RACES_FILE     = path.join(__dirname, 'races.json');
+const LEGACY_FILE    = path.join(__dirname, 'startlists.json');
+const FALLBACK_EVENT = 'archiv';
 
-function loadStartlistsFromDisk() {
-  try {
-    if (fs.existsSync(STARTLISTS_FILE)) {
-      const raw      = JSON.parse(fs.readFileSync(STARTLISTS_FILE, 'utf8'));
-      startlists      = raw.lists   || Object.create(null);
-      activeStartlistId = raw.activeId || null;
-      console.log(`📋 ${Object.keys(startlists).length} Startliste(n) geladen`);
-    }
-  } catch (e) { console.error('❌ Startlisten laden:', e.message); }
+let events       = Object.create(null);   // id -> Veranstaltung
+let races        = Object.create(null);   // id -> Rennen
+let activeRaceId = null;
+
+function newId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 }
 
-function saveStartlistsToDisk() {
-  try {
-    fs.writeFileSync(STARTLISTS_FILE,
-      JSON.stringify({ lists: startlists, activeId: activeStartlistId }, null, 2));
-  } catch (e) { console.error('❌ Startlisten speichern:', e.message); }
+// Fehlende Felder auffuellen: alte Disk-Startlisten kennen nur
+// id/name/createdAt/riders.
+function normalizeRace(r) {
+  return {
+    id:        r.id,
+    eventId:   r.eventId || FALLBACK_EVENT,
+    name:      r.name,
+    category:  r.category  || null,
+    startTime: r.startTime || null,
+    status:    r.status    || 'geplant',
+    createdAt: r.createdAt || new Date().toISOString(),
+    riders:    Array.isArray(r.riders) ? r.riders : [],
+    groups:    Array.isArray(r.groups) ? r.groups : []
+  };
 }
 
-loadStartlistsFromDisk();
+// Sammelbecken fuer Rennen ohne echte Veranstaltung.
+function ensureFallbackEvent() {
+  if (events[FALLBACK_EVENT]) return events[FALLBACK_EVENT];
+  events[FALLBACK_EVENT] = {
+    id:        FALLBACK_EVENT,
+    name:      'Ohne Veranstaltung',
+    ort:       null,
+    dateFrom:  null,
+    dateTo:    null,
+    createdAt: new Date().toISOString()
+  };
+  if (db.enabled) db.upsertEvent(events[FALLBACK_EVENT]).catch(dbFail('upsertEvent fallback'));
+  return events[FALLBACK_EVENT];
+}
+
+function loadRacesFromDisk() {
+  try {
+    const file = fs.existsSync(RACES_FILE)  ? RACES_FILE
+               : fs.existsSync(LEGACY_FILE) ? LEGACY_FILE
+               : null;
+    if (!file) return;
+    const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    events = raw.events || Object.create(null);
+    // raw.lists = altes Format aus startlists.json
+    const src = raw.races || raw.lists || Object.create(null);
+    races = Object.create(null);
+    for (const r of Object.values(src)) races[r.id] = normalizeRace(r);
+    activeRaceId = (raw.activeId && races[raw.activeId]) ? raw.activeId : null;
+    console.log(`📋 ${Object.keys(races).length} Rennen von Disk geladen (${file === LEGACY_FILE ? 'Altformat' : 'races.json'})`);
+  } catch (e) { console.error('❌ Rennen laden:', e.message); }
+}
+
+// Nur ohne Datenbank - sonst waeren zwei Quellen der Wahrheit im Spiel.
+function saveRacesToDisk() {
+  if (db.enabled) return;
+  try {
+    fs.writeFileSync(RACES_FILE,
+      JSON.stringify({ events, races, activeId: activeRaceId }, null, 2));
+  } catch (e) { console.error('❌ Rennen speichern:', e.message); }
+}
 
 // =======================
 // GRUPPEN (Renndaten)
 // =======================
+// groups spiegelt immer den Stand des AKTIVEN Rennens. Der Aufsatzpunkt
+// fuer die Taktik-Endpoints bleibt damit unveraendert, die Ablage
+// wandert aber ins jeweilige Rennen.
 let groups = [];
+
+function syncGroupsToRace() {
+  if (activeRaceId && races[activeRaceId]) races[activeRaceId].groups = groups;
+}
+
+function syncGroupsFromRace() {
+  groups = (activeRaceId && races[activeRaceId] && Array.isArray(races[activeRaceId].groups))
+    ? races[activeRaceId].groups
+    : [];
+}
+
+loadRacesFromDisk();
+syncGroupsFromRace();
 
 // =======================
 // PERSISTENZ (Neon)
@@ -173,27 +240,33 @@ function dbFail(what) {
   return e => console.error(`❌ DB ${what}:`, e.message);
 }
 
-// Ein Startlisten-Eintrag IST bereits ein Rennen - nur ohne Veranstaltung.
-// Deshalb wird er 1:1 in races geschrieben; die Veranstaltungs-Ebene
-// kommt in Stufe 2 obendrauf, ohne dass Daten migriert werden muessen.
+function persistEvent(id) {
+  if (!db.enabled) return;
+  const ev = events[id];
+  if (!ev) return;
+  db.upsertEvent(ev).catch(dbFail('upsertEvent'));
+}
+
 function persistRace(id) {
   if (!db.enabled) return;
-  const sl = startlists[id];
-  if (!sl) return;
+  const r = races[id];
+  if (!r) return;
   db.upsertRace({
-    id:        sl.id,
-    eventId:   sl.eventId || null,
-    name:      sl.name,
-    createdAt: sl.createdAt,
-    status:    id === activeStartlistId ? 'aktiv' : 'geplant',
-    riders:    sl.riders
+    id:        r.id,
+    eventId:   r.eventId,
+    name:      r.name,
+    category:  r.category,
+    startTime: r.startTime,
+    createdAt: r.createdAt,
+    status:    r.status,
+    riders:    r.riders
   }).catch(dbFail('upsertRace'));
 }
 
 function persistGroups() {
-  if (!db.enabled || !activeStartlistId) return;
-  db.updateRaceGroups(activeStartlistId, groups).catch(dbFail('updateRaceGroups'));
-  db.addGapSnapshot(activeStartlistId, groups).catch(dbFail('addGapSnapshot'));
+  if (!db.enabled || !activeRaceId) return;
+  db.updateRaceGroups(activeRaceId, groups).catch(dbFail('updateRaceGroups'));
+  db.addGapSnapshot(activeRaceId, groups).catch(dbFail('addGapSnapshot'));
 }
 
 // GPX haengt aktuell global am Server, nicht am Rennen. Bis die
@@ -208,45 +281,61 @@ async function loadStateFromDb() {
   if (!db.enabled) return;
   const rows = await db.listRaces();
 
-  // Einmalige Uebernahme der Disk-Startlisten beim ersten Start mit DB
-  if (rows.length === 0 && Object.keys(startlists).length > 0) {
-    const evId = 'archiv';
-    await db.upsertEvent({ id: evId, name: 'Archiv', notes: 'Automatisch übernommene Startlisten' });
-    for (const sl of Object.values(startlists)) {
-      sl.eventId = evId;
+  // Einmalige Uebernahme der Disk-Rennen beim ersten Start mit DB
+  if (rows.length === 0 && Object.keys(races).length > 0) {
+    ensureFallbackEvent();
+    await db.upsertEvent(events[FALLBACK_EVENT]);
+    for (const r of Object.values(races)) {
+      r.eventId = r.eventId || FALLBACK_EVENT;
       await db.upsertRace({
-        id: sl.id, eventId: evId, name: sl.name,
-        createdAt: sl.createdAt, status: 'geplant', riders: sl.riders
+        id: r.id, eventId: r.eventId, name: r.name,
+        category: r.category, startTime: r.startTime,
+        createdAt: r.createdAt, status: r.status, riders: r.riders
       });
+      if (r.groups.length > 0) await db.updateRaceGroups(r.id, r.groups);
     }
-    if (activeStartlistId) await db.setSetting('activeRaceId', activeStartlistId);
-    console.log(`📤 ${Object.keys(startlists).length} Startliste(n) in die Datenbank übernommen`);
+    if (activeRaceId) await db.setSetting('activeRaceId', activeRaceId);
+    console.log(`📤 ${Object.keys(races).length} Rennen in die Datenbank übernommen`);
     return;
   }
 
-  startlists = Object.create(null);
-  for (const r of rows) {
-    startlists[r.id] = {
-      id:        r.id,
-      eventId:   r.event_id,
-      name:      r.name,
-      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
-      riders:    Array.isArray(r.riders_json) ? r.riders_json : []
+  const evRows = await db.listEvents();
+  events = Object.create(null);
+  for (const e of evRows) {
+    events[e.id] = {
+      id:        e.id,
+      name:      e.name,
+      ort:       e.ort || null,
+      dateFrom:  e.date_from ? new Date(e.date_from).toISOString().slice(0, 10) : null,
+      dateTo:    e.date_to   ? new Date(e.date_to).toISOString().slice(0, 10)   : null,
+      createdAt: e.created_at ? new Date(e.created_at).toISOString() : new Date().toISOString()
     };
   }
 
-  const activeId = await db.getSetting('activeRaceId');
-  activeStartlistId = (activeId && startlists[activeId]) ? activeId : null;
-
-  if (activeStartlistId) {
-    const row = rows.find(r => r.id === activeStartlistId);
-    groups = (row && Array.isArray(row.groups_json)) ? row.groups_json : [];
+  races = Object.create(null);
+  for (const r of rows) {
+    races[r.id] = {
+      id:        r.id,
+      eventId:   r.event_id || FALLBACK_EVENT,
+      name:      r.name,
+      category:  r.category || null,
+      startTime: r.start_time ? new Date(r.start_time).toISOString() : null,
+      status:    r.status || 'geplant',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
+      riders:    Array.isArray(r.riders_json) ? r.riders_json : [],
+      groups:    Array.isArray(r.groups_json) ? r.groups_json : []
+    };
   }
+  if (Object.values(races).some(r => r.eventId === FALLBACK_EVENT)) ensureFallbackEvent();
+
+  const activeId = await db.getSetting('activeRaceId');
+  activeRaceId = (activeId && races[activeId]) ? activeId : null;
+  syncGroupsFromRace();
 
   const gpx = await db.getSetting('gpx');
   if (gpx && Array.isArray(gpx.coords) && gpx.coords.length > 0) gpxTrack = gpx;
 
-  console.log(`💾 ${rows.length} Rennen geladen, aktiv: ${activeStartlistId || 'keins'}, ${groups.length} Gruppe(n)`);
+  console.log(`💾 ${evRows.length} Veranstaltung(en), ${rows.length} Rennen geladen, aktiv: ${activeRaceId || 'keins'}, ${groups.length} Gruppe(n)`);
 }
 
 // =======================
@@ -485,22 +574,225 @@ app.post('/mode', requireSpolei, (req, res) => {
 });
 
 // =======================
-// STARTLISTEN ENDPOINTS
+// VERANSTALTUNGEN & RENNEN - ENDPOINTS
 // =======================
+function raceView(r) {
+  return {
+    id:         r.id,
+    eventId:    r.eventId,
+    name:       r.name,
+    category:   r.category,
+    startTime:  r.startTime,
+    status:     r.status,
+    createdAt:  r.createdAt,
+    riderCount: r.riders.length,
+    isActive:   r.id === activeRaceId
+  };
+}
+
+function racesOfEvent(eventId) {
+  return Object.values(races)
+    .filter(r => r.eventId === eventId)
+    .sort((a, b) => (a.startTime || a.createdAt).localeCompare(b.startTime || b.createdAt))
+    .map(raceView);
+}
+
+// Genau ein Rennen ist aktiv. Der Wechsel zieht den Taktik-Stand mit:
+// die Gruppen des alten Rennens bleiben dort gespeichert.
+function activateRace(id) {
+  if (activeRaceId && races[activeRaceId] && activeRaceId !== id) {
+    races[activeRaceId].groups = groups;
+    races[activeRaceId].status = 'beendet';
+    persistRace(activeRaceId);
+  }
+  activeRaceId = id;
+  races[id].status = 'aktiv';
+  syncGroupsFromRace();
+  saveRacesToDisk();
+  // Verkettet, nicht parallel: clearActiveStatus wuerde sonst je nach
+  // Pool-Reihenfolge den frisch gesetzten Status wieder auf 'beendet'
+  // zuruecksetzen.
+  if (db.enabled) {
+    db.clearActiveStatus()
+      .then(() => db.upsertRace({
+        id:        races[id].id,
+        eventId:   races[id].eventId,
+        name:      races[id].name,
+        category:  races[id].category,
+        startTime: races[id].startTime,
+        createdAt: races[id].createdAt,
+        status:    'aktiv',
+        riders:    races[id].riders
+      }))
+      .then(() => db.setSetting('activeRaceId', id))
+      .catch(dbFail('activateRace'));
+  }
+  pushAutoDisplays();
+}
+
+// --- Veranstaltungen ---
+app.get('/events', (req, res) => {
+  const list = Object.values(events)
+    .sort((a, b) => (b.dateFrom || b.createdAt).localeCompare(a.dateFrom || a.createdAt))
+    .map(ev => ({ ...ev, races: racesOfEvent(ev.id) }));
+  res.json({ events: list, activeRaceId });
+});
+
+app.post('/events', requireSpolei, (req, res) => {
+  const { name, ort, dateFrom, dateTo } = req.body;
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'name erforderlich' });
+  const id = newId();
+  events[id] = {
+    id,
+    name:      String(name).trim(),
+    ort:       ort ? String(ort).trim() : null,
+    dateFrom:  dateFrom || null,
+    dateTo:    dateTo   || null,
+    createdAt: new Date().toISOString()
+  };
+  saveRacesToDisk();
+  persistEvent(id);
+  console.log(`🏁 Veranstaltung angelegt: "${events[id].name}"`);
+  res.json({ ok: true, id, event: events[id] });
+});
+
+app.patch('/events/:id', requireSpolei, (req, res) => {
+  const ev = events[req.params.id];
+  if (!ev) return res.status(404).json({ error: 'Nicht gefunden' });
+  const { name, ort, dateFrom, dateTo } = req.body;
+  if (name !== undefined) {
+    if (!String(name).trim()) return res.status(400).json({ error: 'name darf nicht leer sein' });
+    ev.name = String(name).trim();
+  }
+  if (ort      !== undefined) ev.ort      = ort ? String(ort).trim() : null;
+  if (dateFrom !== undefined) ev.dateFrom = dateFrom || null;
+  if (dateTo   !== undefined) ev.dateTo   = dateTo   || null;
+  saveRacesToDisk();
+  persistEvent(ev.id);
+  res.json({ ok: true, event: ev });
+});
+
+// Loeschen nimmt alle Rennen der Veranstaltung mit (DB: ON DELETE CASCADE,
+// inkl. Abstandsverlauf). Das aktive Rennen blockiert das bewusst.
+app.delete('/events/:id', requireSpolei, (req, res) => {
+  const { id } = req.params;
+  if (!events[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  const own = Object.values(races).filter(r => r.eventId === id);
+  if (own.some(r => r.id === activeRaceId)) {
+    return res.status(409).json({ error: 'Aktives Rennen liegt in dieser Veranstaltung' });
+  }
+  const name = events[id].name;
+  for (const r of own) delete races[r.id];
+  delete events[id];
+  saveRacesToDisk();
+  if (db.enabled) db.deleteEvent(id).catch(dbFail('deleteEvent'));
+  console.log(`🗑️ Veranstaltung gelöscht: "${name}" (${own.length} Rennen)`);
+  res.json({ ok: true, deletedRaces: own.length });
+});
+
+// --- Rennen ---
+app.get('/races', (req, res) => {
+  const list = Object.values(races).map(raceView);
+  res.json({ races: list, activeId: activeRaceId });
+});
+
+app.get('/races/active', (req, res) => {
+  if (!activeRaceId || !races[activeRaceId]) return res.json([]);
+  res.json(races[activeRaceId].riders);
+});
+
+app.post('/races', requireSpolei, (req, res) => {
+  const { eventId, name, category, startTime, riders } = req.body;
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'name erforderlich' });
+  const evId = eventId && events[eventId] ? eventId : ensureFallbackEvent().id;
+  const id   = newId();
+  races[id] = normalizeRace({
+    id,
+    eventId:   evId,
+    name:      String(name).trim(),
+    category:  category ? String(category).trim() : null,
+    startTime: startTime || null,
+    createdAt: new Date().toISOString(),
+    riders:    Array.isArray(riders) ? riders : []
+  });
+  saveRacesToDisk();
+  persistRace(id);
+  console.log(`🚴 Rennen angelegt: "${races[id].name}" (${races[id].riders.length} Fahrer)`);
+  res.json({ ok: true, id, race: raceView(races[id]) });
+});
+
+app.patch('/races/:id', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const { eventId, name, category, startTime } = req.body;
+  if (name !== undefined) {
+    if (!String(name).trim()) return res.status(400).json({ error: 'name darf nicht leer sein' });
+    r.name = String(name).trim();
+  }
+  if (category  !== undefined) r.category  = category ? String(category).trim() : null;
+  if (startTime !== undefined) r.startTime = startTime || null;
+  if (eventId   !== undefined && events[eventId]) r.eventId = eventId;
+  saveRacesToDisk();
+  persistRace(r.id);
+  res.json({ ok: true, race: raceView(r) });
+});
+
+// Startliste setzen bzw. ersetzen - Ziel des Imports.
+app.put('/races/:id/riders', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const { riders } = req.body;
+  if (!Array.isArray(riders)) return res.status(400).json({ error: 'riders[] erforderlich' });
+  r.riders = riders;
+  saveRacesToDisk();
+  if (db.enabled) db.updateRaceRiders(r.id, riders).catch(dbFail('updateRaceRiders'));
+  console.log(`📋 Startliste gesetzt: "${r.name}" (${riders.length} Fahrer)`);
+  res.json({ ok: true, riderCount: riders.length });
+});
+
+app.post('/races/:id/activate', requireSpolei, (req, res) => {
+  const { id } = req.params;
+  if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  activateRace(id);
+  console.log(`✅ Aktives Rennen: "${races[id].name}"`);
+  res.json({ ok: true, activeId: activeRaceId });
+});
+
+app.delete('/races/:id', requireSpolei, (req, res) => {
+  const { id } = req.params;
+  if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  const name = races[id].name;
+  delete races[id];
+  if (activeRaceId === id) {
+    activeRaceId = null;
+    groups = [];
+    if (db.enabled) db.setSetting('activeRaceId', null).catch(dbFail('setSetting activeRaceId'));
+  }
+  saveRacesToDisk();
+  if (db.enabled) db.deleteRace(id).catch(dbFail('deleteRace'));
+  console.log(`🗑️ Rennen gelöscht: "${name}"`);
+  res.json({ ok: true });
+});
+
+// =======================
+// STARTLISTEN ENDPOINTS (veraltet)
+// =======================
+// Halten das bestehende Frontend am Leben, bis Stufe 2.2 auf /races
+// umgestellt ist. Entfernen in Stufe 2.3.
 app.get('/startlists', (req, res) => {
-  const list = Object.values(startlists).map(sl => ({
-    id:         sl.id,
-    name:       sl.name,
-    createdAt:  sl.createdAt,
-    riderCount: sl.riders.length,
-    isActive:   sl.id === activeStartlistId
+  const list = Object.values(races).map(r => ({
+    id:         r.id,
+    name:       r.name,
+    createdAt:  r.createdAt,
+    riderCount: r.riders.length,
+    isActive:   r.id === activeRaceId
   }));
-  res.json({ lists: list, activeId: activeStartlistId });
+  res.json({ lists: list, activeId: activeRaceId });
 });
 
 app.get('/startlists/active', (req, res) => {
-  if (!activeStartlistId || !startlists[activeStartlistId]) return res.json([]);
-  res.json(startlists[activeStartlistId].riders);
+  if (!activeRaceId || !races[activeRaceId]) return res.json([]);
+  res.json(races[activeRaceId].riders);
 });
 
 app.post('/startlists', requireSpolei, (req, res) => {
@@ -508,9 +800,15 @@ app.post('/startlists', requireSpolei, (req, res) => {
   if (!name || !Array.isArray(riders) || riders.length === 0) {
     return res.status(400).json({ error: 'name und riders[] erforderlich' });
   }
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-  startlists[id] = { id, name: name.trim(), createdAt: new Date().toISOString(), riders };
-  saveStartlistsToDisk();
+  const id = newId();
+  races[id] = normalizeRace({
+    id,
+    eventId:   ensureFallbackEvent().id,
+    name:      String(name).trim(),
+    createdAt: new Date().toISOString(),
+    riders
+  });
+  saveRacesToDisk();
   persistRace(id);
   console.log(`📋 Startliste gespeichert: "${name}" (${riders.length} Fahrer)`);
   res.json({ ok: true, id });
@@ -518,14 +816,15 @@ app.post('/startlists', requireSpolei, (req, res) => {
 
 app.delete('/startlists/:id', requireSpolei, (req, res) => {
   const { id } = req.params;
-  if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
-  const name = startlists[id].name;
-  delete startlists[id];
-  if (activeStartlistId === id) {
-    activeStartlistId = null;
+  if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  const name = races[id].name;
+  delete races[id];
+  if (activeRaceId === id) {
+    activeRaceId = null;
+    groups = [];
     if (db.enabled) db.setSetting('activeRaceId', null).catch(dbFail('setSetting activeRaceId'));
   }
-  saveStartlistsToDisk();
+  saveRacesToDisk();
   if (db.enabled) db.deleteRace(id).catch(dbFail('deleteRace'));
   console.log(`🗑️ Startliste gelöscht: "${name}"`);
   res.json({ ok: true });
@@ -533,11 +832,9 @@ app.delete('/startlists/:id', requireSpolei, (req, res) => {
 
 app.post('/startlists/:id/activate', requireSpolei, (req, res) => {
   const { id } = req.params;
-  if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
-  activeStartlistId = id;
-  saveStartlistsToDisk();
-  if (db.enabled) db.setSetting('activeRaceId', id).catch(dbFail('setSetting activeRaceId'));
-  console.log(`✅ Aktive Startliste: "${startlists[id].name}"`);
+  if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  activateRace(id);
+  console.log(`✅ Aktive Startliste: "${races[id].name}"`);
   res.json({ ok: true });
 });
 
@@ -584,8 +881,8 @@ app.post('/display', requireSpolei, (req, res) => {
 // =======================
 app.get('/groups', (req, res) => {
   const riderMap = Object.create(null);
-  if (activeStartlistId && startlists[activeStartlistId]) {
-    for (const r of startlists[activeStartlistId].riders) {
+  if (activeRaceId && races[activeRaceId]) {
+    for (const r of races[activeRaceId].riders) {
       riderMap[Number(r.nr)] = { name: r.name, team: r.team };
     }
   }
@@ -600,6 +897,8 @@ app.post('/groups', requireSpolei, (req, res) => {
   const { groups: g } = req.body;
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
   groups = g;
+  syncGroupsToRace();          // Stand haengt am Rennen, nicht am Server
+  saveRacesToDisk();
   pushAutoDisplays();          // Automatik-Tracker sofort nachziehen
   persistGroups();             // Stand + Abstandsverlauf sichern
   res.json({ ok: true });
@@ -607,6 +906,8 @@ app.post('/groups', requireSpolei, (req, res) => {
 
 app.delete('/groups', requireSpolei, (req, res) => {
   groups = [];
+  syncGroupsToRace();
+  saveRacesToDisk();
   pushAutoDisplays();
   persistGroups();
   console.log('🧹 Gruppen gelöscht');
