@@ -1,0 +1,294 @@
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: sans-serif; }
+    #map { height: 100%; }
+
+    /* LOGIN MODAL */
+    #loginModal {
+      display: flex;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #loginModal.hidden { display: none !important; }
+    .loginBox {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .loginBox h2 { margin: 0 0 10px 0; color: #333; font-size: 24px; }
+    .loginBox p { color: #666; margin: 10px 0 25px 0; font-size: 14px; }
+    .loginBox input {
+      width: 100%; padding: 12px; margin-bottom: 15px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .loginBox input:focus { outline: none; border-color: #2196F3; }
+    .loginBox button {
+      width: 100%; padding: 12px; background: #2196F3; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 16px; font-weight: bold; transition: background 0.3s;
+    }
+    .loginBox button:hover { background: #1976D2; }
+    .loginBox .error { color: #d32f2f; font-size: 13px; margin-top: 15px; min-height: 20px; }
+
+    /* BUTTONS */
+    .btnGroup { display: none; }
+    .btn {
+      padding: 10px 14px; background: white; border: 1px solid #ccc;
+      border-radius: 6px; cursor: pointer; font-size: 13px;
+      font-family: sans-serif; transition: all 0.2s;
+      white-space: nowrap; flex: 1; min-width: 120px;
+    }
+    .btn:hover { background: #f5f5f5; }
+    .btn.primary { background: #2196F3; color: white; border-color: #1976D2; }
+    .btn.primary:hover { background: #1976D2; }
+    .btn.logout { background: #f44336; color: white; border-color: #c62828; }
+    .btn.logout:hover { background: #d32f2f; }
+    .btn.reset { color: #f44336; }
+    .btn.wakeLock { color: #333; }
+    .btn.wakeLock.active { border-color: #ffc107; color: #ff6f00; background: #fff8e1; }
+    .btn.hidden { display: none; }
+    .btn.rain-active { border-color: #1565c0; color: #0d47a1; background: #e3f2fd; }
+    .btn.autoZoom.active { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+
+    /* OPTIONS MENU */
+    #optionsBtn {
+      position: absolute;
+      bottom: 10px; left: 10px; right: calc(50% + 5px);
+      z-index: 999; padding: 10px 14px; background: white;
+      border: 1px solid #ccc; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif;
+      transition: all 0.2s; width: auto;
+    }
+    #optionsBtn:hover { background: #f5f5f5; }
+    #optionsMenu {
+      position: absolute;
+      bottom: 50px; left: 10px; right: 10px;
+      z-index: 999;
+      background: white; border: 1px solid #ccc;
+      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    #optionsMenu.hidden { display: none; }
+    #optionsMenu .btn {
+      width: 100%; border: none; border-bottom: 1px solid #eee;
+      border-radius: 0; flex: 0; min-width: unset; margin: 0;
+    }
+    #optionsMenu .btn:last-child { border-bottom: none; }
+    #optionsMenu .btn:hover { background: #f5f5f5; }
+
+    @media (min-width: 768px) {
+      #optionsBtn  { position: absolute; top: 10px; left: auto; right: 120px; bottom: auto; width: auto; }
+      #taktikBtn   { top: 10px; right: 10px; bottom: auto; left: auto; width: auto; }
+      #optionsMenu { position: absolute; top: 50px; left: auto; right: 10px; bottom: auto; width: 230px; flex-direction: column; }
+      #optionsMenu .btn { width: 100%; }
+      #status { right: auto; left: 10px; width: fit-content; }
+    }
+
+    #teamCarToggle {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+      padding: 10px 14px; background: white;
+      border: none; border-bottom: 1px solid #eee;
+      width: 100%; font-size: 13px; font-family: sans-serif;
+      color: #666; transition: all 0.2s;
+    }
+    #teamCarToggle:hover { background: #f5f5f5; color: #333; }
+    #teamCarToggle.hidden { display: none; }
+    #teamCarToggle input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
+    #teamCarToggle.active { background: #fff3e0; color: #c62828; }
+    #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
+
+    /* CHANGE 1: Status hidden but JS logic intact */
+    #status {
+      display: none !important;
+      position: absolute; top: 10px; right: 10px;
+      z-index: 999; padding: 8px 14px; border-radius: 6px;
+      font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
+    }
+    #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+    #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
+
+    /* MARKER CONTEXT MENU */
+    .markerMenu {
+      background: white; border: 1px solid #ddd; border-radius: 6px;
+      padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: absolute; z-index: 9500; min-width: 200px; overflow: hidden;
+    }
+    .markerMenu button {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #666;
+      transition: background 0.2s; border-bottom: 1px solid #f0f0f0;
+    }
+    .markerMenu button:last-child { border-bottom: none; }
+    .markerMenu button:hover { background: #f5f5f5; color: #333; }
+    .markerMenu input {
+      display: block; width: 100%; padding: 10px 14px;
+      border: none; border-bottom: 1px solid #f0f0f0;
+      font-size: 13px; font-family: sans-serif;
+    }
+    .markerMenu input:focus { outline: none; background: #f9f9f9; }
+
+
+    /* BETREUER + LOGIN EXTRAS */
+    .loginBox button:disabled { background: #90caf9; cursor: default; }
+    .loginBox .btnSecondary {
+      background: #eee; color: #555; margin-top: 8px; font-size: 14px; font-weight: normal;
+    }
+    .loginBox .btnSecondary:hover { background: #ddd; }
+
+    /* BETREUER MODAL */
+    #betreuerModal {
+      display: flex; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    #betreuerModal.hidden { display: none !important; }
+
+    /* KI-IMPORT MODAL */
+    #aiImportModal {
+      display: flex; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: flex-start; justify-content: center;
+      padding: 20px; overflow-y: auto;
+    }
+    #aiImportModal.hidden { display: none !important; }
+    .aiBox {
+      background: white; padding: 28px; border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      width: 100%; max-width: 420px; margin: auto;
+    }
+    .aiBox h2 { margin: 0 0 6px 0; color: #333; font-size: 20px; }
+    .aiBox p  { color: #666; margin: 0 0 18px 0; font-size: 13px; line-height: 1.5; }
+    .aiBox label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    .aiBox input[type="text"] {
+      width: 100%; padding: 10px 12px; margin-bottom: 14px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px; transition: border-color 0.2s;
+    }
+    .aiBox input[type="text"]:focus { outline: none; border-color: #2196F3; }
+    .aiBtnPrimary {
+      width: 100%; padding: 11px; background: #2196F3; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 14px; font-weight: bold; transition: background 0.2s;
+    }
+    .aiBtnPrimary:hover    { background: #1976D2; }
+    .aiBtnPrimary:disabled { background: #90caf9; cursor: default; }
+    .aiBtnSecondary {
+      width: 100%; padding: 9px; background: #eee; color: #555;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 14px; margin-top: 8px; transition: background 0.2s;
+    }
+    .aiBtnSecondary:hover { background: #ddd; }
+    #aiPreviewTable {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+      display: block; max-height: 200px; overflow-y: auto; margin: 10px 0 14px;
+      border: 1px solid #eee; border-radius: 6px;
+    }
+    #aiPreviewTable th { background: #f5f5f5; padding: 6px 8px; text-align: left; position: sticky; top: 0; font-size: 11px; }
+    #aiPreviewTable td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; }
+    #aiStatus { font-size: 13px; color: #666; padding: 14px 0; text-align: center; }
+
+    /* TAKTIK BUTTON */
+    #taktikBtn {
+      position: absolute; bottom: 10px; right: 10px; left: calc(50% + 5px);
+      z-index: 999; padding: 10px 14px; background: white;
+      border: 1px solid #ccc; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif;
+      transition: all 0.2s; width: auto;
+    }
+    #taktikBtn:hover { background: #f5f5f5; }
+    /* CHANGE 2: Override after base rule so desktop media query wins */
+    @media (min-width: 768px) {
+      #taktikBtn { top: 10px; right: 10px; bottom: auto; left: auto; width: auto; }
+    }
+
+    /* ADVANCED SECTION */
+    #advancedSection { background: #f9f9f9; border-top: 1px solid #eee; }
+    #advancedSection.hidden { display: none; }
+    #modeToggleRow {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #eee;
+    }
+    #modeSwitch {
+      width: 44px; height: 24px; border-radius: 12px;
+      cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    #modeThumb {
+      position: absolute; top: 2px; width: 20px; height: 20px;
+      background: white; border-radius: 50%; transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    #resetBtn {
+      display: block; width: 100%; padding: 10px 14px;
+      background: none; border: none; text-align: left; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; color: #f44336;
+      transition: background 0.2s;
+    }
+    #resetBtn:hover { background: #fff5f5; }
+
+    /* STATUS TRAINING */
+    #status.training { border-color: #f9a825; color: #e65100; background: #fffde7; }
+    #status.searching { border-color: #90a4ae; color: #455a64; background: #eceff1; }
+
+    /* TAKTIK STRIP */
+    #taktikStrip {
+      position: fixed; top: 50%; right: 8px; width: 70px;
+      transform: translateY(-50%);
+      z-index: 998;
+      background: rgba(255,255,255,0.90);
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 14px 0;
+    }
+    #taktikStrip.hidden { display: none; }
+    .strip-grp   { text-align: center; width: 100%; padding: 4px 6px; }
+    .strip-dot   { width: 8px; height: 8px; border-radius: 50%; margin: 0 auto 2px; }
+    .strip-name  { font-size: 11px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; }
+    .strip-cnt   { font-size: 15px; font-weight: 500; color: #333; line-height: 1.2; }
+    .strip-conn  { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
+    .strip-line  { width: 1px; height: 8px; background: #ccc; }
+    .strip-gap   { font-size: 11px; font-weight: 500; color: #aaa; }
+
+    /* TAKTIK VOLLANSICHT */
+    #taktikView {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 2000; background: #f5f5f5; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #taktikView.hidden { display: none; }
+    .tk-header {
+      position: sticky; top: 0; background: white; border-bottom: 1px solid #eee;
+      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+      z-index: 10;
+    }
+    .tk-body { padding: 12px; }
+
+    /* GROUP CARDS */
+    .gc       { background: white; border: 1px solid #eee; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .gc-hdr   { padding: 11px 14px 9px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .gc-sec   { border-top: 1px solid #f0f0f0; padding: 9px 14px; }
+    .gc-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .r-row    { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; }
+    .r-nr     { background: #f0f0f0; color: #666; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 500; min-width: 26px; text-align: center; margin-top: 2px; flex-shrink: 0; }
+    .r-name   { font-size: 13px; font-weight: 500; color: #333; }
+    .r-team   { font-size: 11px; color: #999; }
+    .r-none   { font-size: 13px; color: #bbb; font-style: italic; }
+
+    /* STARTLISTEN PANEL */
+    .sl-panel { background: white; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+    .sl-item  { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .sl-item:last-child { border-bottom: none; }
+    .sl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
