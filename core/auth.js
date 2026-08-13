@@ -1,4 +1,3 @@
-
 const SERVER = 'https://livetracking-fq4l.onrender.com';
 
 // =======================
@@ -12,7 +11,6 @@ function showAdminElements() {
   document.getElementById('advancedBtn').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
-  document.getElementById('gpxBtn').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
 }
@@ -24,7 +22,6 @@ function showBetreuerElements() {
   document.getElementById('advancedBtn').classList.add('hidden');
   document.getElementById('advancedSection').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
-  document.getElementById('gpxBtn').classList.add('hidden');
 }
 
 function hideAdminElements() {
@@ -33,8 +30,6 @@ function hideAdminElements() {
   document.getElementById('advancedBtn').textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8';
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
-  document.getElementById('gpxBtn').classList.add('hidden');
-  document.getElementById('gpxRemoveBtn').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
   document.getElementById('loginBtnTop').classList.remove('hidden');
 }
@@ -110,4 +105,3 @@ document.getElementById('passwordInput').addEventListener('keypress', e => {
 
 document.getElementById('logoutBtn').addEventListener('click', logout);
 loadToken();
-
