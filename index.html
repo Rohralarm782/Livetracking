@@ -43,6 +43,7 @@
   <div class="aiBox">
     <h2>&#128194; Import</h2>
     <p>Lade eine Startliste in beliebigem Format hoch &#8211; die KI extrahiert die Fahrer der gew&#252;nschten Kategorie automatisch.</p>
+    <div id="aiTargetInfo" style="font-size:13px;font-weight:500;color:#2e7d32;background:#e8f5e9;border-radius:6px;padding:8px 10px;margin-bottom:10px"></div>
     <label>Kategorie</label>
     <input type="text" id="aiCategory" placeholder="z.B. U17m, Junioren, Elite, U15 m&#228;nnlich">
     <button class="aiBtnPrimary" id="aiFilePickBtn">&#128194; Datei w&#228;hlen (PDF, Excel, CSV&#8230;)</button>
@@ -53,9 +54,7 @@
         <thead><tr><th>Nr</th><th>Name</th><th>Team</th></tr></thead>
         <tbody id="aiPreviewBody"></tbody>
       </table>
-      <label>Name der Startliste</label>
-      <input type="text" id="aiListName" placeholder="z.B. U17m Schierke 2026">
-      <button class="aiBtnPrimary" id="aiSaveBtn">&#9989; Speichern</button>
+      <button class="aiBtnPrimary" id="aiSaveBtn">&#9989; Startliste &#252;bernehmen</button>
     </div>
     <button class="aiBtnSecondary" id="aiCancelBtn">Abbrechen</button>
   </div>
@@ -107,10 +106,14 @@
 <!-- TAKTIK VOLLANSICHT -->
 <div id="taktikView" class="hidden">
   <div class="tk-header">
-    <span style="font-size:16px;font-weight:500">&#128202; Taktik</span>
-    <button id="closeTaktikBtn" class="btn" style="padding:6px 12px">&#10005; Karte</button>
+    <span id="tkTitle" style="font-size:16px;font-weight:500">&#128202; Taktik</span>
+    <div style="display:flex;gap:6px">
+      <button id="eventsBtn" class="btn" style="padding:6px 12px">&#127937; Rennen</button>
+      <button id="closeTaktikBtn" class="btn" style="padding:6px 12px">&#10005; Karte</button>
+    </div>
   </div>
   <div class="tk-body" id="taktikBody"></div>
+  <div class="tk-body hidden" id="eventsBody"></div>
 </div>
 
 <div id="status" class="warn">&#9898; Verbindung wird aufgebaut&#8230;</div>
@@ -124,8 +127,10 @@
        map/map.js         Karte, Marker, Positionen, Status, Kontextmenue
        map/gpx.js         Streckenanzeige
        race/taktik.js     Gruppenlogik
+       race/events.js     Veranstaltungen und Rennen, Datenschicht
        race/startlists.js Import
        race/taktik-ui.js  Rendern und Event-Delegation
+       race/events-ui.js  Rennverwaltung im Taktik-Tab
        race/displays.js   Garmin-Displays
        core/app.js        Einstieg: Main Loop, Toast, Service Worker -->
 <script src="/core/auth.js"></script>
@@ -133,8 +138,10 @@
 <script src="/map/map.js"></script>
 <script src="/map/gpx.js"></script>
 <script src="/race/taktik.js"></script>
+<script src="/race/events.js"></script>
 <script src="/race/startlists.js"></script>
 <script src="/race/taktik-ui.js"></script>
+<script src="/race/events-ui.js"></script>
 <script src="/race/displays.js"></script>
 <script src="/core/app.js"></script>
 </body>
