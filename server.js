@@ -27,7 +27,6 @@ app.use(express.static(__dirname));
 // STATE
 // =======================
 let positions = Object.create(null);
-let gpxTrack  = null;
 let currentMode = 'race'; // 'race' | 'training'
 
 // Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
@@ -250,7 +249,9 @@ function normalizeRace(r) {
     status:    r.status    || 'geplant',
     createdAt: r.createdAt || new Date().toISOString(),
     riders:    Array.isArray(r.riders) ? r.riders : [],
-    groups:    Array.isArray(r.groups) ? r.groups : []
+    groups:    Array.isArray(r.groups) ? r.groups : [],
+    // {coords:[[lat,lon],...], name} oder null - gehoert zum Rennen
+    gpx:       (r.gpx && Array.isArray(r.gpx.coords) && r.gpx.coords.length) ? r.gpx : null
   };
 }
 
@@ -356,12 +357,14 @@ function persistGroups() {
   db.addGapSnapshot(activeRaceId, groups).catch(dbFail('addGapSnapshot'));
 }
 
-// GPX haengt aktuell global am Server, nicht am Rennen. Bis die
-// Rennen-UI steht, wird er deshalb in settings abgelegt - sonst
-// haette er ohne aktives Rennen keinen Platz.
-function persistGpx() {
+// GPX gehoert zum Rennen. Eigener Schreibpfad, weil upsertRace die
+// Spalte gpx_json bewusst nicht anfasst - so ueberlebt die Strecke
+// jedes Stammdaten-Update des Rennens.
+function persistGpx(raceId) {
   if (!db.enabled) return;
-  db.setSetting('gpx', gpxTrack).catch(dbFail('setSetting gpx'));
+  const r = races[raceId];
+  if (!r) return;
+  db.updateRaceGpx(raceId, r.gpx).catch(dbFail('updateRaceGpx'));
 }
 
 async function loadStateFromDb() {
@@ -386,6 +389,7 @@ async function loadStateFromDb() {
         createdAt: r.createdAt, status: r.status, riders: r.riders
       });
       if (r.groups.length > 0) await db.updateRaceGroups(r.id, r.groups);
+      if (r.gpx)               await db.updateRaceGpx(r.id, r.gpx);
     }
     if (activeRaceId) await db.setSetting('activeRaceId', activeRaceId);
     console.log(`📤 ${Object.keys(races).length} Rennen in die Datenbank übernommen`);
@@ -416,7 +420,9 @@ async function loadStateFromDb() {
       status:    r.status || 'geplant',
       createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
       riders:    Array.isArray(r.riders_json) ? r.riders_json : [],
-      groups:    Array.isArray(r.groups_json) ? r.groups_json : []
+      groups:    Array.isArray(r.groups_json) ? r.groups_json : [],
+      gpx:       (r.gpx_json && Array.isArray(r.gpx_json.coords) && r.gpx_json.coords.length)
+                   ? r.gpx_json : null
     };
   }
   if (Object.values(races).some(r => r.eventId === FALLBACK_EVENT)) ensureFallbackEvent();
@@ -425,10 +431,16 @@ async function loadStateFromDb() {
   activeRaceId = (activeId && races[activeId]) ? activeId : null;
   syncGroupsFromRace();
 
-  const gpx = await db.getSetting('gpx');
-  if (gpx && Array.isArray(gpx.coords) && gpx.coords.length > 0) gpxTrack = gpx;
+  // Das frueher globale GPX wird nicht uebernommen, sondern einmalig
+  // entsorgt - Strecken werden pro Rennen neu hochgeladen.
+  const oldGpx = await db.getSetting('gpx');
+  if (oldGpx) {
+    await db.setSetting('gpx', null);
+    console.log('🧹 Altes globales GPX verworfen');
+  }
 
-  console.log(`💾 ${evRows.length} Veranstaltung(en), ${rows.length} Rennen geladen, aktiv: ${activeRaceId || 'keins'}, ${groups.length} Gruppe(n)`);
+  const withGpx = Object.values(races).filter(r => r.gpx).length;
+  console.log(`💾 ${evRows.length} Veranstaltung(en), ${rows.length} Rennen geladen, aktiv: ${activeRaceId || 'keins'}, ${groups.length} Gruppe(n), ${withGpx} mit Strecke`);
 }
 
 // =======================
@@ -624,25 +636,37 @@ app.post('/api/claude', requireAuth, async (req, res) => {
 // =======================
 // GPX TRACK
 // =======================
+// Die Strecke gehoert zum Rennen. Geschrieben wird ueber
+// /races/:id/gpx - dafuer muss das Rennen NICHT aktiv sein, damit sich
+// ein ganzes Wochenende vorbereiten laesst. Gelesen wird ueber /gpx,
+// das immer die Strecke des aktiven Rennens liefert.
+
 app.get('/gpx', (req, res) => {
-  res.json(gpxTrack || null);
+  const r = activeRaceId ? races[activeRaceId] : null;
+  res.json((r && r.gpx) || null);
 });
 
-app.post('/gpx', requireSpolei, (req, res) => {
+app.put('/races/:id/gpx', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
   const { coords, name } = req.body;
   if (!Array.isArray(coords) || coords.length === 0) {
-    return res.status(400).json({ error: 'coords array required' });
+    return res.status(400).json({ error: 'coords[] erforderlich' });
   }
-  gpxTrack = { coords, name: name || 'GPX Track' };
-  persistGpx();
-  console.log(`📂 GPX gespeichert: ${name} (${coords.length} Punkte)`);
-  res.json({ ok: true });
+  r.gpx = { coords, name: name || 'GPX Track' };
+  saveRacesToDisk();
+  persistGpx(r.id);
+  console.log(`📂 Strecke gespeichert: "${r.name}" \u2190 ${r.gpx.name} (${coords.length} Punkte)`);
+  res.json({ ok: true, pointCount: coords.length });
 });
 
-app.delete('/gpx', requireSpolei, (req, res) => {
-  gpxTrack = null;
-  persistGpx();
-  console.log("🗑️ GPX gelöscht");
+app.delete('/races/:id/gpx', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  r.gpx = null;
+  saveRacesToDisk();
+  persistGpx(r.id);
+  console.log(`🗑️ Strecke gelöscht: "${r.name}"`);
   res.json({ ok: true });
 });
 
@@ -679,6 +703,10 @@ function raceView(r) {
     status:     r.status,
     createdAt:  r.createdAt,
     riderCount: r.riders.length,
+    // Bewusst NUR Kennzeichen statt r.gpx: sonst haengen an jedem
+    // GET /events saemtliche Streckenpunkte aller Rennen.
+    hasGpx:     !!r.gpx,
+    gpxName:    r.gpx ? r.gpx.name : null,
     isActive:   r.id === activeRaceId
   };
 }
