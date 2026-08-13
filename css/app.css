@@ -1,4 +1,4 @@
-    * { box-sizing: border-box; }
+* { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; font-family: sans-serif; }
     #map { height: 100%; }
 
@@ -199,6 +199,39 @@
     #aiPreviewTable td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; }
     #aiStatus { font-size: 13px; color: #666; padding: 14px 0; text-align: center; }
 
+    /* FAVORITEN MODAL */
+    #favModal {
+      display: flex; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000; background: rgba(0,0,0,0.6);
+      align-items: flex-start; justify-content: center;
+      padding: 20px; overflow-y: auto;
+    }
+    #favModal.hidden { display: none !important; }
+    #favModal input[type="text"] {
+      width: 100%; padding: 10px 12px; margin-bottom: 10px;
+      border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
+    }
+    #favModal input[type="text"]:focus { outline: none; border-color: #2196F3; }
+    #favBody {
+      max-height: 45vh; overflow-y: auto;
+      border: 1px solid #eee; border-radius: 6px; padding: 4px 8px;
+    }
+    .fav-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 2px; border-bottom: 1px solid #f5f5f5;
+    }
+    .fav-row:last-child { border-bottom: none; }
+    .fav-row.on { background: #fffdf5; }
+    .fav-star {
+      background: white; border: 1px solid #eee; border-radius: 6px;
+      cursor: pointer; font-size: 15px; line-height: 1;
+      padding: 4px 6px; color: #ccc; flex-shrink: 0;
+    }
+    .fav-row.on .fav-star { border-color: #ffca28; color: #f9a825; }
+    .fav-star:disabled { cursor: default; opacity: 0.4; }
+    .fav-empty { text-align: center; color: #bbb; font-size: 13px; padding: 24px 8px; }
+
     /* TAKTIK BUTTON */
     #taktikBtn {
       position: absolute; bottom: 10px; right: 10px; left: calc(50% + 5px);
@@ -291,4 +324,3 @@
     .sl-item  { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
     .sl-item:last-child { border-bottom: none; }
     .sl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
