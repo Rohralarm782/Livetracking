@@ -27,10 +27,15 @@ tkBody.addEventListener('click', function (e) {
     case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
     case 'send-display':       sendDisplay(id);                   break;
     case 'toggle-auto':        toggleAuto(id);                    break;
+    case 'set-main':           setMainGroup(gid);                 break;
+    case 'toggle-fav':         toggleFav(parseInt(nr), btn.dataset.on === '1'); break;
+    case 'open-favs':          openFavModal();                    break;
   }
 });
 
 tkBody.addEventListener('change', function (e) {
+  // Anzeige-Einstellungen: feuert beim Verlassen des Zahlenfeldes
+  if (e.target.classList.contains('ds-inp')) { saveDisplaySettings(); return; }
   if (!e.target.classList.contains('split-check')) return;
   const nr = parseInt(e.target.dataset.nr);
   if (e.target.checked) splitNrs.add(nr); else splitNrs.delete(nr);
@@ -111,6 +116,8 @@ function renderTaktikBody() {
     </div>`;
     html += `<div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="btn" data-action="add-group" style="flex:1">\uFF0B Gruppe</button>
+      <button class="btn" data-action="open-favs" style="flex:1"${
+        activeRaceId ? '' : ' disabled title="Erst ein Rennen aktivieren"'}>\u2B50 Favoriten</button>
     </div>`;
   }
   if (taktikGroups.length === 0) {
@@ -118,9 +125,11 @@ function renderTaktikBody() {
       ${authToken ? 'Noch keine Gruppen \u2013 oben auf \uFF0B Gruppe tippen' : 'Noch keine Gruppen angelegt'}
     </div>`;
   } else {
+    const mIdx = mainGroupIdx();
     taktikGroups.forEach((g, idx) => {
       const riders    = g.riders || [];
       const isLeading = idx === 0;
+      const isMain    = idx === mIdx;
       const others    = taktikGroups.filter(tg => tg.id !== g.id);
       if (splittingGid === g.id) {
         const rows = riders.map(r => {
@@ -181,8 +190,17 @@ function renderTaktikBody() {
             : '';
       const nameHtml = authToken
         ? `<input class="name-inp" data-gid="${g.id}" value="${escH(g.name)}"
-             style="font-size:14px;font-weight:500;border:none;background:transparent;color:#333;padding:0;width:145px;max-width:55vw">`
+             style="font-size:14px;font-weight:500;border:none;background:transparent;color:#333;padding:0;width:120px;max-width:45vw">`
         : `<span style="font-size:14px;font-weight:500;color:#333">${escH(g.name)}</span>`;
+      // Hauptfeld-Marker. Jederzeit verschiebbar: ein Klick auf das
+      // graue HF einer anderen Gruppe setzt ihn dorthin um.
+      const hfHtml = isMain
+        ? `<span title="Hauptfeld \u2013 hier endet der Text auf dem Garmin"
+             style="flex-shrink:0;font-size:11px;font-weight:600;padding:2px 6px;border-radius:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7">HF</span>`
+        : authToken
+          ? `<button class="btn" data-action="set-main" data-gid="${g.id}" title="Als Hauptfeld markieren"
+               style="flex:0;flex-shrink:0;min-width:unset;padding:2px 6px;font-size:11px;color:#ccc;border-color:#eee">HF</button>`
+          : '';
       const riderRows = riders.map(r => {
         const nr = r.nr !== undefined ? r.nr : r;
         if (authToken && movingRider.gid === g.id && movingRider.nr === nr) {
@@ -197,10 +215,21 @@ function renderTaktikBody() {
             <button class="btn" data-action="cancel-move-rider" style="padding:3px 7px;font-size:11px;flex-shrink:0">\u2715</button>
           </div>`;
         }
+        // Der Stern haengt an der Startliste - ohne Eintrag dort kann
+        // ein Fahrer kein Favorit sein, dann wird er gar nicht gezeigt.
+        const inList = r.name !== undefined && r.name !== null;
+        const favBtn = (authToken && inList)
+          ? `<button class="btn" data-action="toggle-fav" data-nr="${nr}" data-on="${r.fav ? '0' : '1'}"
+               title="${r.fav ? 'Favorit entfernen' : 'Als Favorit markieren'}"
+               style="padding:1px 4px;font-size:13px;line-height:1.2;min-width:unset;flex:0;
+                      border-color:${r.fav ? '#ffca28' : '#eee'};color:${r.fav ? '#f9a825' : '#ccc'}">${
+              r.fav ? '\u2605' : '\u2606'}</button>`
+          : '';
         return `<div class="r-row">
           ${authToken ? `<button class="btn" data-action="remove-rider" data-gid="${g.id}" data-nr="${nr}"
             style="padding:1px 5px;font-size:11px;color:#f44336;min-width:unset;flex:0">\u2715</button>` : ''}
-          <span class="r-nr">${nr}</span>
+          <span class="r-nr"${r.fav ? ' style="background:#fff8e1;color:#f9a825;font-weight:700"' : ''}>${nr}</span>
+          ${favBtn}
           <div style="flex:1">${r.name
             ? `<div class="r-name">${escH(r.name)}</div><div class="r-team">${escH(r.team||'')}</div>`
             : `<div class="r-none">kein Eintrag</div>`
@@ -231,6 +260,7 @@ function renderTaktikBody() {
           <div style="display:flex;align-items:center;gap:7px;min-width:0">
             <div class="gc-dot" style="background:${g.color}"></div>
             ${nameHtml}
+            ${hfHtml}
           </div>
           ${gapHtml}
         </div>
