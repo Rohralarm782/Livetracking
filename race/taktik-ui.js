@@ -10,7 +10,7 @@ tkBody.addEventListener('click', function (e) {
   const { action, gid, id, nr } = btn.dataset;
   switch (action) {
     case 'add-group':          addGroup();                        break;
-    case 'new-race':           neuesRennen();                     break;
+    case 'open-events':        openEventsPanel();                 break;
     case 'add-rider':          addRider(gid);                     break;
     case 'remove-rider':       removeRider(gid, parseInt(nr));    break;
     case 'delete-group':       deleteGroup(gid);                  break;
@@ -27,9 +27,6 @@ tkBody.addEventListener('click', function (e) {
     case 'confirm-move-rider': confirmMoveRider(btn.dataset.target); break;
     case 'send-display':       sendDisplay(id);                   break;
     case 'toggle-auto':        toggleAuto(id);                    break;
-    case 'activate-list':      activateStartlist(id);             break;
-    case 'delete-list':        deleteStartlist(id);               break;
-    case 'upload-startlist':   openAiImport();                    break;
   }
 });
 
@@ -97,27 +94,23 @@ function renderStrip(grps) {
 function renderTaktikBody() {
   let html = '';
   if (authToken) {
-    const active = startlistMeta.find(s => s.id === activeSlId);
+    const ar = activeRace();
     html += `<div class="sl-panel">
-      <div style="padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0">
-        <span style="font-size:13px;font-weight:500;color:#333">\u{1F4CB} Starterliste</span>
-        <span style="font-size:12px;color:${active ? '#2e7d32' : '#999'}">${active ? escH(active.name) : 'Keine aktiv'}</span>
-      </div>`;
-    startlistMeta.forEach(sl => {
-      html += `<div class="sl-item">
-        <div class="sl-dot" style="background:${sl.id === activeSlId ? '#4caf50' : '#ddd'}"></div>
-        <span style="font-size:13px;color:#333;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(sl.name)}</span>
-        <span style="font-size:11px;color:#aaa;flex-shrink:0">${sl.riderCount}</span>
-        <button class="btn" data-action="activate-list" data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0">Aktiv</button>
-        <button class="btn" data-action="delete-list"   data-id="${sl.id}" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:#f44336">\u2715</button>
-      </div>`;
-    });
-    html += `<div style="padding:10px 14px">
-      <button class="btn" data-action="upload-startlist" style="width:100%">\u{1F4C2} Import</button>
-    </div></div>`;
+      <div class="sl-item" style="border-bottom:none">
+        <div class="sl-dot" style="background:${ar ? '#4caf50' : '#ddd'}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;color:${ar ? '#333' : '#999'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${
+            ar ? escH(raceLabel(ar.id, true)) : 'Kein Rennen aktiv'}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">${
+            ar ? `${ar.riderCount} Fahrer${ar.category ? ' \u00B7 ' + escH(ar.category) : ''}`
+               : 'Rennen anlegen oder aktivieren'}</div>
+        </div>
+        <button class="btn" data-action="open-events"
+          style="flex:0;padding:5px 10px;font-size:12px">\u{1F3C1} Rennen</button>
+      </div>
+    </div>`;
     html += `<div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="btn" data-action="add-group" style="flex:1">\uFF0B Gruppe</button>
-      <button class="btn" data-action="new-race"  style="flex:1;color:#f44336">\u{1F6A8} Neues Rennen</button>
     </div>`;
   }
   if (taktikGroups.length === 0) {
@@ -249,4 +242,3 @@ function renderTaktikBody() {
   html += renderDisplayPanel();
   tkBody.innerHTML = html;
 }
-
