@@ -53,64 +53,151 @@ const displayTexts = Object.create(null);
 const autoDisplay = Object.create(null);
 
 // Max. 60 Zeichen - passt unter die ausgehandelte BLE-MTU.
+// Muss mit DISPLAY_MAX in der Firmware uebereinstimmen.
+const DISPLAY_MAX = 60;
+
+// Einstellungen fuer den Automatik-Text. Zahlen statt Schalter:
+// 0 schaltet die jeweilige Zeile ohne Sonderfall ab.
+//   foreignNrs        Fremdnummern je Gruppe, hoechstens
+//   foreignNrsMaxSize ab dieser Gruppengroesse gar keine Fremdnummern
+//                     mehr - drei von zwanzig Nummern sind keine
+//                     Information. Favoriten sind davon ausgenommen.
+let displaySettings = { foreignNrs: 2, foreignNrsMaxSize: 6 };
+
+function sanitizeSettings(s) {
+  const clamp = (v, def, max) => {
+    const n = parseInt(v);
+    return (isNaN(n) || n < 0) ? def : Math.min(n, max);
+  };
+  return {
+    foreignNrs:        clamp(s && s.foreignNrs,        displaySettings.foreignNrs,        5),
+    foreignNrsMaxSize: clamp(s && s.foreignNrsMaxSize, displaySettings.foreignNrsMaxSize, 99)
+  };
+}
+
 // Nur druckbares ASCII: Umlaute oder Emoji wuerden auf dem
 // Garmin als leere Kaestchen erscheinen.
 function sanitizeDisplay(text) {
   let out = '';
   const src = String(text == null ? '' : text);
-  for (let i = 0; i < src.length && out.length < 60; i++) {
+  for (let i = 0; i < src.length && out.length < DISPLAY_MAX; i++) {
     const c = src.charCodeAt(i);
     if (c >= 32 && c <= 126) out += src[i];
   }
   return out.trim();
 }
 
+// Index der Hauptfeld-Gruppe. Vorrang hat die ausdrueckliche Markierung
+// (main: true), sonst gilt wie bisher die letzte Gruppe. Damit bleibt
+// der Text auch fuer alte Rennen ohne Marker richtig.
+function mainGroupIndex() {
+  const i = groups.findIndex(g => g && g.main === true);
+  return i >= 0 ? i : groups.length - 1;
+}
+
+// Startnummern der Favoriten des aktiven Rennens.
+// Quelle ist die Startliste - ein Fahrer ohne Startlisten-Eintrag
+// kann kein Favorit sein.
+function favNrs() {
+  const s = new Set();
+  if (!activeRaceId || !races[activeRaceId]) return s;
+  for (const r of races[activeRaceId].riders) {
+    if (r && r.fav && r.nr !== undefined && r.nr !== null) s.add(Number(r.nr));
+  }
+  return s;
+}
+
 // Baut den Anzeigetext aus dem aktuellen Gruppenstand.
-// Format je Gruppe: "<Anzahl>x <Abstand nach hinten>"
+// Format je Gruppe: "<Anzahl>x <Abstand nach hinten>~<Startnummern>"
 // Das 'x' klebt an der Zahl und macht sie als Stueckzahl kenntlich -
 // ohne das liest sich "6 0:15" wie zwei gleichrangige Zahlen.
 // Muss ASCII bleiben: bytesToLines() im Datenfeld filtert auf 32-126,
 // ein typografisches Mal-Zeichen wuerde stillschweigend verschluckt.
-// gefolgt von "~<Startnummern>" (optional, darf wegfallen).
-// Die letzte Gruppe ist das Feld und bekommt "...".
+//
+// Das Hauptfeld heisst "HF" und beendet den Text:
+//   - ohne Anzahl, weil wir nicht zaehlen, wer hinten rausfaellt
+//   - ohne Abstand, weil der Abstand einer Gruppe der nach hinten ist
+//   - Gruppen dahinter (Gruppetto) entfallen ganz
+// "HF" ersetzt damit das frueher angehaengte "...".
 //
 // Der Abstand steht in groups[i].gap und meint den Rueckstand
 // AUF DIE GRUPPE DAVOR. Fuer "Abstand nach hinten" brauchen
 // wir daher den gap der FOLGENDEN Gruppe.
+//
+// Reicht das Zeichenbudget nicht, wird gestuft gekuerzt statt hinten
+// abgeschnitten. Reihenfolge: Fremdnummern von hinten nach vorn,
+// dann Favoriten von hinten nach vorn. Die Kopfzeilen bleiben.
 function buildAutoText() {
   if (!Array.isArray(groups) || groups.length === 0) return '';
-  const parts = [];
-  for (let i = 0; i < groups.length; i++) {
-    const g     = groups[i];
-    const riders = Array.isArray(g.riders) ? g.riders : [];
-    const isLast = (i === groups.length - 1);
 
-    // Letzte Gruppe ohne Fahrer = das Feld
-    if (isLast && riders.length === 0) { parts.push('...'); break; }
+  const mainIdx = mainGroupIndex();
+  const favs    = favNrs();
+  const maxFor  = displaySettings.foreignNrs;
+  const maxSize = displaySettings.foreignNrsMaxSize;
 
-    const next = groups[i + 1];
-    const gap  = next && next.gap ? String(next.gap).trim() : '';
-    let seg = String(riders.length) + 'x';
-    if (gap.length > 0) seg += ' ' + gap;
-    parts.push(seg);
+  // Segmente bis einschliesslich Hauptfeld
+  const segs = [];
+  for (let i = 0; i <= mainIdx && i < groups.length; i++) {
+    const g      = groups[i];
+    const riders = (Array.isArray(g.riders) ? g.riders : [])
+      .map(r => (r && r.nr !== undefined) ? Number(r.nr) : Number(r))
+      .filter(n => !isNaN(n));
 
-    // Startnummern als optionaler Teil, maximal drei.
-    // Komma statt Leerzeichen: in der kleinen Schrift der optionalen
-    // Zeile ist ein Leerzeichen zu schmal, "8 9" liest sich sonst als
-    // "89". Kostet kein zusaetzliches Zeichen.
-    const nrs = riders
-      .map(r => (r && r.nr !== undefined) ? r.nr : r)
-      .filter(n => n !== undefined && n !== null)
-      .slice(0, 3);
-    if (nrs.length > 0) parts.push('~' + nrs.join(','));
+    let head;
+    if (i === mainIdx) {
+      head = 'HF';
+    } else {
+      const next = groups[i + 1];
+      const gap  = next && next.gap ? String(next.gap).trim() : '';
+      head = String(riders.length) + 'x' + (gap.length > 0 ? ' ' + gap : '');
+    }
+
+    // Im Hauptfeld sind Fremdnummern wertlos: wir fuehren dort keine
+    // vollstaendige Liste, zwei herausgegriffene Nummern taeuschen
+    // eine Information vor, die es nicht gibt. Favoriten dagegen sind
+    // genau die Aussage "dein Fahrer sitzt im Feld".
+    const fav     = riders.filter(n =>  favs.has(n));
+    const other   = riders.filter(n => !favs.has(n));
+    const tooBig  = (maxSize > 0 && riders.length > maxSize);
+    const foreign = (i === mainIdx || tooBig) ? [] : other.slice(0, maxFor);
+    segs.push({ head, fav, foreign });
   }
-  // '~' leitet seinen Abschnitt selbst ein, davor kein ';'
-  let out = '';
-  for (const p of parts) {
-    if (out.length === 0)        out = p;
-    else if (p.startsWith('~'))  out += p;
-    else                         out += ';' + p;
+
+  // Komma statt Leerzeichen zwischen den Nummern: in der kleinen
+  // Schrift der optionalen Zeile ist ein Leerzeichen zu schmal,
+  // "8 9" liest sich sonst als "89". Kostet kein Zeichen mehr.
+  const keepFav = segs.map(s => s.fav.length);
+  const keepFor = segs.map(s => s.foreign.length);
+  const render  = () => segs.map((s, i) => {
+    const nrs = s.fav.slice(0, keepFav[i]).concat(s.foreign.slice(0, keepFor[i]));
+    return s.head + (nrs.length > 0 ? '~' + nrs.join(',') : '');
+  }).join(';');
+
+  // Streichreihenfolge aufbauen: niedrigste Prioritaet zuerst.
+  const drop = [];
+  for (let i = segs.length - 1; i >= 0; i--)
+    for (let k = 0; k < segs[i].foreign.length; k++) drop.push(['for', i]);
+  for (let i = segs.length - 1; i >= 0; i--)
+    for (let k = 0; k < segs[i].fav.length; k++) drop.push(['fav', i]);
+
+  let out = render();
+  let d   = 0;
+  while (out.length > DISPLAY_MAX && d < drop.length) {
+    const [kind, i] = drop[d++];
+    if (kind === 'for') keepFor[i]--; else keepFav[i]--;
+    out = render();
   }
+
+  // Passen nicht einmal die Kopfzeilen, fallen Gruppen direkt vor dem
+  // Hauptfeld weg: vorne stehen die Ausreisser, hinten der Anker.
+  // Braucht es ab etwa acht Gruppen - im Rennen praktisch nie.
+  while (out.length > DISPLAY_MAX && segs.length > 2) {
+    segs.splice(segs.length - 2, 1);
+    keepFav.splice(keepFav.length - 2, 1);
+    keepFor.splice(keepFor.length - 2, 1);
+    out = render();
+  }
+
   return sanitizeDisplay(out);
 }
 
@@ -279,6 +366,12 @@ function persistGpx() {
 
 async function loadStateFromDb() {
   if (!db.enabled) return;
+
+  // Bewusst ganz oben: der Migrations-Zweig weiter unten springt
+  // vorzeitig zurueck, die Einstellungen waeren sonst verloren.
+  const ds = await db.getSetting('displaySettings');
+  if (ds && typeof ds === 'object') displaySettings = sanitizeSettings(ds);
+
   const rows = await db.listRaces();
 
   // Einmalige Uebernahme der Disk-Rennen beim ersten Start mit DB
@@ -743,11 +836,40 @@ app.put('/races/:id/riders', requireSpolei, (req, res) => {
   if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
   const { riders } = req.body;
   if (!Array.isArray(riders)) return res.status(400).json({ error: 'riders[] erforderlich' });
-  r.riders = riders;
+  // Favoriten ueber den Re-Import retten: eine korrigierte Startliste
+  // soll die Sternchen nicht mitnehmen.
+  const prevFav = new Set(
+    r.riders.filter(x => x && x.fav).map(x => Number(x.nr))
+  );
+  r.riders = riders.map(x =>
+    prevFav.has(Number(x && x.nr)) ? { ...x, fav: true } : x
+  );
   saveRacesToDisk();
-  if (db.enabled) db.updateRaceRiders(r.id, riders).catch(dbFail('updateRaceRiders'));
-  console.log(`📋 Startliste gesetzt: "${r.name}" (${riders.length} Fahrer)`);
-  res.json({ ok: true, riderCount: riders.length });
+  if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders'));
+  if (r.id === activeRaceId) pushAutoDisplays();
+  console.log(`📋 Startliste gesetzt: "${r.name}" (${r.riders.length} Fahrer)`);
+  res.json({ ok: true, riderCount: r.riders.length });
+});
+
+// Einzelnen Fahrer als Favorit markieren bzw. die Markierung loesen.
+// Bewusst pro Fahrer statt als komplette Liste: die Taktikansicht kennt
+// nur die Fahrer in den Gruppen, ein PUT der ganzen Liste wuerde die
+// Sternchen aller uebrigen Fahrer loeschen.
+app.post('/races/:id/favorite', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const nr  = Number(req.body.nr);
+  const fav = !!req.body.fav;
+  if (isNaN(nr)) return res.status(400).json({ error: 'nr erforderlich' });
+  const rider = r.riders.find(x => x && Number(x.nr) === nr);
+  if (!rider) return res.status(404).json({ error: 'Fahrer nicht in der Startliste' });
+  if (fav) rider.fav = true;
+  else     delete rider.fav;
+  saveRacesToDisk();
+  if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders fav'));
+  if (r.id === activeRaceId) pushAutoDisplays();
+  console.log(`\u2B50 Favorit ${fav ? 'gesetzt' : 'entfernt'}: Nr. ${nr} in "${r.name}"`);
+  res.json({ ok: true, nr, fav });
 });
 
 app.post('/races/:id/activate', requireSpolei, (req, res) => {
@@ -842,7 +964,23 @@ app.post('/startlists/:id/activate', requireSpolei, (req, res) => {
 // DISPLAY-NACHRICHTEN
 // =======================
 app.get('/displays', (req, res) => {
-  res.json({ texts: displayTexts, auto: autoDisplay, preview: buildAutoText() });
+  res.json({
+    texts:    displayTexts,
+    auto:     autoDisplay,
+    preview:  buildAutoText(),
+    settings: displaySettings,
+    maxLen:   DISPLAY_MAX
+  });
+});
+
+// Einstellungen fuer den Automatik-Text. Angehaengt an /displays
+// gelesen, damit die Taktikansicht mit einem Request auskommt.
+app.post('/display-settings', requireSpolei, (req, res) => {
+  displaySettings = sanitizeSettings(req.body);
+  if (db.enabled) db.setSetting('displaySettings', displaySettings).catch(dbFail('setSetting displaySettings'));
+  pushAutoDisplays();
+  console.log(`\u2699\uFE0F Anzeige-Einstellungen: ${JSON.stringify(displaySettings)}`);
+  res.json({ ok: true, settings: displaySettings, preview: buildAutoText() });
 });
 
 // Automatik pro Tracker ein-/ausschalten
@@ -883,7 +1021,7 @@ app.get('/groups', (req, res) => {
   const riderMap = Object.create(null);
   if (activeRaceId && races[activeRaceId]) {
     for (const r of races[activeRaceId].riders) {
-      riderMap[Number(r.nr)] = { name: r.name, team: r.team };
+      riderMap[Number(r.nr)] = { name: r.name, team: r.team, fav: !!r.fav };
     }
   }
   const enriched = groups.map(g => ({
@@ -896,6 +1034,15 @@ app.get('/groups', (req, res) => {
 app.post('/groups', requireSpolei, (req, res) => {
   const { groups: g } = req.body;
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
+  // Genau eine Gruppe darf das Hauptfeld sein. Ohne das koennte ein
+  // Browser-Tab mit altem Stand einen zweiten Marker setzen - der Text
+  // waere dann mitten im Rennen an der falschen Stelle zu Ende.
+  let seenMain = false;
+  for (const grp of g) {
+    if (!grp || grp.main !== true) continue;
+    if (seenMain) delete grp.main;
+    else          seenMain = true;
+  }
   groups = g;
   syncGroupsToRace();          // Stand haengt am Rennen, nicht am Server
   saveRacesToDisk();
