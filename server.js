@@ -3,6 +3,7 @@ const cors    = require('cors');
 const mqtt    = require('mqtt');
 const fs      = require('fs');
 const path    = require('path');
+const db      = require('./db');
 
 const app = express();
 
@@ -157,9 +158,96 @@ function saveStartlistsToDisk() {
 loadStartlistsFromDisk();
 
 // =======================
-// GRUPPEN (in-memory, Renndaten)
+// GRUPPEN (Renndaten)
 // =======================
 let groups = [];
+
+// =======================
+// PERSISTENZ (Neon)
+// =======================
+// Die Disk bleibt als Cache innerhalb einer Instanz erhalten, die
+// Datenbank ist die Quelle der Wahrheit ueber Neustarts hinweg.
+// Fehler werden geloggt, aber nie an den Request durchgereicht:
+// ein DB-Ausfall waehrend des Rennens darf die Taktik nicht blockieren.
+function dbFail(what) {
+  return e => console.error(`❌ DB ${what}:`, e.message);
+}
+
+// Ein Startlisten-Eintrag IST bereits ein Rennen - nur ohne Veranstaltung.
+// Deshalb wird er 1:1 in races geschrieben; die Veranstaltungs-Ebene
+// kommt in Stufe 2 obendrauf, ohne dass Daten migriert werden muessen.
+function persistRace(id) {
+  if (!db.enabled) return;
+  const sl = startlists[id];
+  if (!sl) return;
+  db.upsertRace({
+    id:        sl.id,
+    eventId:   sl.eventId || null,
+    name:      sl.name,
+    createdAt: sl.createdAt,
+    status:    id === activeStartlistId ? 'aktiv' : 'geplant',
+    riders:    sl.riders
+  }).catch(dbFail('upsertRace'));
+}
+
+function persistGroups() {
+  if (!db.enabled || !activeStartlistId) return;
+  db.updateRaceGroups(activeStartlistId, groups).catch(dbFail('updateRaceGroups'));
+  db.addGapSnapshot(activeStartlistId, groups).catch(dbFail('addGapSnapshot'));
+}
+
+// GPX haengt aktuell global am Server, nicht am Rennen. Bis die
+// Rennen-UI steht, wird er deshalb in settings abgelegt - sonst
+// haette er ohne aktives Rennen keinen Platz.
+function persistGpx() {
+  if (!db.enabled) return;
+  db.setSetting('gpx', gpxTrack).catch(dbFail('setSetting gpx'));
+}
+
+async function loadStateFromDb() {
+  if (!db.enabled) return;
+  const rows = await db.listRaces();
+
+  // Einmalige Uebernahme der Disk-Startlisten beim ersten Start mit DB
+  if (rows.length === 0 && Object.keys(startlists).length > 0) {
+    const evId = 'archiv';
+    await db.upsertEvent({ id: evId, name: 'Archiv', notes: 'Automatisch übernommene Startlisten' });
+    for (const sl of Object.values(startlists)) {
+      sl.eventId = evId;
+      await db.upsertRace({
+        id: sl.id, eventId: evId, name: sl.name,
+        createdAt: sl.createdAt, status: 'geplant', riders: sl.riders
+      });
+    }
+    if (activeStartlistId) await db.setSetting('activeRaceId', activeStartlistId);
+    console.log(`📤 ${Object.keys(startlists).length} Startliste(n) in die Datenbank übernommen`);
+    return;
+  }
+
+  startlists = Object.create(null);
+  for (const r of rows) {
+    startlists[r.id] = {
+      id:        r.id,
+      eventId:   r.event_id,
+      name:      r.name,
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
+      riders:    Array.isArray(r.riders_json) ? r.riders_json : []
+    };
+  }
+
+  const activeId = await db.getSetting('activeRaceId');
+  activeStartlistId = (activeId && startlists[activeId]) ? activeId : null;
+
+  if (activeStartlistId) {
+    const row = rows.find(r => r.id === activeStartlistId);
+    groups = (row && Array.isArray(row.groups_json)) ? row.groups_json : [];
+  }
+
+  const gpx = await db.getSetting('gpx');
+  if (gpx && Array.isArray(gpx.coords) && gpx.coords.length > 0) gpxTrack = gpx;
+
+  console.log(`💾 ${rows.length} Rennen geladen, aktiv: ${activeStartlistId || 'keins'}, ${groups.length} Gruppe(n)`);
+}
 
 // =======================
 // AUTH
@@ -364,12 +452,14 @@ app.post('/gpx', requireSpolei, (req, res) => {
     return res.status(400).json({ error: 'coords array required' });
   }
   gpxTrack = { coords, name: name || 'GPX Track' };
+  persistGpx();
   console.log(`📂 GPX gespeichert: ${name} (${coords.length} Punkte)`);
   res.json({ ok: true });
 });
 
 app.delete('/gpx', requireSpolei, (req, res) => {
   gpxTrack = null;
+  persistGpx();
   console.log("🗑️ GPX gelöscht");
   res.json({ ok: true });
 });
@@ -421,6 +511,7 @@ app.post('/startlists', requireSpolei, (req, res) => {
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   startlists[id] = { id, name: name.trim(), createdAt: new Date().toISOString(), riders };
   saveStartlistsToDisk();
+  persistRace(id);
   console.log(`📋 Startliste gespeichert: "${name}" (${riders.length} Fahrer)`);
   res.json({ ok: true, id });
 });
@@ -430,8 +521,12 @@ app.delete('/startlists/:id', requireSpolei, (req, res) => {
   if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
   const name = startlists[id].name;
   delete startlists[id];
-  if (activeStartlistId === id) activeStartlistId = null;
+  if (activeStartlistId === id) {
+    activeStartlistId = null;
+    if (db.enabled) db.setSetting('activeRaceId', null).catch(dbFail('setSetting activeRaceId'));
+  }
   saveStartlistsToDisk();
+  if (db.enabled) db.deleteRace(id).catch(dbFail('deleteRace'));
   console.log(`🗑️ Startliste gelöscht: "${name}"`);
   res.json({ ok: true });
 });
@@ -441,6 +536,7 @@ app.post('/startlists/:id/activate', requireSpolei, (req, res) => {
   if (!startlists[id]) return res.status(404).json({ error: 'Nicht gefunden' });
   activeStartlistId = id;
   saveStartlistsToDisk();
+  if (db.enabled) db.setSetting('activeRaceId', id).catch(dbFail('setSetting activeRaceId'));
   console.log(`✅ Aktive Startliste: "${startlists[id].name}"`);
   res.json({ ok: true });
 });
@@ -505,12 +601,14 @@ app.post('/groups', requireSpolei, (req, res) => {
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
   groups = g;
   pushAutoDisplays();          // Automatik-Tracker sofort nachziehen
+  persistGroups();             // Stand + Abstandsverlauf sichern
   res.json({ ok: true });
 });
 
 app.delete('/groups', requireSpolei, (req, res) => {
   groups = [];
   pushAutoDisplays();
+  persistGroups();
   console.log('🧹 Gruppen gelöscht');
   res.json({ ok: true });
 });
@@ -602,6 +700,18 @@ connectMqtt();
 // START
 // =======================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server läuft auf Port ${PORT}`);
-});
+
+// Erst den Zustand aus der Datenbank holen, dann Requests annehmen.
+// Bewusst in try/catch: ist Neon nicht erreichbar, startet der Server
+// trotzdem - mit leerem Stand, aber er startet.
+(async () => {
+  try {
+    await db.init();
+    await loadStateFromDb();
+  } catch (e) {
+    console.error('❌ DB-Start fehlgeschlagen, laufe ohne Persistenz:', e.message);
+  }
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server läuft auf Port ${PORT}`);
+  });
+})();
