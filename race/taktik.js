@@ -6,6 +6,8 @@ let lastPosData    = {};   // letzte Antwort von GET /positions
 let displayTexts   = {};   // aktueller Text je Tracker
 let displayAuto    = {};   // Tracker im Automatik-Modus
 let displayPreview = '';   // Text, den die Automatik gerade erzeugen wuerde
+let displayCfg     = { foreignNrs: 2, foreignNrsMaxSize: 6 };
+let displayMaxLen  = 60;   // Zeichenbudget, kommt vom Server
 let taktikGroups   = [];
 let taktikOpen     = false;
 let splittingGid   = null;
@@ -42,6 +44,7 @@ async function loadTaktikView() {
       name:   'Hauptfeld',
       color:  '#888780',
       gap:    null,
+      main:   true,
       riders: []
     });
     await saveGroups();
@@ -56,7 +59,33 @@ async function loadDisplays() {
     displayTexts   = data.texts   || {};
     displayAuto    = data.auto    || {};
     displayPreview = data.preview || '';
+    if (data.settings) displayCfg = data.settings;
+    if (data.maxLen)   displayMaxLen = data.maxLen;
   } catch (e) { console.error('Displays:', e); }
+}
+
+// Speichert beide Regler gemeinsam - der Server nimmt ohnehin nur
+// das komplette Objekt entgegen.
+async function saveDisplaySettings() {
+  if (!authToken) return;
+  const read = key => {
+    const el = document.querySelector(`.ds-inp[data-key="${key}"]`);
+    return el ? parseInt(el.value) : displayCfg[key];
+  };
+  const body = {
+    foreignNrs:        read('foreignNrs'),
+    foreignNrsMaxSize: read('foreignNrsMaxSize')
+  };
+  try {
+    const res = await fetch(`${SERVER}/display-settings`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body:    JSON.stringify(body)
+    });
+    if (!res.ok) { alert('\u274C Einstellungen konnten nicht gespeichert werden'); return; }
+  } catch (err) { alert('\u274C Fehler: ' + err.message); return; }
+  await loadDisplays();
+  renderTaktikBody();
 }
 
 async function toggleAuto(id) {
@@ -89,6 +118,7 @@ async function saveGroups() {
     color:   g.color,
     gap:     g.gap    || null,
     gapPrev: g.gapPrev || null,
+    main:    g.main === true,
     riders:  (g.riders || []).map(r => typeof r === 'object' ? r.nr : r)
   }));
   await fetch(`${SERVER}/groups`, {
@@ -98,9 +128,48 @@ async function saveGroups() {
   }).catch(e => console.error('saveGroups:', e));
 }
 
+// Index der Hauptfeld-Gruppe. Gleiche Regel wie im Server:
+// ausdruecklicher Marker, sonst die letzte Gruppe.
+function mainGroupIdx() {
+  const i = taktikGroups.findIndex(g => g && g.main === true);
+  return i >= 0 ? i : taktikGroups.length - 1;
+}
+
+// Der Marker ist jederzeit umsetzbar, nicht einmalig: genau eine
+// Gruppe traegt ihn, ein Klick verschiebt ihn.
+async function setMainGroup(gid) {
+  if (!authToken) return;
+  taktikGroups.forEach(g => { g.main = (g.id === gid); });
+  await saveGroups();
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+// Favorit umschalten. Geht nur fuer Fahrer, die in der Startliste
+// stehen - dort liegt die Markierung.
+async function toggleFav(nr, on) {
+  if (!authToken || !activeRaceId) return;
+  try {
+    const res = await fetch(`${SERVER}/races/${activeRaceId}/favorite`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body:    JSON.stringify({ nr, fav: on })
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert('\u274C ' + (d.error || 'Favorit konnte nicht gesetzt werden'));
+      return;
+    }
+  } catch (err) { alert('\u274C Fehler: ' + err.message); return; }
+  await loadGroups();
+  await loadDisplays();
+  if (favModalOpen) await renderFavModal();
+  renderTaktikBody();
+}
+
 async function addGroup() {
-  const last       = taktikGroups[taktikGroups.length - 1];
-  const insertIdx  = (last && last.name === 'Hauptfeld') ? taktikGroups.length - 1 : taktikGroups.length;
+  // Vor das Hauptfeld: neue Gruppen sind Ausreisser oder Verfolger,
+  // hinter dem Feld wuerden sie den Text abschneiden.
+  const insertIdx  = Math.max(0, mainGroupIdx());
   const names      = ['Spitzengruppe', 'Verfolger'];
   taktikGroups.splice(insertIdx, 0, {
     id:     Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
