@@ -14,6 +14,12 @@ let splittingGid   = null;
 const splitNrs     = new Set();
 let mergingGid     = null;
 let movingRider    = { gid: null, nr: null };
+// Bis zu diesem Zeitpunkt darf pollGroups() den lokalen Stand NICHT
+// ueberschreiben. Ohne die Sperre konnte der 5-Sekunden-Poll eine
+// Antwort einspielen, die noch vor dem gerade abgeschickten Speichern
+// erzeugt wurde - der naechste Klick auf +15 rechnete dann wieder vom
+// alten Abstand aus und der Wert sprang zurueck.
+let groupsWriteLock = 0;
 
 function openTaktikView() {
   taktikOpen = true;
@@ -38,6 +44,7 @@ async function loadTaktikView() {
   await loadDisplays();
   await loadPending();
   if (authToken) await loadEvents();
+  await loadGapSeries(true);
   if (taktikGroups.length === 0 && authToken) {
     taktikGroups.push({
       id:     'hauptfeld-' + Date.now().toString(36),
@@ -112,6 +119,7 @@ async function loadGroups() {
 
 async function saveGroups() {
   if (!authToken) return;
+  groupsWriteLock = Date.now() + 4000;
   const payload = taktikGroups.map(g => ({
     id:      g.id,
     name:    g.name,
@@ -126,6 +134,9 @@ async function saveGroups() {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
     body:    JSON.stringify({ groups: payload })
   }).catch(e => console.error('saveGroups:', e));
+  // Kurze Nachlaufzeit: der naechste Poll soll erst laufen, wenn der
+  // Server den neuen Stand sicher ausliefert.
+  groupsWriteLock = Date.now() + 800;
 }
 
 // Index der Hauptfeld-Gruppe. Gleiche Regel wie im Server:
@@ -142,6 +153,73 @@ async function setMainGroup(gid) {
   taktikGroups.forEach(g => { g.main = (g.id === gid); });
   await saveGroups();
   renderTaktikBody(); renderStrip(taktikGroups);
+}
+
+// Reihenfolge beim Durchtippen. Ein Tippen weiter, ein Tippen zurueck
+// auf normal - im Auto ist ein Menue mit vier Punkten unbedienbar.
+const RIDER_STATE_CYCLE = [null, 'warn', 'dsq', 'dnf'];
+
+const RIDER_STATE_LABEL = {
+  warn: { txt: '\u26A0',  title: 'Verwarnt',            bg: '#fff8e1', fg: '#f57f17', bd: '#ffe082' },
+  dsq:  { txt: 'DSQ', title: 'Disqualifiziert',      bg: '#ffebee', fg: '#c62828', bd: '#ef9a9a' },
+  dnf:  { txt: 'DNF', title: 'Aufgegeben',           bg: '#eceff1', fg: '#546e7a', bd: '#cfd8dc' }
+};
+
+// Zustand eines Fahrers weiterschalten: normal -> verwarnt -> DSQ ->
+// DNF -> normal. DSQ und DNF nehmen den Fahrer aus der Gruppengroesse
+// und von den Garmin-Anzeigen, er bleibt in der Gruppe aber sichtbar.
+async function cycleRiderStatus(nr, current) {
+  if (!authToken || !activeRaceId) return;
+  const idx  = RIDER_STATE_CYCLE.indexOf(current || null);
+  const next = RIDER_STATE_CYCLE[(idx < 0 ? 0 : idx + 1) % RIDER_STATE_CYCLE.length];
+  try {
+    await setRiderStatus(activeRaceId, nr, next);
+  } catch (err) { alert('\u274C ' + err.message); return; }
+  await loadGroups();
+  await loadDisplays();
+  if (favModalOpen) await renderFavModal();
+  renderTaktikBody();
+}
+
+// =======================
+// ABSTANDSVERLAUF
+// =======================
+// gap_history wurde bisher nur geschrieben. Daraus laesst sich die
+// Annaeherungsrate ablesen - die eigentlich interessante Zahl:
+// nicht "1:30 Rueckstand", sondern "holt 8 s pro Minute auf".
+let gapSeries    = Object.create(null);   // gid -> [{ t, sec }]
+let gapLoadedAt  = 0;
+const GAP_WINDOW_MS  = 6 * 60 * 1000;     // Betrachtungsfenster
+const GAP_RELOAD_MS  = 30 * 1000;         // hoechstens alle 30 s laden
+
+async function loadGapSeries(force) {
+  if (!activeRaceId) { gapSeries = Object.create(null); return; }
+  if (!force && Date.now() - gapLoadedAt < GAP_RELOAD_MS) return;
+  gapLoadedAt = Date.now();
+  const snaps = await loadRaceGaps(activeRaceId);
+  const out   = Object.create(null);
+  const cut   = Date.now() - GAP_WINDOW_MS;
+  snaps.forEach(s => {
+    if (!s || s.ts < cut || !Array.isArray(s.groups)) return;
+    s.groups.forEach(g => {
+      if (!g || !g.id) return;
+      const sec = gapToSec(g.gap);
+      if (sec === null) return;
+      (out[g.id] = out[g.id] || []).push({ t: s.ts, sec });
+    });
+  });
+  gapSeries = out;
+}
+
+// Sekunden pro Minute. Negativ = holt auf. null, wenn die Datenlage
+// zu duenn ist - lieber nichts anzeigen als eine Zahl erfinden.
+function gapRate(gid) {
+  const s = gapSeries[gid];
+  if (!s || s.length < 2) return null;
+  const a = s[0], b = s[s.length - 1];
+  const min = (b.t - a.t) / 60000;
+  if (min < 1) return null;
+  return (b.sec - a.sec) / min;
 }
 
 // Favorit umschalten. Geht nur fuer Fahrer, die in der Startliste
@@ -184,6 +262,12 @@ async function addGroup() {
 }
 
 async function deleteGroup(gid) {
+  // Der Papierkorb sitzt in der Fusszeile direkt neben "+ Fahrer".
+  // Ein Fehlgriff hat bisher ohne Rueckfrage eine komplette Gruppe
+  // samt Fahrern geloescht.
+  const grp = taktikGroups.find(g => g.id === gid);
+  const cnt = grp ? (grp.riders || []).length : 0;
+  if (cnt > 0 && !confirm(`Gruppe \u201E${grp.name}\u201C mit ${cnt} Fahrer${cnt === 1 ? '' : 'n'} l\u00F6schen?`)) return;
   taktikGroups = taktikGroups.filter(g => g.id !== gid);
   await saveGroups();
   renderTaktikBody();
@@ -209,9 +293,17 @@ async function confirmSplit(gid, direction = 'before') {
   const usedCols = taktikGroups.map(g => g.color);
   const newColor = GROUP_COLORS.find(c => !usedCols.includes(c)) || GROUP_COLORS[0];
   const insertIdx = taktikGroups.indexOf(g) + (direction === 'after' ? 1 : 0);
+  // gap meint immer den Rueckstand auf die Gruppe DAVOR. Setzt sich
+  // eine Gruppe nach vorne ab, ruecken die Abgesetzten an die Stelle
+  // der alten Gruppe: sie erben deren Abstand, und der Rest hat auf
+  // die Abgesetzten erstmal keinen messbaren Rueckstand.
+  // Ohne das behielt die Restgruppe einen Abstand, der sich auf eine
+  // ganz andere Gruppe bezog - und stand so auch auf dem Garmin.
+  const newGap = direction === 'before' ? (g.gap || null) : null;
+  if (direction === 'before') { g.gapPrev = g.gap; g.gap = null; }
   taktikGroups.splice(insertIdx, 0, {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
-    name: newName, color: newColor, gap: null, riders: splitRiders
+    name: newName, color: newColor, gap: newGap, riders: splitRiders
   });
   splittingGid = null; splitNrs.clear();
   await saveGroups(); await loadGroups();

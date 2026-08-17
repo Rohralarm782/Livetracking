@@ -21,6 +21,19 @@ app.use((req, res, next) => {
 // =======================
 // FRONTEND
 // =======================
+// Nur ausliefern, was zum Frontend gehoert. express.static(__dirname)
+// hat auch server.js, db.js, package.json und - ohne Datenbank -
+// races.json mit allen Startlisten oeffentlich zugaenglich gemacht.
+const PRIVATE_FILES = new Set([
+  '/server.js', '/db.js', '/package.json', '/package-lock.json',
+  '/races.json', '/startlists.json'
+]);
+
+app.use((req, res, next) => {
+  if (PRIVATE_FILES.has(req.path)) return res.status(404).send('Not found');
+  next();
+});
+
 app.use(express.static(__dirname));
 
 // =======================
@@ -41,6 +54,33 @@ const trackerDisplayNames = Object.create(null);
 // anfangen kann.
 const pending            = Object.create(null);
 const PENDING_TIMEOUT_MS = 90000;
+
+// Positionen wurden bisher nie von selbst verworfen. Nach dem Rennen
+// am Vormittag standen die Marker nachmittags noch auf der Karte und
+// haben den Auto-Zoom aufgezogen. Zwei Stufen:
+//   POSITION_MAX_AGE_MS  harte Obergrenze, per Kehrbesen
+//   STALE_ON_ACTIVATE_MS beim Aktivieren eines Rennens: alles, was
+//                        aelter ist, gehoert zum Rennen davor
+const POSITION_MAX_AGE_MS  = 12 * 60 * 60 * 1000;
+const STALE_ON_ACTIVATE_MS = 15 * 60 * 1000;
+
+function sweepPositions(maxAgeMs, reason) {
+  const now = Date.now();
+  let n = 0;
+  for (const [id, p] of Object.entries(positions)) {
+    if (!p || typeof p.timestamp !== 'number') continue;
+    if (now - p.timestamp <= maxAgeMs) continue;
+    delete positions[id];
+    n++;
+  }
+  for (const [id, p] of Object.entries(pending)) {
+    if (p && now - p.timestamp > maxAgeMs) delete pending[id];
+  }
+  if (n > 0) console.log(`\u{1F9F9} ${n} veraltete Position(en) verworfen (${reason})`);
+  return n;
+}
+
+setInterval(() => sweepPositions(POSITION_MAX_AGE_MS, 'Kehrbesen'), 30 * 60 * 1000);
 
 // Aktuell auf den Garmin-Displays stehende Texte, je Tracker-ID.
 // Quelle der Wahrheit ist der Broker (retained) - wir lesen sie beim
@@ -86,6 +126,40 @@ function sanitizeDisplay(text) {
   return out.trim();
 }
 
+// Eingehende Gruppen in eine garantiert verarbeitbare Form bringen.
+// Ohne das legte ein einziger kaputter Eintrag (null, String, riders
+// als Nicht-Array) den kompletten Taktik-Teil lahm: GET /groups und
+// GET /displays antworteten danach dauerhaft mit 500, und mit
+// Datenbank wurde der kaputte Stand auch noch persistiert.
+function sanitizeGroups(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const g of list) {
+    if (!g || typeof g !== 'object' || Array.isArray(g)) continue;
+    const riders = (Array.isArray(g.riders) ? g.riders : [])
+      .map(r => (r && typeof r === 'object') ? Number(r.nr) : Number(r))
+      .filter(n => Number.isFinite(n) && n > 0);
+    out.push({
+      id:      g.id ? String(g.id) : newId(),
+      name:    (g.name !== undefined && g.name !== null && String(g.name).trim())
+                 ? String(g.name).trim().slice(0, 40) : 'Gruppe',
+      color:   typeof g.color === 'string' ? g.color.slice(0, 16) : '#888780',
+      gap:     (g.gap     === null || g.gap     === undefined || g.gap     === '') ? null : String(g.gap).trim().slice(0, 8),
+      gapPrev: (g.gapPrev === null || g.gapPrev === undefined || g.gapPrev === '') ? null : String(g.gapPrev).trim().slice(0, 8),
+      main:    g.main === true,
+      riders
+    });
+  }
+  // Genau eine Gruppe darf das Hauptfeld sein.
+  let seenMain = false;
+  for (const g of out) {
+    if (!g.main) continue;
+    if (seenMain) g.main = false;
+    else          seenMain = true;
+  }
+  return out;
+}
+
 // Index der Hauptfeld-Gruppe. Vorrang hat die ausdrueckliche Markierung
 // (main: true), sonst gilt wie bisher die letzte Gruppe. Damit bleibt
 // der Text auch fuer alte Rennen ohne Marker richtig.
@@ -102,6 +176,25 @@ function favNrs() {
   if (!activeRaceId || !races[activeRaceId]) return s;
   for (const r of races[activeRaceId].riders) {
     if (r && r.fav && r.nr !== undefined && r.nr !== null) s.add(Number(r.nr));
+  }
+  return s;
+}
+
+// Zulaessige Fahrerzustaende. 'warn' (Verwarnung) faehrt weiter,
+// 'dsq' und 'dnf' sind raus.
+const RIDER_STATES = ['warn', 'dsq', 'dnf'];
+function isOutState(s) { return s === 'dsq' || s === 'dnf'; }
+
+// Startnummern, die aus dem Rennen sind. Sie bleiben in der Gruppe
+// sichtbar - der Betreuer will wissen, wen es erwischt hat - zaehlen
+// aber nicht mehr in die Gruppengroesse und stehen nicht mehr auf dem
+// Garmin. Eine Spitzengruppe als "4x" zu melden, in der einer
+// disqualifiziert ist, waere schlicht falsch.
+function outNrs() {
+  const s = new Set();
+  if (!activeRaceId || !races[activeRaceId]) return s;
+  for (const r of races[activeRaceId].riders) {
+    if (r && isOutState(r.status) && r.nr !== undefined && r.nr !== null) s.add(Number(r.nr));
   }
   return s;
 }
@@ -131,16 +224,18 @@ function buildAutoText() {
 
   const mainIdx = mainGroupIndex();
   const favs    = favNrs();
+  const gone    = outNrs();
   const maxFor  = displaySettings.foreignNrs;
   const maxSize = displaySettings.foreignNrsMaxSize;
 
   // Segmente bis einschliesslich Hauptfeld
   const segs = [];
   for (let i = 0; i <= mainIdx && i < groups.length; i++) {
-    const g      = groups[i];
+    const g = groups[i];
+    if (!g || typeof g !== 'object') continue;
     const riders = (Array.isArray(g.riders) ? g.riders : [])
       .map(r => (r && r.nr !== undefined) ? Number(r.nr) : Number(r))
-      .filter(n => !isNaN(n));
+      .filter(n => !isNaN(n) && !gone.has(n));
 
     let head;
     if (i === mainIdx) {
@@ -351,6 +446,21 @@ function persistRace(id) {
   }).catch(dbFail('upsertRace'));
 }
 
+// Laufzeit-Zustand, der bisher nur im RAM lag und bei jedem Cold Start
+// von Render verloren ging:
+//   autoDisplay          - danach liefen alle Garmins wieder auf
+//                          "manuell", die Anzeige fror unbemerkt ein
+//   currentMode          - sprang stillschweigend zurueck auf 'race'
+//   trackerDisplayNames  - alle Umbenennungen waren weg
+function persistRuntime() {
+  if (!db.enabled) return;
+  db.setSetting('runtime', {
+    autoDisplay:         Object.keys(autoDisplay).filter(id => autoDisplay[id]),
+    currentMode,
+    trackerDisplayNames
+  }).catch(dbFail('setSetting runtime'));
+}
+
 function persistGroups() {
   if (!db.enabled || !activeRaceId) return;
   db.updateRaceGroups(activeRaceId, groups).catch(dbFail('updateRaceGroups'));
@@ -374,6 +484,23 @@ async function loadStateFromDb() {
   // vorzeitig zurueck, die Einstellungen waeren sonst verloren.
   const ds = await db.getSetting('displaySettings');
   if (ds && typeof ds === 'object') displaySettings = sanitizeSettings(ds);
+
+  // Ebenfalls bewusst ganz oben, aus demselben Grund wie displaySettings.
+  const rt = await db.getSetting('runtime');
+  if (rt && typeof rt === 'object') {
+    if (Array.isArray(rt.autoDisplay)) {
+      for (const id of rt.autoDisplay) autoDisplay[String(id)] = true;
+    }
+    if (rt.currentMode === 'race' || rt.currentMode === 'training') {
+      currentMode = rt.currentMode;
+    }
+    if (rt.trackerDisplayNames && typeof rt.trackerDisplayNames === 'object') {
+      for (const [id, nm] of Object.entries(rt.trackerDisplayNames)) {
+        if (typeof nm === 'string') trackerDisplayNames[id] = nm;
+      }
+    }
+    console.log(`\u267B\uFE0F Laufzeit-Zustand geladen: Modus ${currentMode}, ${Object.keys(autoDisplay).length} Auto-Tracker, ${Object.keys(trackerDisplayNames).length} Namen`);
+  }
 
   const rows = await db.listRaces();
 
@@ -511,12 +638,23 @@ app.post('/logout', requireAuth, (req, res) => {
 // =======================
 // POSITIONEN (GPS-Tracker schreiben via MQTT, POST bleibt für Kompatibilität)
 // =======================
+// Der echte Weg der Tracker ist MQTT. Dieser Endpoint bleibt als
+// Rueckfalltuer bestehen, war aber voellig ungeschuetzt: jeder mit der
+// URL konnte beliebige Fahrer auf die Karte setzen.
+// Ist TRACKER_KEY gesetzt, wird er verlangt. Ist er nicht gesetzt,
+// verhaelt sich der Endpoint wie bisher - ein Deploy ohne neue
+// Env-Variable kann also nichts kaputt machen.
+const TRACKER_KEY = process.env.TRACKER_KEY || '';
+
 app.post('/positions', (req, res) => {
+  if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   const { id, lat, lon } = req.body;
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({ error: 'id, lat, lon required' });
   }
-  positions[id] = { lat, lon, timestamp: Date.now() };
+  positions[String(id).slice(0, 40)] = { lat, lon, timestamp: Date.now() };
   res.json({ ok: true });
 });
 
@@ -603,7 +741,8 @@ app.post('/team-position', requireSpolei, (req, res) => {
 app.post('/rename-tracker', requireSpolei, (req, res) => {
   const { trackerId, newName } = req.body;
   if (!trackerId || !newName) return res.status(400).json({ error: 'trackerId, newName required' });
-  trackerDisplayNames[trackerId] = newName.trim();
+  trackerDisplayNames[trackerId] = String(newName).trim().slice(0, 40);
+  persistRuntime();
   console.log(`✏️ Tracker umbenannt: ${trackerId} → ${newName}`);
   res.json({ ok: true });
 });
@@ -612,7 +751,12 @@ app.post('/rename-tracker', requireSpolei, (req, res) => {
 // CLAUDE API PROXY
 // API-Key bleibt server-seitig, Browser-CORS-Problem umgangen
 // =======================
-app.post('/api/claude', requireAuth, async (req, res) => {
+// Groesseres Limit als die globalen 2 MB: eine als Base64 eingebettete
+// Startlisten-PDF waechst um rund ein Drittel, ab etwa 1,5 MB Datei lief
+// der Import vorher in einen 413 mit nichtssagender Meldung.
+// requireSpolei statt requireAuth: ein Betreuer-Token konnte bisher
+// beliebig viele Anfragen auf Kosten des API-Keys ausloesen.
+app.post('/api/claude', requireSpolei, express.json({ limit: '20mb' }), async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY nicht konfiguriert' });
   try {
@@ -683,6 +827,7 @@ app.post('/mode', requireSpolei, (req, res) => {
     return res.status(400).json({ error: 'mode must be race or training' });
   }
   currentMode = mode;
+  persistRuntime();
   if (mqttClient && mqttClient.connected) {
     mqttClient.publish('livetracking-fq4l/config', mode, { retain: true, qos: 0 });
   }
@@ -728,6 +873,9 @@ function activateRace(id) {
   }
   activeRaceId = id;
   races[id].status = 'aktiv';
+  // Marker aus dem vorherigen Rennen abraeumen. Wer gerade sendet,
+  // ist juenger als 15 Minuten und bleibt stehen.
+  sweepPositions(STALE_ON_ACTIVATE_MS, 'Rennenwechsel');
   syncGroupsFromRace();
   saveRacesToDisk();
   // Verkettet, nicht parallel: clearActiveStatus wuerde sonst je nach
@@ -900,6 +1048,148 @@ app.post('/races/:id/favorite', requireSpolei, (req, res) => {
   res.json({ ok: true, nr, fav });
 });
 
+// Zustand eines Fahrers setzen: Verwarnung, DSQ, DNF oder zurueck auf
+// normal (status: null). Bewusst wie der Favoritenstern ein eigener,
+// fahrerbezogener Endpoint - ein PUT der ganzen Liste wuerde die
+// Zustaende aller uebrigen Fahrer mitloeschen.
+app.post('/races/:id/rider-status', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const nr = Number(req.body.nr);
+  if (isNaN(nr)) return res.status(400).json({ error: 'nr erforderlich' });
+  const st = req.body.status;
+  if (st !== null && st !== undefined && st !== '' && !RIDER_STATES.includes(st)) {
+    return res.status(400).json({ error: 'status muss warn, dsq, dnf oder null sein' });
+  }
+  const rider = r.riders.find(x => x && Number(x.nr) === nr);
+  if (!rider) return res.status(404).json({ error: 'Fahrer nicht in der Startliste' });
+  if (st === null || st === undefined || st === '') delete rider.status;
+  else                                              rider.status = st;
+  saveRacesToDisk();
+  if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders status'));
+  if (r.id === activeRaceId) pushAutoDisplays();
+  console.log(`\u{1F6A9} Zustand Nr. ${nr} in "${r.name}": ${rider.status || 'normal'}`);
+  res.json({ ok: true, nr, status: rider.status || null });
+});
+
+// Einzelnen Fahrer anlegen oder aendern. Deckt den Fall ab, dass die
+// importierte Startliste einen Fahrer vergisst oder eine Nummer falsch
+// erkannt wurde - bisher half nur ein kompletter Neuimport.
+app.post('/races/:id/rider', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const nr = Number(req.body.nr);
+  if (isNaN(nr) || nr < 1) return res.status(400).json({ error: 'nr erforderlich' });
+  const newNr = (req.body.newNr === undefined || req.body.newNr === null || req.body.newNr === '')
+    ? nr : Number(req.body.newNr);
+  if (isNaN(newNr) || newNr < 1) return res.status(400).json({ error: 'newNr ungueltig' });
+
+  const existing = r.riders.find(x => x && Number(x.nr) === nr);
+  if (newNr !== nr && r.riders.some(x => x && Number(x.nr) === newNr)) {
+    return res.status(409).json({ error: `Nr. ${newNr} ist schon vergeben` });
+  }
+
+  const name = req.body.name !== undefined ? String(req.body.name).trim().slice(0, 60) : undefined;
+  const team = req.body.team !== undefined ? String(req.body.team).trim().slice(0, 60) : undefined;
+
+  if (existing) {
+    if (name !== undefined) existing.name = name;
+    if (team !== undefined) existing.team = team;
+    if (newNr !== nr) {
+      existing.nr = newNr;
+      // Die Gruppen tragen nur Nummern. Wird eine Nummer korrigiert,
+      // muss sie auch dort wandern, sonst steht der Fahrer als
+      // "kein Eintrag" in seiner Gruppe.
+      if (r.id === activeRaceId) {
+        for (const g of groups) {
+          if (!g || !Array.isArray(g.riders)) continue;
+          g.riders = g.riders.map(x => Number(x) === nr ? newNr : x);
+        }
+      }
+    }
+  } else {
+    if (!name) return res.status(400).json({ error: 'name erforderlich' });
+    r.riders.push({ nr: newNr, name, team: team || '' });
+  }
+
+  r.riders.sort((a, b) => (Number(a && a.nr) || 9999) - (Number(b && b.nr) || 9999));
+  saveRacesToDisk();
+  if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders rider'));
+  if (r.id === activeRaceId) {
+    syncGroupsToRace(); persistGroups(); pushAutoDisplays();
+  }
+  console.log(`\u{1F4DD} Fahrer ${existing ? 'geaendert' : 'ergaenzt'}: Nr. ${newNr} in "${r.name}"`);
+  res.json({ ok: true, riderCount: r.riders.length });
+});
+
+// Fahrer aus der Startliste nehmen. Nimmt ihn beim aktiven Rennen auch
+// gleich aus seiner Gruppe - eine Nummer ohne Startlisteneintrag wuerde
+// sonst als Karteileiche in der Taktik stehen bleiben.
+app.delete('/races/:id/rider/:nr', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const nr = Number(req.params.nr);
+  if (isNaN(nr)) return res.status(400).json({ error: 'nr ungueltig' });
+  const before = r.riders.length;
+  r.riders = r.riders.filter(x => !(x && Number(x.nr) === nr));
+  if (r.riders.length === before) return res.status(404).json({ error: 'Fahrer nicht in der Startliste' });
+  if (r.id === activeRaceId) {
+    for (const g of groups) {
+      if (!g || !Array.isArray(g.riders)) continue;
+      g.riders = g.riders.filter(x => Number(x) !== nr);
+    }
+    syncGroupsToRace(); persistGroups(); pushAutoDisplays();
+  }
+  saveRacesToDisk();
+  if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders del'));
+  console.log(`\u{1F5D1} Fahrer entfernt: Nr. ${nr} aus "${r.name}"`);
+  res.json({ ok: true, riderCount: r.riders.length });
+});
+
+// Rennen kopieren: gleiche Startliste, gleiche AK, gleiche
+// Veranstaltung - ohne Gruppen und ohne Strecke. Fuer Etappenrennen
+// und fuer den zweiten Lauf am selben Tag.
+app.post('/races/:id/duplicate', requireSpolei, (req, res) => {
+  const src = races[req.params.id];
+  if (!src) return res.status(404).json({ error: 'Nicht gefunden' });
+  const id = newId();
+  races[id] = normalizeRace({
+    id,
+    eventId:   src.eventId,
+    name:      (req.body && req.body.name ? String(req.body.name).trim() : src.name + ' (Kopie)').slice(0, 80),
+    category:  src.category,
+    startTime: null,
+    createdAt: new Date().toISOString(),
+    // Favoritensterne wandern mit, Zustaende bewusst nicht:
+    // eine Verwarnung gilt fuer genau ein Rennen.
+    riders:    src.riders.map(r => {
+      const c = { ...r };
+      delete c.status;
+      return c;
+    })
+  });
+  saveRacesToDisk();
+  persistRace(id);
+  console.log(`\u29C9 Rennen kopiert: "${src.name}" \u2192 "${races[id].name}" (${races[id].riders.length} Fahrer)`);
+  res.json({ ok: true, id, race: raceView(races[id]) });
+});
+
+// Abstandsverlauf des Rennens. Die Tabelle wurde bisher zwar
+// geschrieben, aber nie gelesen.
+app.get('/races/:id/gaps', async (req, res) => {
+  if (!races[req.params.id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  if (!db.enabled) return res.json({ snapshots: [] });
+  try {
+    const rows = await db.listGapHistory(req.params.id);
+    res.json({
+      snapshots: rows.map(r => ({ ts: new Date(r.ts).getTime(), groups: r.snapshot }))
+    });
+  } catch (e) {
+    console.error('\u274C DB listGapHistory:', e.message);
+    res.json({ snapshots: [] });
+  }
+});
+
 app.post('/races/:id/activate', requireSpolei, (req, res) => {
   const { id } = req.params;
   if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
@@ -1017,6 +1307,7 @@ app.post('/display-auto', requireSpolei, (req, res) => {
   if (!id) return res.status(400).json({ error: 'id erforderlich' });
   if (auto) autoDisplay[id] = true;
   else      delete autoDisplay[id];
+  persistRuntime();
   console.log(`\u{1F916} Auto ${id}: ${auto ? 'an' : 'aus'}`);
   if (auto) pushAutoDisplays();
   res.json({ ok: true, auto: !!auto });
@@ -1032,6 +1323,7 @@ app.post('/display', requireSpolei, (req, res) => {
   }
   // Manuelles Senden hebt die Automatik fuer diesen Tracker auf
   delete autoDisplay[id];
+  persistRuntime();
 
   // Leerer Text loescht die retained Message beim Broker.
   mqttClient.publish(`livetracking-fq4l/display/${id}`, text, { retain: true, qos: 0 });
@@ -1049,12 +1341,14 @@ app.get('/groups', (req, res) => {
   const riderMap = Object.create(null);
   if (activeRaceId && races[activeRaceId]) {
     for (const r of races[activeRaceId].riders) {
-      riderMap[Number(r.nr)] = { name: r.name, team: r.team, fav: !!r.fav };
+      riderMap[Number(r.nr)] = { name: r.name, team: r.team, fav: !!r.fav, status: r.status || null };
     }
   }
-  const enriched = groups.map(g => ({
+  // Zweiter Riegel: auch ein vor diesem Update gespeicherter kaputter
+  // Stand aus der Datenbank darf den Endpoint nicht mehr abschiessen.
+  const enriched = groups.filter(g => g && typeof g === 'object').map(g => ({
     ...g,
-    riders: (g.riders || []).map(nr => ({ nr, ...(riderMap[Number(nr)] || {}) }))
+    riders: (Array.isArray(g.riders) ? g.riders : []).map(nr => ({ nr, ...(riderMap[Number(nr)] || {}) }))
   }));
   res.json(enriched);
 });
@@ -1062,16 +1356,9 @@ app.get('/groups', (req, res) => {
 app.post('/groups', requireSpolei, (req, res) => {
   const { groups: g } = req.body;
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
-  // Genau eine Gruppe darf das Hauptfeld sein. Ohne das koennte ein
-  // Browser-Tab mit altem Stand einen zweiten Marker setzen - der Text
-  // waere dann mitten im Rennen an der falschen Stelle zu Ende.
-  let seenMain = false;
-  for (const grp of g) {
-    if (!grp || grp.main !== true) continue;
-    if (seenMain) delete grp.main;
-    else          seenMain = true;
-  }
-  groups = g;
+  // sanitizeGroups() erledigt Typpruefung UND die Regel "genau eine
+  // Gruppe ist das Hauptfeld" an einer Stelle.
+  groups = sanitizeGroups(g);
   syncGroupsToRace();          // Stand haengt am Rennen, nicht am Server
   saveRacesToDisk();
   pushAutoDisplays();          // Automatik-Tracker sofort nachziehen
@@ -1087,6 +1374,19 @@ app.delete('/groups', requireSpolei, (req, res) => {
   persistGroups();
   console.log('🧹 Gruppen gelöscht');
   res.json({ ok: true });
+});
+
+// =======================
+// FEHLERHANDLER
+// =======================
+// Ohne den antwortet Express mit einer HTML-Seite samt Stacktrace und
+// absoluten Serverpfaden - auch bei einem zu grossen Request-Body.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const tooBig = err && (err.type === 'entity.too.large' || err.status === 413);
+  console.error('\u274C Serverfehler:', req.method, req.url, err && err.message);
+  res.status(tooBig ? 413 : (err && err.status) || 500)
+     .json({ error: tooBig ? 'Datei zu gross' : 'Serverfehler' });
 });
 
 // =======================

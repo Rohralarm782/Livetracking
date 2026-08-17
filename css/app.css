@@ -324,3 +324,38 @@
     .sl-item  { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
     .sl-item:last-child { border-bottom: none; }
     .sl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* RENNVERWALTUNG (Rennen-Tab)
+       Diese Klassen werden von race/events-ui.js erzeugt. Ohne sie
+       greift fuer die vielen kleinen Knoepfe je Rennzeile die
+       Grundregel .btn { flex:1; min-width:120px } - fuenf Knoepfe
+       a 120px sprengen jedes Handydisplay. */
+    #eventsBody .btn { flex: 0 0 auto; min-width: unset; }
+    .ev-card  { background: white; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+    .ev-hdr   { display: flex; align-items: center; gap: 6px; padding: 11px 14px; border-bottom: 1px solid #f0f0f0; }
+    .ev-name  { font-size: 14px; font-weight: 500; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ev-meta  { font-size: 11px; color: #aaa; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ev-race  { display: flex; align-items: center; gap: 5px; padding: 9px 14px; border-bottom: 1px solid #f7f7f7; }
+    .ev-rname { font-size: 13px; font-weight: 500; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ev-ak    { flex-shrink: 0; font-size: 11px; font-weight: 500; color: #1565c0;
+                background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 10px; padding: 2px 7px; }
+    .ev-form  { padding: 11px 14px; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+    .ev-form input { width: 100%; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #ddd;
+                     border-radius: 6px; font-size: 13px; font-family: sans-serif; }
+    .ev-form input:focus { outline: none; border-color: #2196F3; }
+    .ev-form .row { display: flex; gap: 8px; }
+    .ev-form .row input { flex: 1; min-width: 0; }
+    .ev-empty { text-align: center; color: #bbb; font-size: 13px; padding: 30px 12px; }
+
+    /* STARTLISTEN-EDITOR im Fahrer-Modal */
+    .btn.active { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
+    #favModal input[type="number"] {
+      padding: 10px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;
+    }
+    #favModal input[type="number"]:focus { outline: none; border-color: #2196F3; }
+    #favAddRow { border: 1px dashed #ddd; border-radius: 6px; padding: 10px; margin-bottom: 10px; }
+    #favAddRow.hidden { display: none; }
+    #favAddRow .row, #favBody .row { display: flex; gap: 8px; align-items: center; }
+    #favAddRow .row input, #favBody .row input { flex: 1; min-width: 0; margin-bottom: 8px; }
+    #favAddRow .error { color: #d32f2f; font-size: 12px; min-height: 0; }
+    #favBody .btn { min-width: unset; }

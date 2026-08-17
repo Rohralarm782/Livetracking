@@ -131,6 +131,42 @@ async function deleteRaceGpx(id) {
   await loadEvents();
 }
 
+// Zustand eines Fahrers: 'warn' | 'dsq' | 'dnf' | null
+async function setRiderStatus(raceId, nr, status) {
+  await apiSend(`/races/${raceId}/rider-status`, 'POST', { nr, status });
+}
+
+// Einzelnen Fahrer anlegen oder aendern. newNr nur setzen, wenn die
+// Startnummer selbst korrigiert wird.
+async function saveRider(raceId, { nr, newNr, name, team }) {
+  await apiSend(`/races/${raceId}/rider`, 'POST', { nr, newNr, name, team });
+  await loadEvents();
+}
+
+// Bewusst NICHT removeRider(): so heisst in race/taktik.js schon das
+// Herausnehmen aus einer Gruppe. Alle Dateien teilen sich einen
+// globalen Scope - gleicher Name waere ein stiller Ueberschreiber.
+async function deleteRiderFromRace(raceId, nr) {
+  await apiSend(`/races/${raceId}/rider/${nr}`, 'DELETE');
+  await loadEvents();
+}
+
+// Rennen kopieren: gleiche Startliste, keine Gruppen, keine Strecke.
+async function duplicateRace(id, name) {
+  const data = await apiSend(`/races/${id}/duplicate`, 'POST', name ? { name } : {});
+  await loadEvents();
+  return data.id;
+}
+
+// Abstandsverlauf des Rennens (aus gap_history).
+async function loadRaceGaps(id) {
+  try {
+    const res  = await fetch(`${SERVER}/races/${id}/gaps`);
+    const data = await res.json();
+    return Array.isArray(data.snapshots) ? data.snapshots : [];
+  } catch (e) { console.error('Gaps:', e); return []; }
+}
+
 // Fahrer des aktiven Rennens - fuer den Startlisten-Editor.
 async function loadActiveRiders() {
   try {

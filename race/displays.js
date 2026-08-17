@@ -49,7 +49,7 @@ function renderDisplayPanel() {
       ${auto
         ? `<div style="padding:7px 10px;background:#f5f5f5;border-radius:6px;font-size:13px;font-family:monospace;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(txt || '\u2013')}</div>`
         : `<div style="display:flex;gap:6px">
-        <input type="text" class="disp-inp" data-id="${escH(id)}" maxlength="60"
+        <input type="text" class="disp-inp" data-id="${escH(id)}" maxlength="${displayMaxLen}"
           value="${escH(txt)}" placeholder="Nachricht\u2026"
           style="flex:1;min-width:0;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:monospace">
         <button class="btn" data-action="send-display" data-id="${escH(id)}"
@@ -115,9 +115,32 @@ function escH(s) {
 }
 
 async function pollGroups() {
+  // Waehrend und kurz nach einem eigenen Speichern nichts einspielen -
+  // sonst ueberschreibt eine Antwort von vor dem Speichern den gerade
+  // getippten Abstand.
+  if (Date.now() < groupsWriteLock) return;
   try {
     const res  = await fetch(`${SERVER}/groups`);
-    taktikGroups = await res.json();
-    if (!taktikOpen) renderStrip(taktikGroups);
+    const next = await res.json();
+    if (!Array.isArray(next)) return;
+    // Zweite Pruefung: waehrend der Request lief, kann gespeichert
+    // worden sein.
+    if (Date.now() < groupsWriteLock) return;
+    taktikGroups = next;
+    if (!taktikOpen) { renderStrip(taktikGroups); return; }
+    // Offene Taktikansicht mitziehen, damit Aenderungen von einem
+    // zweiten Geraet ankommen. Nicht neu zeichnen, solange jemand
+    // tippt oder mitten in Aufteilen/Zusammenfuehren/Verschieben ist -
+    // das wuerde den Vorgang abbrechen.
+    const el   = document.activeElement;
+    const typing = el && el.classList && (
+      el.classList.contains('gap-inp')  || el.classList.contains('name-inp') ||
+      el.classList.contains('disp-inp') || el.classList.contains('ds-inp')   ||
+      el.classList.contains('add-rider-input'));
+    if (!typing && !splittingGid && !mergingGid && !movingRider.gid) {
+      // Eigene Drossel auf 30 s, der Poll selbst laeuft alle 5 s.
+      await loadGapSeries(false);
+      renderTaktikBody();
+    }
   } catch (e) {}
 }

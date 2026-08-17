@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#2196F3">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="/css/app.css">
 </head>
@@ -60,13 +60,26 @@
   </div>
 </div>
 
-<!-- FAVORITEN MODAL -->
+<!-- FAVORITEN / STARTLISTE MODAL -->
 <div id="favModal" class="hidden">
   <div class="aiBox">
     <h2>&#11088; Eigene Fahrer</h2>
     <p>Markierte Fahrer erscheinen auf dem Garmin mit Startnummer &#8211; auch in gro&#223;en Gruppen und auch dann, wenn der Platz knapp wird.</p>
     <input type="text" id="favFilter" placeholder="Nummer, Name oder Team suchen&#8230;">
     <div id="favCount" style="font-size:12px;color:#888;margin-bottom:8px"></div>
+    <!-- Startliste nachbessern, ohne komplett neu zu importieren -->
+    <button class="btn" id="favEditToggle" style="width:100%;margin-bottom:8px">&#9998; Startliste bearbeiten</button>
+    <div id="favAddRow" class="hidden">
+      <div class="row">
+        <input type="number" id="favNewNr" min="1" placeholder="Nr.">
+        <input type="text" id="favNewName" placeholder="NACHNAME Vorname">
+      </div>
+      <div class="row">
+        <input type="text" id="favNewTeam" placeholder="Team">
+        <button class="btn" id="favAddBtn" style="flex:0 0 auto">&#65291; Fahrer</button>
+      </div>
+      <div id="favAddError" class="error"></div>
+    </div>
     <div id="favBody"></div>
     <button class="aiBtnSecondary" id="favCloseBtn">Fertig</button>
   </div>
@@ -80,6 +93,7 @@
   <button class="btn primary" id="loginBtnTop">&#128275; Login</button>
   <button class="btn wakeLock" id="wakeLockBtn">&#128161; Bildschirm aktiv</button>
   <button class="btn autoZoom active" id="autoZoomBtn">&#127919; Auto-Zoom: Ein</button>
+  <button class="btn" id="mapStyleBtn">&#128506; Karte: Voyager</button>
 
   <!-- Betreuer-Level -->
   <button class="btn hidden" id="betreuerBtn">&#128205; Standort teilen</button>
@@ -131,7 +145,7 @@
 <div id="status" class="warn">&#9898; Verbindung wird aufgebaut&#8230;</div>
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Ladereihenfolge ist bindend: klassische Scripts, gemeinsamer globaler
      Scope. Eine Datei darf beim Laden nur benutzen, was weiter oben steht.
        core/auth.js       SERVER-Konstante, Login, Rollen

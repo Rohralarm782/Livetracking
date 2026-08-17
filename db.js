@@ -203,7 +203,11 @@ let lastSnapshotKey = '';
 
 async function addGapSnapshot(raceId, groups) {
   if (!enabled || !raceId) return;
+  // id mitschreiben: der Abstandsverlauf wird im Frontend je Gruppe
+  // ausgewertet, und ueber den Namen ist das nicht zuverlaessig -
+  // Gruppen werden waehrend des Rennens umbenannt.
   const snapshot = (Array.isArray(groups) ? groups : []).map(g => ({
+    id:     g.id || null,
     label:  g.label || g.name || null,
     gap:    g.gap != null ? String(g.gap) : null,
     riders: (g.riders || []).map(r => (r && r.nr !== undefined) ? r.nr : r)

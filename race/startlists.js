@@ -52,6 +52,49 @@ document.getElementById('aiSaveBtn').addEventListener('click', async () => {
   }
 });
 
+// Zweiter, kleiner Aufruf: nur die Kategoriebezeichnungen holen.
+// Bekommt denselben Dateiinhalt wie der erste Versuch, damit die
+// Datei nicht noch einmal gelesen werden muss.
+async function askCategories(apiBody, rawText) {
+  const ask = 'Welche Kategorien / Altersklassen kommen in dieser Startliste vor? '
+            + 'Antworte NUR mit einem JSON-Array der Bezeichnungen, ohne Text, ohne Backticks, '
+            + 'z.B. ["U15m","U17m","Junioren"]. Hoechstens 20 Eintraege.';
+  const body = JSON.parse(JSON.stringify(apiBody));
+  body.max_tokens = 500;
+  const c = body.messages[0].content;
+  if (Array.isArray(c)) {
+    // PDF: das Dokument bleibt, nur der Textblock wird ausgetauscht.
+    body.messages[0].content = c.map(b => b.type === 'text' ? { type: 'text', text: ask } : b);
+  } else {
+    // Text/Excel/CSV: rawText ist der reine Dateiinhalt ohne Prompt.
+    // Den Prompt aus dem alten String herauszuschneiden waere
+    // fehleranfaellig - aiPrompt() enthaelt selbst Leerzeilen.
+    body.messages[0].content = ask + '\n\n' + String(rawText || '').slice(0, 200000);
+  }
+  try {
+    const res = await fetch(`${SERVER}/api/claude`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const raw  = (data.content || []).map(b => b.text || '').join('');
+    const m    = raw.match(/\[[\s\S]*\]/);
+    if (!m) return [];
+    const list = JSON.parse(m[0]);
+    return Array.isArray(list) ? list.filter(x => typeof x === 'string').slice(0, 20) : [];
+  } catch (e) { return []; }
+}
+
+// Vorgeschlagene Kategorie uebernehmen und sofort neu versuchen.
+document.getElementById('aiStatus').addEventListener('click', function (e) {
+  const btn = e.target.closest('.ai-cat');
+  if (!btn) return;
+  document.getElementById('aiCategory').value = btn.dataset.cat;
+  document.getElementById('aiFilePickBtn').click();
+});
+
 function aiPrompt(category) {
   return `Extrahiere alle Fahrer der Kategorie "${category}" aus dieser Startliste.\n\nAntworte NUR mit einem JSON-Array, ohne Text, ohne Backticks:\n[{"nr": null, "name": "NACHNAME Vorname", "team": "Teamname"}, ...]\n\nFalls Startnummern vorhanden sind, trage sie als Zahl ein. Sonst null.\nFalls keine Fahrer f\u00FCr diese Kategorie gefunden werden: []`;
 }
@@ -71,6 +114,9 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
   try {
     const ext = file.name.split('.').pop().toLowerCase();
     let apiBody;
+    // Reiner Dateiinhalt, getrennt vom Prompt aufbewahrt: die
+    // Kategorie-Nachfrage braucht ihn ohne den Extraktionsauftrag.
+    let rawText = null;
 
     if (ext === 'pdf') {
       statusEl2.textContent = '\u23F3 PDF wird gelesen\u2026';
@@ -96,6 +142,7 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
       } else {
         text = await file.text();
       }
+      rawText = text;
       apiBody = {
         model: 'claude-sonnet-4-6', max_tokens: 8000,
         messages: [{ role: 'user', content: `${aiPrompt(category)}\n\n${text}` }]
@@ -120,7 +167,17 @@ document.getElementById('startlistFileInput').addEventListener('change', async f
     aiRiders = JSON.parse(m[0]);
 
     if (aiRiders.length === 0) {
-      statusEl2.textContent = `\u26A0\uFE0F Keine Fahrer f\u00FCr \u201E${category}\u201C gefunden \u2013 Bezeichnung pr\u00FCfen.`;
+      // Haeufigste Ursache: die Kategorie heisst in der Datei anders
+      // ("Manner U17", "MU17", "Jugend m"). Statt raten zu lassen,
+      // fragen wir jetzt nach, welche Kategorien wirklich drinstehen.
+      // Bewusst erst hier, nicht bei jedem Import: der zweite Aufruf
+      // kostet Tokens und nuetzt nur im Fehlerfall.
+      statusEl2.textContent = '\u{1F916} Keine Treffer \u2013 suche vorhandene Kategorien\u2026';
+      const found = await askCategories(apiBody, rawText);
+      statusEl2.innerHTML = found.length > 0
+        ? `\u26A0\uFE0F Keine Fahrer f\u00FCr \u201E${escH(category)}\u201C.<br>In der Datei stehen: `
+          + found.map(c => `<button class="btn ai-cat" data-cat="${escH(c)}" style="min-width:unset;padding:3px 8px;font-size:12px;margin:3px 3px 0 0">${escH(c)}</button>`).join('')
+        : `\u26A0\uFE0F Keine Fahrer f\u00FCr \u201E${escH(category)}\u201C gefunden \u2013 Bezeichnung pr\u00FCfen.`;
       return;
     }
 

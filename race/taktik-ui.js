@@ -30,6 +30,7 @@ tkBody.addEventListener('click', function (e) {
     case 'set-main':           setMainGroup(gid);                 break;
     case 'toggle-fav':         toggleFav(parseInt(nr), btn.dataset.on === '1'); break;
     case 'open-favs':          openFavModal();                    break;
+    case 'cycle-status':       cycleRiderStatus(parseInt(nr), btn.dataset.state || null); break;
   }
 });
 
@@ -75,14 +76,23 @@ tkBody.addEventListener('keydown', function (e) {
 // =======================
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
-  if (!grps || grps.length === 0) { strip.classList.add('hidden'); return; }
+  // filter(Boolean) VOR dem Zaehlen: sonst zeigen die Verbindungslinien
+  // auf die Indizes der ungefilterten Liste.
+  const list = Array.isArray(grps) ? grps.filter(Boolean) : [];
+  if (list.length === 0) { strip.classList.add('hidden'); return; }
   strip.classList.remove('hidden');
-  strip.innerHTML = grps.map((g, i) => {
-    const cnt      = (g.riders||[]).length;
-    const lbl      = g.name.length > 7 ? g.name.slice(0, 6) + '.' : g.name;
-    const nextGap  = grps[i + 1] ? grps[i + 1].gap  : null;
-    const nextPrev = grps[i + 1] ? grps[i + 1].gapPrev : null;
-    const conn     = i < grps.length - 1
+  strip.innerHTML = list.map((g, i) => {
+    // Wie auf dem Garmin: DSQ und DNF zaehlen nicht mehr mit.
+    const cnt      = (g.riders||[]).filter(r =>
+      !(r && (r.status === 'dsq' || r.status === 'dnf'))).length;
+    // g.name kann fehlen, wenn eine Gruppe ueber die API angelegt
+    // wurde. Frueher warf .length hier - und weil pollGroups() den
+    // Fehler schluckt, hoerte der Streifen einfach auf zu leben.
+    const nm       = String(g.name || 'Gruppe');
+    const lbl      = nm.length > 7 ? nm.slice(0, 6) + '.' : nm;
+    const nextGap  = list[i + 1] ? list[i + 1].gap  : null;
+    const nextPrev = list[i + 1] ? list[i + 1].gapPrev : null;
+    const conn     = i < list.length - 1
       ? `<div class="strip-conn">
            <div class="strip-line"></div>
            <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '\u2013'}${trendArrow(nextGap, nextPrev)}</div>
@@ -176,6 +186,21 @@ function renderTaktikBody() {
         return;
       }
       const trend   = trendArrow(g.gap, g.gapPrev);
+      // Annaeherungsrate aus dem Abstandsverlauf. Die Zahl beantwortet
+      // die einzige Frage, die im Auto zaehlt: reicht es noch?
+      const rate    = gapRate(g.id);
+      let rateHtml  = '';
+      if (rate !== null && Math.abs(rate) >= 1) {
+        const closing = rate < 0;
+        const perMin  = Math.round(Math.abs(rate));
+        const secNow  = gapToSec(g.gap);
+        // Nur eine Prognose wagen, wenn sie in einer Groessenordnung
+        // liegt, die im Rennen noch etwas heisst.
+        const eta = (closing && secNow) ? Math.round(secNow / Math.abs(rate)) : null;
+        const etaTxt = (eta !== null && eta >= 1 && eta <= 45) ? ` \u00B7 dran in ~${eta} min` : '';
+        rateHtml = `<div style="font-size:10px;margin-top:2px;text-align:right;color:${
+          closing ? '#2e7d32' : '#c62828'}">${closing ? '\u25BC' : '\u25B2'} ${perMin} s/min${etaTxt}</div>`;
+      }
       const gapHtml = isLeading
         ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e8f5e9;color:#2e7d32">F\u00FChrend</span>`
         : authToken
@@ -218,6 +243,22 @@ function renderTaktikBody() {
         // Der Stern haengt an der Startliste - ohne Eintrag dort kann
         // ein Fahrer kein Favorit sein, dann wird er gar nicht gezeigt.
         const inList = r.name !== undefined && r.name !== null;
+        const st     = r.status || null;
+        const stDef  = st ? RIDER_STATE_LABEL[st] : null;
+        // Ausgeschiedene Fahrer bleiben stehen, aber sichtbar
+        // abgesetzt: sie zaehlen nicht mehr in die Gruppengroesse
+        // und stehen nicht mehr auf dem Garmin.
+        const outRow = (st === 'dsq' || st === 'dnf');
+        const stBtn  = (authToken && inList)
+          ? `<button class="btn" data-action="cycle-status" data-nr="${nr}" data-state="${st || ''}"
+               title="${stDef ? stDef.title : 'Zustand'} \u2013 tippen: verwarnt \u203A DSQ \u203A DNF \u203A normal"
+               style="padding:1px 5px;font-size:10px;font-weight:600;line-height:1.4;min-width:unset;flex:0;
+                      background:${stDef ? stDef.bg : '#fff'};color:${stDef ? stDef.fg : '#ccc'};
+                      border-color:${stDef ? stDef.bd : '#eee'}">${stDef ? stDef.txt : '\u26A0'}</button>`
+          : (stDef
+              ? `<span title="${stDef.title}" style="flex-shrink:0;font-size:10px;font-weight:600;padding:1px 5px;
+                   border-radius:5px;background:${stDef.bg};color:${stDef.fg};border:1px solid ${stDef.bd}">${stDef.txt}</span>`
+              : '');
         const favBtn = (authToken && inList)
           ? `<button class="btn" data-action="toggle-fav" data-nr="${nr}" data-on="${r.fav ? '0' : '1'}"
                title="${r.fav ? 'Favorit entfernen' : 'Als Favorit markieren'}"
@@ -225,13 +266,14 @@ function renderTaktikBody() {
                       border-color:${r.fav ? '#ffca28' : '#eee'};color:${r.fav ? '#f9a825' : '#ccc'}">${
               r.fav ? '\u2605' : '\u2606'}</button>`
           : '';
-        return `<div class="r-row">
+        return `<div class="r-row"${outRow ? ' style="opacity:0.55"' : ''}>
           ${authToken ? `<button class="btn" data-action="remove-rider" data-gid="${g.id}" data-nr="${nr}"
             style="padding:1px 5px;font-size:11px;color:#f44336;min-width:unset;flex:0">\u2715</button>` : ''}
           <span class="r-nr"${r.fav ? ' style="background:#fff8e1;color:#f9a825;font-weight:700"' : ''}>${nr}</span>
           ${favBtn}
+          ${stBtn}
           <div style="flex:1">${r.name
-            ? `<div class="r-name">${escH(r.name)}</div><div class="r-team">${escH(r.team||'')}</div>`
+            ? `<div class="r-name"${outRow ? ' style="text-decoration:line-through"' : ''}>${escH(r.name)}</div><div class="r-team">${escH(r.team||'')}</div>`
             : `<div class="r-none">kein Eintrag</div>`
           }</div>
           ${(authToken && others.length > 0) ? `
@@ -262,7 +304,7 @@ function renderTaktikBody() {
             ${nameHtml}
             ${hfHtml}
           </div>
-          ${gapHtml}
+          <div style="flex-shrink:0">${gapHtml}${rateHtml}</div>
         </div>
         ${riders.length > 0 ? `<div class="gc-sec">${riderRows}</div>` : ''}
         ${footer}

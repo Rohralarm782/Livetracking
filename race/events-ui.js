@@ -178,6 +178,8 @@ function renderEventsBody() {
         <button class="btn" data-action="rc-gpx" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px${r.hasGpx ? ';color:#e65100' : ''}"
           title="Strecke laden">\u{1F5FA}</button>
+        <button class="btn" data-action="rc-copy" data-id="${r.id}"
+          style="flex:0;padding:4px 8px;font-size:12px" title="Rennen kopieren (gleiche Startliste)">\u29C9</button>
         <button class="btn" data-action="rc-edit" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px">\u270E</button>
         ${r.isActive
@@ -341,6 +343,17 @@ evBody.addEventListener('click', function (e) {
         await fetchGpxTrack();   // Strecke des neuen Rennens auf die Karte
       });
       break;
+
+    case 'rc-copy': {
+      // Fuer Etappenrennen und zweite Laeufe: gleiche Startliste,
+      // gleiche AK, keine Gruppen, keine Strecke.
+      const r = findRace(id);
+      if (!r) return;
+      const name = prompt('Name des neuen Rennens:', r.name + ' (Kopie)');
+      if (name === null) return;
+      guard(async () => { await duplicateRace(id, name.trim() || undefined); resetEventForms(); });
+      break;
+    }
 
     case 'rc-import':
       openAiImport(id);

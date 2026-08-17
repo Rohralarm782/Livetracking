@@ -2,7 +2,51 @@
 // MAP
 // =======================
 const map = L.map('map').setView([52.52, 13.405], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+// Zwei Kartenstile zur Auswahl. Voyager ist die Vorgabe: entsaettigt,
+// wenig Beschriftung, kaum Symbole - die orange Streckenlinie und die
+// Marker liegen praktisch allein auf grauem Grund. Auf dem
+// OSM-Standard konkurriert dieselbe Linie mit orangen Autobahnen und
+// gelben Landstrassen, und im fahrenden Auto entscheidet das darueber,
+// ob man den Verlauf in zwei Sekunden erfasst oder suchen muss.
+// OSM-Standard bleibt waehlbar: er beschriftet mehr und hilft in duenn
+// besiedelten Gegenden bei der Orientierung.
+const TILE_STYLES = {
+  voyager: {
+    label: 'Voyager',
+    url:   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    opts:  { maxZoom: 20, subdomains: 'abcd',
+             attribution: '&copy; OpenStreetMap, &copy; CARTO' }
+  },
+  osm: {
+    label: 'OSM',
+    url:   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    opts:  { maxZoom: 19, subdomains: 'abc',
+             attribution: '&copy; OpenStreetMap' }
+  }
+};
+
+let tileStyle = localStorage.getItem('tileStyle') === 'osm' ? 'osm' : 'voyager';
+let tileLayer = null;
+
+function applyTileStyle(key) {
+  const def = TILE_STYLES[key] || TILE_STYLES.voyager;
+  tileStyle = TILE_STYLES[key] ? key : 'voyager';
+  if (tileLayer) map.removeLayer(tileLayer);
+  // Ganz nach unten: sonst liegen die frischen Kacheln ueber Strecke,
+  // Spuren und Markern.
+  tileLayer = L.tileLayer(def.url, def.opts).addTo(map);
+  tileLayer.bringToBack();
+  const btn = document.getElementById('mapStyleBtn');
+  if (btn) btn.textContent = '\u{1F5FA} Karte: ' + def.label;
+  localStorage.setItem('tileStyle', tileStyle);
+}
+
+applyTileStyle(tileStyle);
+
+document.getElementById('mapStyleBtn').addEventListener('click', () => {
+  applyTileStyle(tileStyle === 'voyager' ? 'osm' : 'voyager');
+});
 
 // =======================
 // STATE
@@ -14,6 +58,15 @@ let currentMarkerMenu = null;
 let firstDevice  = true;
 let lastDataTime = null;
 let autoZoom     = true;
+// Ab wann eine Position als veraltet gilt. Im Renn-Modus meldet ein
+// Tracker alle 2 s (bewegt) bzw. 30 s (stehend), im Training alle
+// 10/60 s - 3 Minuten Stille heisst also wirklich "meldet nicht mehr".
+// Wichtig, weil der Server Positionen nie von selbst verwirft: die
+// Marker des Vormittagsrennens stehen sonst nachmittags noch da.
+const STALE_MS   = 3 * 60 * 1000;
+// Schwelle fuer die Statuszeile. Muss ueber dem Stehend-Intervall von
+// 30 s liegen, sonst meldet ein wartendes Feld dauernd "Offline".
+const OFFLINE_MS = 75 * 1000;
 // Tracker, die online sind, aber noch keinen GPS-Fix haben.
 // [{ id, displayName, sats, since, timestamp }]
 let pendingTrackers = [];
@@ -53,7 +106,7 @@ function startTeamCarTracking() {
       const latlng   = [pos.coords.latitude, pos.coords.longitude];
       const accuracy = pos.coords.accuracy;
       try {
-        await fetch('https://livetracking-fq4l.onrender.com/team-position', {
+        await fetch(`${SERVER}/team-position`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ lat: latlng[0], lon: latlng[1] })
@@ -109,7 +162,7 @@ function updateStatus() {
     return;
   }
   const ago = (Date.now() - lastDataTime) / 1000;
-  if (ago >= 5) {
+  if (ago * 1000 >= OFFLINE_MS) {
     statusEl.className   = 'warn';
     statusEl.textContent = `\u{1F534} Offline (${Math.round(ago)}s)`;
     return;
@@ -166,8 +219,18 @@ function batLabel(bat) {
   return ` <span style="color:${color};font-size:11px">${icon} ${bat}%</span>`;
 }
 
-function tooltipContent(id, bat) {
-  return id + batLabel(bat);
+// "4 min" bzw. "2:15 h" - kurz genug fuer das Tooltip am Marker
+function ageLabel(ms) {
+  const min = Math.floor(ms / 60000);
+  if (min < 60) return min + ' min';
+  return Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0') + ' h';
+}
+
+function tooltipContent(id, bat, age) {
+  const old = (typeof age === 'number' && age > STALE_MS)
+    ? ` <span style="color:#c62828;font-size:11px">\u23F8 ${ageLabel(age)}</span>`
+    : '';
+  return id + batLabel(bat) + old;
 }
 
 // =======================
@@ -191,18 +254,21 @@ function showMarkerMenu(e, markerId) {
     const newName = input.value.trim();
     if (!newName || newName === markerId) { container.remove(); return; }
     try {
-      const res = await fetch('https://livetracking-fq4l.onrender.com/rename-tracker', {
+      const res = await fetch(`${SERVER}/rename-tracker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({ trackerId: markerId, newName })
       });
       if (!res.ok) { alert('\u274C Fehler beim Umbenennen'); return; }
-      if (markers[markerId]) {
-        markers[newName] = markers[markerId]; delete markers[markerId];
-        if (lastPositions[markerId]) { lastPositions[newName] = lastPositions[markerId]; delete lastPositions[markerId]; }
-        if (trails[markerId])        { trails[newName] = trails[markerId]; delete trails[markerId]; }
-        markers[newName].setTooltipContent(newName);
-      }
+      // Bewusst NUR das Tooltip anfassen. Frueher wurden markers,
+      // lastPositions und trails auf den neuen Namen umgeschluesselt -
+      // der Server liefert unter /positions aber weiterhin die
+      // Hardware-ID. Beim naechsten Poll fand loadPositions() unter
+      // der ID keinen Marker mehr und legte einen zweiten an: ein
+      // toter umbenannter und ein lebender namenloser Marker auf
+      // demselben Punkt. Der Anzeigename kommt jetzt als
+      // pos.displayName von selbst mit.
+      if (markers[markerId]) markers[markerId].setTooltipContent(newName);
       container.remove();
     } catch (err) { alert('\u274C Fehler: ' + err.message); }
   });
@@ -235,8 +301,15 @@ async function loadPositions() {
     const ids  = Object.keys(data);
     if (ids.length === 0) return;
 
-    lastDataTime = Date.now();
+    // Nicht der Zeitpunkt der Antwort zaehlt, sondern die juengste
+    // Position darin. Vorher galt jede Antwort als Lebenszeichen -
+    // weil der Server Positionen aufhebt, stand die Statuszeile auch
+    // Stunden nach dem letzten Tracker-Signal noch auf "Verbunden".
+    const newest = ids.reduce((mx, id) => Math.max(mx, data[id].timestamp || 0), 0);
+    if (newest > 0) lastDataTime = newest;
     updateStatus();
+
+    const now = Date.now();
 
     ids.forEach(id => {
       const pos         = data[id];
@@ -244,6 +317,8 @@ async function loadPositions() {
       const bat         = pos.bat;
       const displayName = pos.displayName || id;
       const isBetreuer  = pos.type === 'betreuer';
+      const age         = pos.timestamp ? now - pos.timestamp : 0;
+      const stale       = !isBetreuer && age > STALE_MS;
 
       if (id === 'TEAMAUTO' && teamCarMarker !== null) return;
 
@@ -258,15 +333,16 @@ async function loadPositions() {
         const icon = id === 'TEAMAUTO' ? teamCarIcon
                    : isBetreuer        ? betreuerIcon
                    : L.icon({
-                       iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-                       shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+                       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                      });
 
-        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat);
+        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age);
 
         const marker = L.marker(latlng, { icon }).addTo(map)
           .bindTooltip(label, { permanent: true, direction: 'top' });
+        if (stale) marker.setOpacity(0.45);
 
         if (id !== 'TEAMAUTO' && !isBetreuer) {
           marker.on('contextmenu', e => { L.DomEvent.stop(e); showMarkerMenu(e.originalEvent, id); });
@@ -276,7 +352,9 @@ async function loadPositions() {
         lastPositions[id] = latlng;
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
-        if (firstDevice && !isBetreuer) { map.setView(latlng, 15); firstDevice = false; }
+        lastPositions[id].stale       = stale;
+        lastPositions[id].betreuer    = isBetreuer;
+        if (firstDevice && !isBetreuer && !stale) { map.setView(latlng, 15); firstDevice = false; }
 
       } else {
         if (isBetreuer) {
@@ -291,15 +369,24 @@ async function loadPositions() {
         lastPositions[id] = latlng;
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
+        lastPositions[id].stale       = stale;
+        lastPositions[id].betreuer    = isBetreuer;
 
+        if (!isBetreuer) markers[id].setOpacity(stale ? 0.45 : 1);
         if (!isBetreuer && id !== 'TEAMAUTO') {
-          markers[id].setTooltipContent(tooltipContent(displayName, bat));
+          markers[id].setTooltipContent(tooltipContent(displayName, bat, age));
         }
       }
     });
 
     if (autoZoom) {
-      const allLatLngs = Object.values(lastPositions);
+      // Nur frische, echte Tracker bestimmen den Ausschnitt.
+      // Betreuer stehen fest an der Verpflegungszone, gern 30 km vom
+      // Feld entfernt - sie mit einzurahmen zoomt das Rennen auf einen
+      // Punkt zusammen. Dasselbe gilt fuer Marker aus einem frueheren
+      // Rennen, die der Server noch vorhaelt.
+      const allLatLngs = Object.values(lastPositions)
+        .filter(p => !p.betreuer && !p.stale);
       if (teamCarMarker) {
         const tc = teamCarMarker.getLatLng();
         allLatLngs.push([tc.lat, tc.lng]);
