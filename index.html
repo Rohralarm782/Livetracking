@@ -94,7 +94,6 @@
   <!-- Ebene 1: Hauptmenue -->
   <div id="optionsMain">
     <button class="btn primary" id="loginBtnTop">&#128275; Login</button>
-    <button class="btn wakeLock" id="wakeLockBtn">&#128161; Bildschirm aktiv</button>
     <button class="btn autoZoom active" id="autoZoomBtn">&#127919; Auto-Zoom: Ein</button>
 
     <!-- Betreuer-Level -->
@@ -107,20 +106,45 @@
       <input type="checkbox" id="teamCarCheckbox"> &#128663; Mein Standort
     </label>
 
-    <button class="btn" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#9658;</button>
+    <button class="btn" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#8230;</button>
     <button class="btn logout hidden" id="logoutBtn">&#128682; Logout</button>
   </div>
 
-  <!-- Ebene 2: Erweiterte Einstellungen -->
-  <div id="advancedPanel" class="hidden">
-    <button class="btn" id="advBackBtn">&#8592; Zur&uuml;ck</button>
+</div>
 
-    <div class="adv-group">Darstellung</div>
-    <button class="btn" id="mapStyleBtn">&#128506; Karte: Voyager</button>
+<!-- ERWEITERTE EINSTELLUNGEN (eigenes Fenster, Bottom Sheet)
+     Bewusst NICHT im Optionsmenue: die Schalter hier wirken teils
+     serverweit. Das Sheet deckt nur den unteren Teil ab, damit ein
+     Kartenstil-Wechsel direkt auf der Karte sichtbar wird. -->
+<div id="advancedModal" class="hidden">
+  <div id="advScrim"></div>
+  <div id="advSheet">
+    <div id="advGrip"></div>
+
+    <div class="adv-head">
+      <h2>&#9881;&#65039; Erweiterte Einstellungen</h2>
+      <button id="advCloseX" aria-label="Schliessen">&#10005;</button>
+    </div>
+    <p class="adv-intro">Die Karte bleibt sichtbar &#8211; &Auml;nderungen wirken sofort.</p>
+
+    <div class="adv-group">Kartenstil</div>
+    <div id="mapStyleSeg">
+      <button type="button" data-style="voyager">Voyager</button>
+      <button type="button" data-style="osm">OSM</button>
+    </div>
+
+    <div class="adv-group">Ger&auml;t</div>
+    <div class="adv-row">
+      <div>
+        <div class="adv-txt">&#128161; Bildschirm wach halten</div>
+        <div class="adv-sub" id="wakeLockSub">&nbsp;</div>
+      </div>
+      <div id="wakeLockSwitch" class="adv-switch"><i></i></div>
+    </div>
 
     <!-- nur SpoLei -->
     <div id="advRaceGroup" class="hidden">
-      <div class="adv-group">Rennbetrieb</div>
+      <div class="adv-group">Rennbetrieb <span class="adv-lock">&#128274; nur SpoLei</span></div>
       <div id="modeToggleRow">
         <div>
           <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
@@ -130,10 +154,25 @@
           <div id="modeThumb" style="left:22px;"></div>
         </div>
       </div>
-      <button id="resetBtn">&#129529; Karte leeren</button>
-    </div>
-  </div>
 
+      <div class="adv-danger">
+        <div class="adv-group">Nicht umkehrbar</div>
+        <div class="adv-row">
+          <div>
+            <div class="adv-txt">&#129529; Karte leeren</div>
+            <div class="adv-sub">L&ouml;scht alle Positionen und Marker f&uuml;r alle Zuschauer.</div>
+          </div>
+          <button id="resetBtn">Leeren</button>
+          <div id="resetConfirm" class="hidden">
+            <button id="resetCancelBtn">Abbrechen</button>
+            <button id="resetConfirmBtn">Wirklich leeren</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="adv-foot"><button id="advDoneBtn">Fertig</button></div>
+  </div>
 </div>
 
 

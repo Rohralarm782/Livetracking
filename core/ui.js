@@ -107,19 +107,19 @@ document.getElementById('modeSwitch').addEventListener('click', async () => {
 const optionsBtn  = document.getElementById('optionsBtn');
 const optionsMenu = document.getElementById('optionsMenu');
 
-function showAdvancedPanel() {
-  document.getElementById('optionsMain').classList.add('hidden');
-  document.getElementById('advancedPanel').classList.remove('hidden');
+const advancedModal = document.getElementById('advancedModal');
+
+function openAdvanced() {
+  optionsMenu.classList.add('hidden');
+  advancedModal.classList.remove('hidden');
 }
 
-function showOptionsMain() {
-  document.getElementById('advancedPanel').classList.add('hidden');
-  document.getElementById('optionsMain').classList.remove('hidden');
+function closeAdvanced() {
+  advancedModal.classList.add('hidden');
 }
 
 function closeOptionsMenu() {
   optionsMenu.classList.add('hidden');
-  showOptionsMain();
 }
 
 optionsBtn.addEventListener('click', e => {
@@ -134,8 +134,8 @@ document.addEventListener('click', e => {
   }
 });
 
-// Nur Knoepfe der 1. Ebene schliessen das Menue. In den Erweiterten
-// Einstellungen bleibt es offen, sonst waere jede Umschaltung ein Neustart.
+// Der Advanced-Knopf oeffnet ein eigenes Fenster und schliesst das Menue
+// dabei selbst, deshalb ist er hier ausgenommen.
 optionsMenu.querySelectorAll('#optionsMain .btn').forEach(btn => {
   if (btn.id !== 'advancedBtn' && btn.id !== 'betreuerBtn')
     btn.addEventListener('click', () => closeOptionsMenu());
@@ -143,41 +143,83 @@ optionsMenu.querySelectorAll('#optionsMain .btn').forEach(btn => {
 
 document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
 
-document.getElementById('advancedBtn').addEventListener('click', showAdvancedPanel);
-document.getElementById('advBackBtn').addEventListener('click', showOptionsMain);
+document.getElementById('advancedBtn').addEventListener('click', openAdvanced);
+document.getElementById('advCloseX').addEventListener('click', closeAdvanced);
+document.getElementById('advDoneBtn').addEventListener('click', closeAdvanced);
+document.getElementById('advScrim').addEventListener('click', closeAdvanced);
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (optionsMenu.classList.contains('hidden')) return;
-  if (document.getElementById('advancedPanel').classList.contains('hidden')) closeOptionsMenu();
-  else showOptionsMain();
+  if (!advancedModal.classList.contains('hidden')) { closeAdvanced(); return; }
+  if (!optionsMenu.classList.contains('hidden')) closeOptionsMenu();
 });
 
 // =======================
 // WAKE LOCK
 // =======================
-let wakeLock = null;
+// Der Bildschirm bleibt jetzt standardmaessig an. Wer im Teamwagen sitzt,
+// will die Karte sehen und nicht alle 30 Sekunden das Handy antippen.
+// Abschalten geht in den Erweiterten Einstellungen, die Wahl haelt.
+let wakeLock       = null;
+let wakeLockWanted = localStorage.getItem('wakeLockPref') !== 'off';
+let wakeLockRetry  = false;
 
-async function toggleWakeLock() {
-  try {
-    if (!wakeLock) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      document.getElementById('wakeLockBtn').classList.add('active');
-    } else {
-      await wakeLock.release();
-      wakeLock = null;
-      document.getElementById('wakeLockBtn').classList.remove('active');
-    }
-  } catch (err) { console.error('Wake Lock Fehler:', err); }
+function updateWakeLockUi() {
+  const sw  = document.getElementById('wakeLockSwitch');
+  const sub = document.getElementById('wakeLockSub');
+  if (!sw || !sub) return;
+  sw.classList.toggle('on', wakeLockWanted);
+  sub.textContent = wakeLockWanted
+    ? 'Ist an. Das Display schaltet sich w\u00E4hrend des Rennens nicht ab.'
+    : 'Ist aus. Das Display schaltet sich nach der Zeit deines Handys ab.';
 }
 
-document.getElementById('wakeLockBtn').addEventListener('click', toggleWakeLock);
+// Manche Browser geben den Lock erst nach einer Nutzerinteraktion frei.
+// Dann wird er beim ersten Tippen still nachgeholt, ohne Meldung.
+function armWakeLockRetry() {
+  if (wakeLockRetry) return;
+  wakeLockRetry = true;
+  document.addEventListener('pointerdown', () => {
+    wakeLockRetry = false;
+    acquireWakeLock();
+  }, { once: true });
+}
+
+async function acquireWakeLock() {
+  if (!wakeLockWanted || wakeLock) return;
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (err) {
+    wakeLock = null;
+    console.warn('Wake Lock noch nicht moeglich:', err.name);
+    armWakeLockRetry();
+  }
+}
+
+async function releaseWakeLock() {
+  if (!wakeLock) return;
+  try { await wakeLock.release(); } catch (err) { console.error('Wake Lock Release:', err); }
+  wakeLock = null;
+}
+
+document.getElementById('wakeLockSwitch').addEventListener('click', () => {
+  wakeLockWanted = !wakeLockWanted;
+  localStorage.setItem('wakeLockPref', wakeLockWanted ? 'on' : 'off');
+  updateWakeLockUi();
+  if (wakeLockWanted) acquireWakeLock();
+  else                releaseWakeLock();
+});
+
+updateWakeLockUi();
+acquireWakeLock();
 
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden) return;
-  if (wakeLock) {
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
-  }
+  // Beim Sperren gibt das System den Lock frei. Nach dem Entsperren
+  // entscheidet die gespeicherte Wahl, nicht der alte Handle.
+  acquireWakeLock();
   if (document.getElementById('teamCarCheckbox').checked) {
     stopTeamCarTracking();
     startTeamCarTracking();

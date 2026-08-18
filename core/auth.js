@@ -25,8 +25,7 @@ function showBetreuerElements() {
 
 function hideAdminElements() {
   document.getElementById('advRaceGroup').classList.add('hidden');
-  document.getElementById('advancedPanel').classList.add('hidden');
-  document.getElementById('optionsMain').classList.remove('hidden');
+  closeAdvanced();
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');

@@ -37,15 +37,20 @@ function applyTileStyle(key) {
   // Spuren und Markern.
   tileLayer = L.tileLayer(def.url, def.opts).addTo(map);
   tileLayer.bringToBack();
-  const btn = document.getElementById('mapStyleBtn');
-  if (btn) btn.textContent = '\u{1F5FA} Karte: ' + def.label;
+  const seg = document.getElementById('mapStyleSeg');
+  if (seg) seg.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', b.dataset.style === tileStyle);
+  });
   localStorage.setItem('tileStyle', tileStyle);
 }
 
 applyTileStyle(tileStyle);
 
-document.getElementById('mapStyleBtn').addEventListener('click', () => {
-  applyTileStyle(tileStyle === 'voyager' ? 'osm' : 'voyager');
+// Das Einstellungs-Sheet deckt nur den unteren Teil ab: der Wechsel ist
+// sofort auf der Karte zu sehen, eine Vorschau im Menue eruebrigt sich.
+document.getElementById('mapStyleSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-style]');
+  if (b) applyTileStyle(b.dataset.style);
 });
 
 // =======================
@@ -437,7 +442,8 @@ async function loadPending() {
 // RESET
 // =======================
 async function clearMap() {
-  if (!confirm('\u{1F6A8} Wirklich ALLE Positionen l\u00F6schen?')) return;
+  // Die Rueckfrage steht als zweistufiger Knopf im Einstellungs-Sheet,
+  // ein zusaetzlicher System-Dialog waere eine Bestaetigung zu viel.
   try {
     await fetch(`${SERVER}/positions`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
@@ -448,5 +454,21 @@ async function clearMap() {
     lastDataTime = null; firstDevice = true; updateStatus();
   } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
-document.getElementById("resetBtn").addEventListener("click", clearMap);
+const resetBtn     = document.getElementById('resetBtn');
+const resetConfirm = document.getElementById('resetConfirm');
+
+function hideResetConfirm() {
+  resetConfirm.classList.add('hidden');
+  resetBtn.classList.remove('hidden');
+}
+
+resetBtn.addEventListener('click', () => {
+  resetBtn.classList.add('hidden');
+  resetConfirm.classList.remove('hidden');
+});
+document.getElementById('resetCancelBtn').addEventListener('click', hideResetConfirm);
+document.getElementById('resetConfirmBtn').addEventListener('click', () => {
+  hideResetConfirm();
+  clearMap();
+});
 
