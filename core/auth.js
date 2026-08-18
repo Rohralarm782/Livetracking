@@ -8,7 +8,7 @@ let authLevel   = null;   // 'spolei' | 'betreuer' | null
 let currentMode = 'race';
 
 function showAdminElements() {
-  document.getElementById('advancedBtn').classList.remove('hidden');
+  document.getElementById('advRaceGroup').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
@@ -19,15 +19,14 @@ function showBetreuerElements() {
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('betreuerBtn').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
-  document.getElementById('advancedBtn').classList.add('hidden');
-  document.getElementById('advancedSection').classList.add('hidden');
+  document.getElementById('advRaceGroup').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
 }
 
 function hideAdminElements() {
-  document.getElementById('advancedBtn').classList.add('hidden');
-  document.getElementById('advancedSection').classList.add('hidden');
-  document.getElementById('advancedBtn').textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8';
+  document.getElementById('advRaceGroup').classList.add('hidden');
+  document.getElementById('advancedPanel').classList.add('hidden');
+  document.getElementById('optionsMain').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');

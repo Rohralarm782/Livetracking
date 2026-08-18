@@ -90,37 +90,50 @@
 <button id="taktikBtn">&#128202; Taktik</button>
 
 <div id="optionsMenu" class="hidden">
-  <button class="btn primary" id="loginBtnTop">&#128275; Login</button>
-  <button class="btn wakeLock" id="wakeLockBtn">&#128161; Bildschirm aktiv</button>
-  <button class="btn autoZoom active" id="autoZoomBtn">&#127919; Auto-Zoom: Ein</button>
-  <button class="btn" id="mapStyleBtn">&#128506; Karte: Voyager</button>
 
-  <!-- Betreuer-Level -->
-  <button class="btn hidden" id="betreuerBtn">&#128205; Standort teilen</button>
+  <!-- Ebene 1: Hauptmenue -->
+  <div id="optionsMain">
+    <button class="btn primary" id="loginBtnTop">&#128275; Login</button>
+    <button class="btn wakeLock" id="wakeLockBtn">&#128161; Bildschirm aktiv</button>
+    <button class="btn autoZoom active" id="autoZoomBtn">&#127919; Auto-Zoom: Ein</button>
 
-  <!-- SpoLei-Level -->
-  <!-- GPX laden/entfernen liegt in der Rennverwaltung (Taktik-Tab),
-       weil die Strecke zum Rennen gehoert und nicht zum Server. -->
-  <label id="teamCarToggle" class="hidden">
-    <input type="checkbox" id="teamCarCheckbox"> &#128663; Mein Standort
-  </label>
-  <button class="btn hidden" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#9658;</button>
+    <!-- Betreuer-Level -->
+    <button class="btn hidden" id="betreuerBtn">&#128205; Standort teilen</button>
 
-  <!-- Erweiterte Einstellungen -->
-  <div id="advancedSection" class="hidden">
-    <div id="modeToggleRow">
-      <div>
-        <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
-        <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend &middot; 30s stehend</div>
-      </div>
-      <div id="modeSwitch" style="background:#2196F3;">
-        <div id="modeThumb" style="left:22px;"></div>
-      </div>
-    </div>
-    <button id="resetBtn">&#129529; Karte leeren</button>
+    <!-- SpoLei-Level -->
+    <!-- GPX laden/entfernen liegt in der Rennverwaltung (Taktik-Tab),
+         weil die Strecke zum Rennen gehoert und nicht zum Server. -->
+    <label id="teamCarToggle" class="hidden">
+      <input type="checkbox" id="teamCarCheckbox"> &#128663; Mein Standort
+    </label>
+
+    <button class="btn" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#9658;</button>
+    <button class="btn logout hidden" id="logoutBtn">&#128682; Logout</button>
   </div>
 
-  <button class="btn logout hidden" id="logoutBtn">&#128682; Logout</button>
+  <!-- Ebene 2: Erweiterte Einstellungen -->
+  <div id="advancedPanel" class="hidden">
+    <button class="btn" id="advBackBtn">&#8592; Zur&uuml;ck</button>
+
+    <div class="adv-group">Darstellung</div>
+    <button class="btn" id="mapStyleBtn">&#128506; Karte: Voyager</button>
+
+    <!-- nur SpoLei -->
+    <div id="advRaceGroup" class="hidden">
+      <div class="adv-group">Rennbetrieb</div>
+      <div id="modeToggleRow">
+        <div>
+          <div id="modeLabel" style="font-size:13px; font-weight:500; color:#333;">Renn-Modus</div>
+          <div id="modeSub"   style="font-size:11px; color:#999; margin-top:3px;">2s bewegend &middot; 30s stehend</div>
+        </div>
+        <div id="modeSwitch" style="background:#2196F3;">
+          <div id="modeThumb" style="left:22px;"></div>
+        </div>
+      </div>
+      <button id="resetBtn">&#129529; Karte leeren</button>
+    </div>
+  </div>
+
 </div>
 
 

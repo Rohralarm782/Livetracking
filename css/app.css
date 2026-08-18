@@ -246,9 +246,21 @@
       #taktikBtn { top: 10px; right: 10px; bottom: auto; left: auto; width: auto; }
     }
 
-    /* ADVANCED SECTION */
-    #advancedSection { background: #f9f9f9; border-top: 1px solid #eee; }
-    #advancedSection.hidden { display: none; }
+    /* MENUE-EBENEN */
+    #optionsMain, #advancedPanel { display: flex; flex-direction: column; }
+    #optionsMain.hidden, #advancedPanel.hidden { display: none; }
+
+    /* ADVANCED PANEL (2. Ebene) */
+    #advancedPanel { background: #f9f9f9; border-top: 1px solid #eee; }
+    #advBackBtn { color: #888; }
+    #advRaceGroup { display: flex; flex-direction: column; }
+    #advRaceGroup.hidden { display: none; }
+    .adv-group {
+      padding: 9px 14px 5px; font-size: 10px; font-weight: 600;
+      color: #aaa; text-transform: uppercase; letter-spacing: 0.05em;
+      font-family: sans-serif; background: #f9f9f9;
+      border-bottom: 1px solid #eee;
+    }
     #modeToggleRow {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 14px; border-bottom: 1px solid #eee;
@@ -301,6 +313,7 @@
       -webkit-overflow-scrolling: touch;
     }
     #taktikView.hidden { display: none; }
+    #taktikBody.hidden, #eventsBody.hidden { display: none; }
     .tk-header {
       position: sticky; top: 0; background: white; border-bottom: 1px solid #eee;
       padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;

@@ -107,10 +107,19 @@ document.getElementById('modeSwitch').addEventListener('click', async () => {
 const optionsBtn  = document.getElementById('optionsBtn');
 const optionsMenu = document.getElementById('optionsMenu');
 
+function showAdvancedPanel() {
+  document.getElementById('optionsMain').classList.add('hidden');
+  document.getElementById('advancedPanel').classList.remove('hidden');
+}
+
+function showOptionsMain() {
+  document.getElementById('advancedPanel').classList.add('hidden');
+  document.getElementById('optionsMain').classList.remove('hidden');
+}
+
 function closeOptionsMenu() {
   optionsMenu.classList.add('hidden');
-  document.getElementById('advancedSection').classList.add('hidden');
-  document.getElementById('advancedBtn').textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8';
+  showOptionsMain();
 }
 
 optionsBtn.addEventListener('click', e => {
@@ -125,19 +134,23 @@ document.addEventListener('click', e => {
   }
 });
 
-optionsMenu.querySelectorAll('.btn').forEach(btn => {
+// Nur Knoepfe der 1. Ebene schliessen das Menue. In den Erweiterten
+// Einstellungen bleibt es offen, sonst waere jede Umschaltung ein Neustart.
+optionsMenu.querySelectorAll('#optionsMain .btn').forEach(btn => {
   if (btn.id !== 'advancedBtn' && btn.id !== 'betreuerBtn')
     btn.addEventListener('click', () => closeOptionsMenu());
 });
 
 document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
 
-document.getElementById('advancedBtn').addEventListener('click', () => {
-  const section = document.getElementById('advancedSection');
-  const btn     = document.getElementById('advancedBtn');
-  const isOpen  = !section.classList.contains('hidden');
-  if (isOpen) { section.classList.add('hidden');    btn.textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25B8'; }
-  else         { section.classList.remove('hidden'); btn.textContent = '\u2699\uFE0F Erweiterte Einstellungen \u25BE'; }
+document.getElementById('advancedBtn').addEventListener('click', showAdvancedPanel);
+document.getElementById('advBackBtn').addEventListener('click', showOptionsMain);
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (optionsMenu.classList.contains('hidden')) return;
+  if (document.getElementById('advancedPanel').classList.contains('hidden')) closeOptionsMenu();
+  else showOptionsMain();
 });
 
 // =======================
