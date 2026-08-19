@@ -354,17 +354,57 @@
     }
     #resetBtn:hover { background: #ffebee; }
     #resetBtn.hidden { display: none; }
-    #resetConfirm { display: flex; gap: 6px; flex-shrink: 0; }
-    #resetConfirm.hidden { display: none; }
-    #resetConfirmBtn {
-      background: #d32f2f; color: white; border: none; padding: 8px 14px;
-      border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600;
+
+    /* Loesch-Rueckfrage: eigener Dialog mittig im Bild, ueber dem Sheet.
+       Die raeumliche Trennung zum Ausloeser ist hier der eigentliche Schutz. */
+    #confirmClearModal {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10001;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    #confirmClearModal.hidden { display: none !important; }
+    #ccScrim {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45); animation: advFade 0.18s ease-out;
+    }
+    #ccBox {
+      position: relative; width: 100%; max-width: 340px; box-sizing: border-box;
+      background: white; border-radius: 14px; padding: 20px 20px 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      animation: ccPop 0.18s cubic-bezier(0.2,0.8,0.3,1);
+    }
+    @keyframes ccPop {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: none; }
+    }
+    #ccTitle {
+      font-size: 16px; font-weight: 600; color: #c62828; font-family: sans-serif;
+    }
+    #ccText {
+      font-size: 13px; color: #555; line-height: 1.45; margin-top: 8px;
       font-family: sans-serif;
     }
-    #resetCancelBtn {
-      background: #eee; color: #555; border: none; padding: 8px 12px;
-      border-radius: 6px; font-size: 13px; cursor: pointer; font-family: sans-serif;
+    #ccActions { display: flex; gap: 8px; margin-top: 18px; }
+    #ccActions button {
+      flex: 1; padding: 11px 12px; border-radius: 8px; font-size: 14px;
+      cursor: pointer; font-family: sans-serif;
     }
+    #ccCancelBtn { background: #eee; color: #444; border: none; }
+    #ccCancelBtn:hover { background: #ddd; }
+    #ccConfirmBtn {
+      background: #d32f2f; color: white; border: none; font-weight: 600;
+      transition: background 0.15s;
+    }
+    #ccConfirmBtn:disabled { background: #e6b9b9; cursor: default; }
+
+    /* Scharf-Balken: laeuft einmal durch, danach ist der rote Knopf aktiv */
+    #ccArmBar {
+      height: 3px; margin-top: 10px; border-radius: 2px;
+      background: #f2e0e0; overflow: hidden;
+    }
+    #ccArmBar > i { display: block; height: 100%; width: 0; background: #d32f2f; }
+    #confirmClearModal.arming #ccArmBar > i { animation: ccArm 800ms linear forwards; }
+    #confirmClearModal.armed  #ccArmBar { visibility: hidden; }
+    @keyframes ccArm { from { width: 0; } to { width: 100%; } }
     .adv-foot { padding: 12px 18px 18px; }
     #advDoneBtn {
       width: 100%; padding: 11px; background: #eee; color: #555; border: none;

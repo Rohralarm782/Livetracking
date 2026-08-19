@@ -150,6 +150,10 @@ document.getElementById('advScrim').addEventListener('click', closeAdvanced);
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  // Liegt die Loesch-Rueckfrage oben drauf, gehoert ESC ihr allein.
+  // Sie schliesst sich in map/map.js selbst, das Sheet bleibt stehen.
+  const cc = document.getElementById('confirmClearModal');
+  if (cc && !cc.classList.contains('hidden')) return;
   if (!advancedModal.classList.contains('hidden')) { closeAdvanced(); return; }
   if (!optionsMenu.classList.contains('hidden')) closeOptionsMenu();
 });

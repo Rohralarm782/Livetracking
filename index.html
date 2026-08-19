@@ -163,15 +163,30 @@
             <div class="adv-sub">L&ouml;scht alle Positionen und Marker f&uuml;r alle Zuschauer.</div>
           </div>
           <button id="resetBtn">Leeren</button>
-          <div id="resetConfirm" class="hidden">
-            <button id="resetCancelBtn">Abbrechen</button>
-            <button id="resetConfirmBtn">Wirklich leeren</button>
-          </div>
         </div>
       </div>
     </div>
 
     <div class="adv-foot"><button id="advDoneBtn">Fertig</button></div>
+  </div>
+</div>
+
+<!-- LOESCH-RUECKFRAGE (eigener Dialog, mittig)
+     Bewusst NICHT an der Stelle des Ausloesers: im fahrenden Auto wird
+     sonst aus Reflex zweimal auf dieselbe Stelle getippt. Der rote Knopf
+     ist zusaetzlich erst nach kurzer Verzoegerung scharf. -->
+<div id="confirmClearModal" class="hidden" role="alertdialog" aria-modal="true"
+     aria-labelledby="ccTitle" aria-describedby="ccText">
+  <div id="ccScrim"></div>
+  <div id="ccBox">
+    <div id="ccTitle">&#129529; Karte wirklich leeren?</div>
+    <div id="ccText">L&ouml;scht alle Positionen und Marker f&uuml;r alle Zuschauer.
+      Das l&auml;sst sich nicht r&uuml;ckg&auml;ngig machen.</div>
+    <div id="ccActions">
+      <button type="button" id="ccCancelBtn">Abbrechen</button>
+      <button type="button" id="ccConfirmBtn" disabled>Wirklich leeren</button>
+    </div>
+    <div id="ccArmBar"><i></i></div>
   </div>
 </div>
 

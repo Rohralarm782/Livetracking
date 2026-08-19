@@ -442,8 +442,8 @@ async function loadPending() {
 // RESET
 // =======================
 async function clearMap() {
-  // Die Rueckfrage steht als zweistufiger Knopf im Einstellungs-Sheet,
-  // ein zusaetzlicher System-Dialog waere eine Bestaetigung zu viel.
+  // Die Rueckfrage laeuft ueber #confirmClearModal (eigener Dialog, mittig).
+  // Ein zusaetzlicher System-Dialog waere eine Bestaetigung zu viel.
   try {
     await fetch(`${SERVER}/positions`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
@@ -454,21 +454,58 @@ async function clearMap() {
     lastDataTime = null; firstDevice = true; updateStatus();
   } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
-const resetBtn     = document.getElementById('resetBtn');
-const resetConfirm = document.getElementById('resetConfirm');
+// Die Bestaetigung sitzt bewusst nicht mehr an der Stelle des Ausloesers,
+// sondern in einem eigenen Fenster mittig im Bild. Zusaetzlich ist der rote
+// Knopf die ersten CLEAR_ARM_MS gesperrt, damit ein reflexhafter Doppeltipp
+// oder ein Verwackeln im Auto nicht loeschen kann.
+const resetBtn          = document.getElementById('resetBtn');
+const confirmClearModal = document.getElementById('confirmClearModal');
+const ccConfirmBtn      = document.getElementById('ccConfirmBtn');
+const ccCancelBtn       = document.getElementById('ccCancelBtn');
 
-function hideResetConfirm() {
-  resetConfirm.classList.add('hidden');
-  resetBtn.classList.remove('hidden');
+const CLEAR_ARM_MS = 800;   // muss zur Dauer von @keyframes ccArm passen
+let clearArmTimer = null;
+
+function openClearConfirm() {
+  if (clearArmTimer) clearTimeout(clearArmTimer);
+  ccConfirmBtn.disabled = true;
+  confirmClearModal.classList.remove('hidden');
+  confirmClearModal.classList.remove('armed');
+  // Reflow erzwingen, sonst startet der Balken beim zweiten Oeffnen nicht neu
+  void confirmClearModal.offsetWidth;
+  confirmClearModal.classList.add('arming');
+  ccCancelBtn.focus();
+  clearArmTimer = setTimeout(() => {
+    confirmClearModal.classList.remove('arming');
+    confirmClearModal.classList.add('armed');
+    ccConfirmBtn.disabled = false;
+    clearArmTimer = null;
+  }, CLEAR_ARM_MS);
 }
 
-resetBtn.addEventListener('click', () => {
-  resetBtn.classList.add('hidden');
-  resetConfirm.classList.remove('hidden');
-});
-document.getElementById('resetCancelBtn').addEventListener('click', hideResetConfirm);
-document.getElementById('resetConfirmBtn').addEventListener('click', () => {
-  hideResetConfirm();
+function closeClearConfirm() {
+  if (clearArmTimer) { clearTimeout(clearArmTimer); clearArmTimer = null; }
+  confirmClearModal.classList.add('hidden');
+  confirmClearModal.classList.remove('arming');
+  confirmClearModal.classList.remove('armed');
+  ccConfirmBtn.disabled = true;
+}
+
+resetBtn.addEventListener('click', openClearConfirm);
+ccCancelBtn.addEventListener('click', closeClearConfirm);
+document.getElementById('ccScrim').addEventListener('click', closeClearConfirm);
+
+ccConfirmBtn.addEventListener('click', () => {
+  if (ccConfirmBtn.disabled) return;
+  closeClearConfirm();
+  closeAdvanced();   // Sheet zu, damit der rote Knopf nicht offen stehen bleibt
   clearMap();
+});
+
+// ESC schliesst zuerst diesen Dialog. core/ui.js prueft das und laesst
+// das Sheet in dem Fall stehen.
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!confirmClearModal.classList.contains('hidden')) closeClearConfirm();
 });
 
