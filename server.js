@@ -646,15 +646,49 @@ app.post('/logout', requireAuth, (req, res) => {
 // Env-Variable kann also nichts kaputt machen.
 const TRACKER_KEY = process.env.TRACKER_KEY || '';
 
+// Zeitpunkt des Fixes, nicht des Eingangs. Das Handy liefert bei
+// Funkloch gepufferte Punkte spaeter nach - mit Date.now() haetten die
+// alle dieselbe Zeit und der Verlauf waere zusammengestaucht.
+// Ausserdem liefert Android beim Abonnieren sofort die letzte bekannte
+// Position aus, mitunter Minuten alt. Grenzen:
+//   Zukunft  -> Geraeteuhr falsch gestellt, auf jetzt ziehen
+//   zu alt   -> Nachzuegler, verwerfen statt Marker zurueckzusetzen
+const TS_FUTURE_TOLERANCE_MS = 60 * 1000;
+const TS_MAX_AGE_MS          = 60 * 60 * 1000;
+
+function resolveTimestamp(raw) {
+  const now = Date.now();
+  if (typeof raw !== 'number' || !isFinite(raw)) return now;
+  if (raw > now + TS_FUTURE_TOLERANCE_MS)        return now;
+  if (raw < now - TS_MAX_AGE_MS)                 return null;
+  return raw;
+}
+
 app.post('/positions', (req, res) => {
   if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  const { id, lat, lon } = req.body;
+  const { id, lat, lon, bat, acc, spd, ts } = req.body;
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
     return res.status(400).json({ error: 'id, lat, lon required' });
   }
-  positions[String(id).slice(0, 40)] = { lat, lon, timestamp: Date.now() };
+  const key       = String(id).slice(0, 40);
+  const timestamp = resolveTimestamp(ts);
+  if (timestamp === null) return res.json({ ok: true, skipped: 'stale' });
+
+  // Einen aelteren Punkt nicht ueber einen neueren schreiben. Ohne das
+  // setzt ein nachgelieferter Puffer-Punkt den Marker zurueck.
+  const prev = positions[key];
+  if (prev && typeof prev.timestamp === 'number' && prev.timestamp > timestamp) {
+    return res.json({ ok: true, skipped: 'out-of-order' });
+  }
+
+  const entry = { lat, lon, timestamp };
+  if (typeof bat === 'number' && bat >= 0 && bat <= 100) entry.bat = Math.round(bat);
+  if (typeof acc === 'number' && acc >= 0)               entry.acc = Math.round(acc);
+  if (typeof spd === 'number' && spd >= 0)               entry.spd = Math.round(spd * 10) / 10;
+  positions[key] = entry;
+  delete pending[key];
   res.json({ ok: true });
 });
 

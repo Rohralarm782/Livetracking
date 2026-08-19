@@ -1,45 +1,190 @@
-// LT Background Test v1.0.0
-// Stufe 1: Isolierter Test des Foreground Service + Location Task.
-// Kein Server, keine Integration. Ziel: lueckenlose Punkte bei Display aus.
+// LT Tracker v1.1.0
+// Stufe 2: Foreground Service + Location Task + Versand an das Backend.
+// Positionen gehen per POST /positions mit x-tracker-key an den Server.
 
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, Pressable, ScrollView, StyleSheet, StatusBar, Platform,
+  TextInput, PermissionsAndroid,
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TASK_NAME = 'LT_BG_LOCATION';
-const LOG_KEY = 'lt_bg_log_v1';
-const MAX_ENTRIES = 3000;
+const STAT_KEY = 'lt_stat_v2';
+const TAIL_KEY = 'lt_tail_v2';
+const CFG_KEY = 'lt_cfg_v1';
+const TAIL_MAX = 40;
+const GAPS_MAX = 50;
+const EVENTS_MAX = 30;
 const INTERVAL_MS = 5000;
 
-// ---------------------------------------------------------------------------
-// Log-Schreiber. Laeuft sowohl im UI-Kontext als auch im Task-Kontext.
-// Der Task hat einen EIGENEN JS-Kontext ohne Zugriff auf React-State,
-// deshalb geht die Uebergabe ausschliesslich ueber AsyncStorage.
-// ---------------------------------------------------------------------------
-async function appendLog(entries) {
+// Android liefert beim Abonnieren sofort die letzte bekannte Position
+// aus - im Stufe-1-Test war die 2:18 alt. Bei 80 km/h waeren das fast
+// drei Kilometer daneben. Solche Fixes werden protokolliert, aber nicht
+// gesendet.
+const MAX_FIX_AGE_MS = 30 * 1000;
+
+// fetch kennt keinen eigenen Timeout. Ohne AbortController haengt eine
+// Anfrage im Funkloch, bis das System sie irgendwann aufgibt - und der
+// naechste Fix laeuft derweil auf.
+const SEND_TIMEOUT_MS = 8000;
+
+const DEFAULT_CFG = {
+  serverUrl: 'https://livetracking-fq4l.onrender.com',
+  trackerKey: '',
+  trackerId: 'TEAMAUTO',
+};
+
+async function readCfg() {
   try {
-    const raw = await AsyncStorage.getItem(LOG_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    for (const e of entries) arr.push(e);
-    if (arr.length > MAX_ENTRIES) arr.splice(0, arr.length - MAX_ENTRIES);
-    await AsyncStorage.setItem(LOG_KEY, JSON.stringify(arr));
+    const raw = await AsyncStorage.getItem(CFG_KEY);
+    return raw ? { ...DEFAULT_CFG, ...JSON.parse(raw) } : { ...DEFAULT_CFG };
   } catch (err) {
-    // Bewusst still: ein fehlgeschlagener Log-Schreibvorgang darf den
+    return { ...DEFAULT_CFG };
+  }
+}
+
+async function writeCfg(cfg) {
+  await AsyncStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+}
+
+// ---------------------------------------------------------------------------
+// Versand eines einzelnen Punktes. Wirft nie - der Aufrufer im Task darf
+// unter keinen Umstaenden abbrechen. Rueckgabe beschreibt das Ergebnis,
+// damit die Auswertung Netz- von GPS-Problemen unterscheiden kann.
+// ---------------------------------------------------------------------------
+async function sendPoint(cfg, point) {
+  if (!cfg.serverUrl) return { sent: 'cfg', msg: 'keine Server-URL' };
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), SEND_TIMEOUT_MS);
+  try {
+    const res = await fetch(cfg.serverUrl.replace(/\/+$/, '') + '/positions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-tracker-key': cfg.trackerKey || '',
+      },
+      body: JSON.stringify({
+        id: cfg.trackerId || 'TEAMAUTO',
+        lat: point.lat,
+        lon: point.lon,
+        acc: point.acc == null ? undefined : point.acc,
+        spd: point.spd == null ? undefined : point.spd,
+        ts: point.t,
+      }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return { sent: 'err', code: res.status };
+    const body = await res.json().catch(() => ({}));
+    if (body && body.skipped) return { sent: 'skip', msg: body.skipped };
+    return { sent: 'ok' };
+  } catch (err) {
+    // Die Meldung eines abgebrochenen fetch lautet je nach Version
+    // "Aborted", "AbortError" oder "The user aborted a request" -
+    // deshalb kein exakter Vergleich.
+    const m = String(err && err.message ? err.message : err);
+    const aborted = /abort/i.test(m) || (err && err.name === 'AbortError');
+    return { sent: 'err', msg: aborted ? 'Timeout' : m.slice(0, 120) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Protokoll. Laeuft sowohl im UI- als auch im Task-Kontext. Der Task hat
+// einen EIGENEN JS-Kontext ohne Zugriff auf React-State, deshalb geht die
+// Uebergabe ausschliesslich ueber AsyncStorage.
+//
+// Bewusst NICHT als wachsende Liste aller Punkte: bei 5 s Intervall und
+// einer Stunde Fahrt waeren das rund 700 Eintraege, also gut 300 KB, die
+// alle 5 Sekunden komplett gelesen, geparst und zurueckgeschrieben
+// wuerden - hochgerechnet ueber 200 MB Schreiblast pro Stunde, nur fuer
+// ein Protokoll. Stattdessen zwei kleine Schluessel:
+//   STAT_KEY  laufend fortgeschriebene Kennzahlen, wenige KB
+//   TAIL_KEY  die letzten TAIL_MAX Punkte fuer die Anzeige
+// ---------------------------------------------------------------------------
+const EMPTY_STAT = {
+  count: 0, first: null, last: null, lastFixTs: null,
+  gaps: [], dropped: 0,
+  tally: { ok: 0, err: 0, alt: 0, skip: 0, cfg: 0 },
+  lastErr: null, events: [],
+};
+
+async function readJson(key, fallback) {
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (err) {
+    return fallback;
+  }
+}
+
+async function readStat() {
+  const s = await readJson(STAT_KEY, null);
+  return s ? { ...EMPTY_STAT, ...s, tally: { ...EMPTY_STAT.tally, ...(s.tally || {}) } }
+           : { ...EMPTY_STAT };
+}
+
+// Punkte einarbeiten. Luecken werden im Vorbeigehen erkannt, statt am
+// Ende ueber die gesamte Liste gerechnet.
+async function recordPoints(points) {
+  try {
+    const stat = await readStat();
+    for (const p of points) {
+      if (p.sent && stat.tally[p.sent] !== undefined) stat.tally[p.sent]++;
+      if (p.sent === 'err') stat.lastErr = { at: p.r, code: p.code, msg: p.msg };
+      if (p.sent === 'alt') { stat.dropped++; continue; }
+
+      if (stat.lastFixTs != null) {
+        const d = p.t - stat.lastFixTs;
+        if (d > INTERVAL_MS * 3) {
+          stat.gaps.push({ at: stat.lastFixTs, sec: Math.round(d / 1000) });
+          if (stat.gaps.length > GAPS_MAX) stat.gaps.shift();
+        }
+      }
+      if (stat.first == null) stat.first = p.t;
+      stat.last = p.t;
+      stat.lastFixTs = p.t;
+      stat.count++;
+    }
+    const tail = await readJson(TAIL_KEY, []);
+    for (const p of points) tail.push(p);
+    if (tail.length > TAIL_MAX) tail.splice(0, tail.length - TAIL_MAX);
+    await AsyncStorage.multiSet([
+      [STAT_KEY, JSON.stringify(stat)],
+      [TAIL_KEY, JSON.stringify(tail)],
+    ]);
+  } catch (err) {
+    // Bewusst still: ein fehlgeschlagener Schreibvorgang darf den
     // Location-Task nicht abbrechen.
   }
 }
 
-async function readLog() {
+async function recordEvent(ev, msg) {
   try {
-    const raw = await AsyncStorage.getItem(LOG_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const stat = await readStat();
+    const entry = { r: Date.now(), ev };
+    if (msg) entry.msg = String(msg).slice(0, 200);
+    stat.events.push(entry);
+    if (stat.events.length > EVENTS_MAX) stat.events.shift();
+    // Nach einem Neustart nicht faelschlich eine Riesenluecke melden.
+    if (ev === 'started') stat.lastFixTs = null;
+    const tail = await readJson(TAIL_KEY, []);
+    tail.push(entry);
+    if (tail.length > TAIL_MAX) tail.splice(0, tail.length - TAIL_MAX);
+    await AsyncStorage.multiSet([
+      [STAT_KEY, JSON.stringify(stat)],
+      [TAIL_KEY, JSON.stringify(tail)],
+    ]);
   } catch (err) {
-    return [];
+    // siehe oben
   }
+}
+
+async function clearLog() {
+  try { await AsyncStorage.multiRemove([STAT_KEY, TAIL_KEY]); } catch (err) {}
 }
 
 // ---------------------------------------------------------------------------
@@ -50,52 +195,68 @@ async function readLog() {
 TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
   const now = Date.now();
   if (error) {
-    await appendLog([{ r: now, ev: 'task_error', msg: String(error.message || error) }]);
+    await recordEvent('task_error', String(error.message || error));
     return;
   }
   const locs = (data && data.locations) || [];
   if (!locs.length) {
-    await appendLog([{ r: now, ev: 'task_empty' }]);
+    await recordEvent('task_empty');
     return;
   }
-  await appendLog(locs.map((l) => ({
+
+  const cfg = await readCfg();
+  const points = locs.map((l) => ({
     r: now,
     t: l.timestamp,
+    age: Math.max(0, now - l.timestamp),
     lat: Number(l.coords.latitude.toFixed(6)),
     lon: Number(l.coords.longitude.toFixed(6)),
     acc: l.coords.accuracy == null ? null : Math.round(l.coords.accuracy),
     spd: l.coords.speed == null ? null : Number(l.coords.speed.toFixed(1)),
-  })));
+  }));
+
+  // Kommen mehrere Fixes im selben Zyklus, ist nur der juengste
+  // interessant - die aelteren wuerden am Server ohnehin als
+  // out-of-order abgewiesen.
+  const newest = points.reduce((a, b) => (b.t > a.t ? b : a), points[0]);
+
+  for (const p of points) {
+    if (p !== newest)                { p.sent = 'skip'; p.msg = 'nicht juengster'; continue; }
+    if (p.age > MAX_FIX_AGE_MS)      { p.sent = 'alt';  continue; }
+    const r = await sendPoint(cfg, p);
+    p.sent = r.sent;
+    if (r.code) p.code = r.code;
+    if (r.msg)  p.msg  = r.msg;
+  }
+
+  await recordPoints(points);
 });
 
 // ---------------------------------------------------------------------------
-// Auswertung: was uns wirklich interessiert sind die Luecken.
+// Ableitungen aus den laufend gefuehrten Kennzahlen. Die Luecken selbst
+// werden bereits beim Eintragen erkannt, hier bleibt nur die Verdichtung.
 // ---------------------------------------------------------------------------
-function analyse(log) {
-  const fixes = log.filter((e) => e.t != null).sort((a, b) => a.t - b.t);
-  if (fixes.length < 2) {
-    return { count: fixes.length, events: log.filter((e) => e.ev), gaps: [], maxGap: 0, duration: 0, first: null, last: null };
-  }
-  const gaps = [];
-  for (let i = 1; i < fixes.length; i++) {
-    const d = fixes[i].t - fixes[i - 1].t;
-    if (d > INTERVAL_MS * 3) gaps.push({ at: fixes[i - 1].t, sec: Math.round(d / 1000) });
-  }
-  const first = fixes[0].t;
-  const last = fixes[fixes.length - 1].t;
-  const maxGap = gaps.reduce((m, g) => Math.max(m, g.sec), 0);
-  return {
-    count: fixes.length,
-    events: log.filter((e) => e.ev),
-    gaps,
-    maxGap,
-    duration: Math.round((last - first) / 1000),
-    first,
-    last,
-  };
+function derive(stat) {
+  const maxGap = stat.gaps.reduce((m, g) => Math.max(m, g.sec), 0);
+  const duration = (stat.first != null && stat.last != null)
+    ? Math.round((stat.last - stat.first) / 1000)
+    : 0;
+  return { ...stat, maxGap, duration };
 }
 
 const clock = (ms) => (ms ? new Date(ms).toLocaleTimeString('de-DE') : '–');
+
+// Kurzzeichen fuer den Versandstatus in der Punkteliste.
+function sentMark(e) {
+  switch (e.sent) {
+    case 'ok':   return '\u2713';
+    case 'err':  return '\u2717 ' + (e.code ? 'HTTP ' + e.code : e.msg || 'Fehler');
+    case 'alt':  return 'alt';
+    case 'skip': return '\u2013';
+    case 'cfg':  return 'keine Konfig';
+    default:     return '';
+  }
+}
 
 const hms = (sec) => {
   const h = Math.floor(sec / 3600);
@@ -109,13 +270,26 @@ export default function App() {
   const [status, setStatus] = useState('Bereit');
   const [stats, setStats] = useState(null);
   const [tail, setTail] = useState([]);
+  const [cfg, setCfg] = useState(DEFAULT_CFG);
+  const [showCfg, setShowCfg] = useState(false);
+  const [cfgSaved, setCfgSaved] = useState(true);
 
   const refresh = useCallback(async () => {
     const isOn = await Location.hasStartedLocationUpdatesAsync(TASK_NAME).catch(() => false);
     setRunning(isOn);
-    const log = await readLog();
-    setStats(analyse(log));
-    setTail(log.slice(-25).reverse());
+    const stat = await readStat();
+    setStats(derive(stat));
+    const t = await readJson(TAIL_KEY, []);
+    setTail(t.slice().reverse());
+  }, []);
+
+  useEffect(() => {
+    readCfg().then((c) => {
+      setCfg(c);
+      // Ohne Schluessel kommt der Server nicht in Frage - Einstellungen
+      // gleich aufklappen statt den Nutzer suchen zu lassen.
+      if (!c.trackerKey) setShowCfg(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -123,6 +297,44 @@ export default function App() {
     const id = setInterval(refresh, 4000);
     return () => clearInterval(id);
   }, [refresh]);
+
+  function editCfg(field, value) {
+    setCfg((c) => ({ ...c, [field]: value }));
+    setCfgSaved(false);
+  }
+
+  async function saveCfg() {
+    await writeCfg(cfg);
+    setCfgSaved(true);
+    setStatus('Einstellungen gespeichert.');
+  }
+
+  // Einzelner Probeversand, damit die Konfiguration ohne Testfahrt
+  // pruefbar ist. Nutzt bewusst denselben Weg wie der Task.
+  async function testSend() {
+    setStatus('Sende Testpunkt …');
+    await writeCfg(cfg);
+    setCfgSaved(true);
+    try {
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      const r = await sendPoint(cfg, {
+        t: pos.timestamp,
+        lat: Number(pos.coords.latitude.toFixed(6)),
+        lon: Number(pos.coords.longitude.toFixed(6)),
+        acc: pos.coords.accuracy == null ? null : Math.round(pos.coords.accuracy),
+        spd: pos.coords.speed == null ? null : Number(pos.coords.speed.toFixed(1)),
+      });
+      if (r.sent === 'ok')        setStatus('Testpunkt angekommen. Server erreichbar.');
+      else if (r.sent === 'skip') setStatus('Server hat verworfen: ' + r.msg);
+      else if (r.code === 401)    setStatus('401 – Tracker-Key stimmt nicht.');
+      else if (r.code)            setStatus('HTTP ' + r.code + ' vom Server.');
+      else                        setStatus('Kein Kontakt: ' + (r.msg || 'unbekannt'));
+    } catch (err) {
+      setStatus('Testpunkt fehlgeschlagen: ' + String(err.message || err));
+    }
+  }
 
   async function beginUpdates() {
     await Location.startLocationUpdatesAsync(TASK_NAME, {
@@ -148,11 +360,29 @@ export default function App() {
 
   async function start() {
     try {
+      // Konfiguration festschreiben, bevor der Task laeuft: er liest sie
+      // aus AsyncStorage, nicht aus dem React-State.
+      await writeCfg(cfg);
+      setCfgSaved(true);
+
       setStatus('Frage Berechtigung an …');
       const fg = await Location.requestForegroundPermissionsAsync();
       if (fg.status !== 'granted') {
         setStatus('Standort-Berechtigung abgelehnt. Test nicht moeglich.');
         return;
+      }
+
+      // Ab Android 13 ist die Benachrichtigung eigens zu erlauben. Ohne
+      // sie laeuft der Service zwar, ist aber unsichtbar - im Rennen
+      // faellt ein Ausfall dann erst auf, wenn jemand anruft.
+      if (Platform.OS === 'android' && Number(Platform.Version) >= 33) {
+        try {
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+        } catch (err) {
+          // Nicht kritisch - Tracking laeuft auch ohne sichtbare Meldung.
+        }
       }
 
       setStatus('Starte Service …');
@@ -171,7 +401,7 @@ export default function App() {
         await beginUpdates();
       }
 
-      await appendLog([{ r: Date.now(), ev: 'started' }]);
+      await recordEvent('started');
       setStatus('Laeuft. Display ausschalten und losfahren.');
       refresh();
     } catch (err) {
@@ -182,7 +412,7 @@ export default function App() {
   async function stop() {
     try {
       await Location.stopLocationUpdatesAsync(TASK_NAME);
-      await appendLog([{ r: Date.now(), ev: 'stopped' }]);
+      await recordEvent('stopped');
       setStatus('Gestoppt. Auswertung unten.');
       refresh();
     } catch (err) {
@@ -191,7 +421,7 @@ export default function App() {
   }
 
   async function clear() {
-    await AsyncStorage.removeItem(LOG_KEY);
+    await clearLog();
     setStatus('Log geloescht.');
     refresh();
   }
@@ -202,10 +432,12 @@ export default function App() {
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="#101317" />
       <ScrollView contentContainerStyle={s.pad}>
-        <Text style={s.h1}>Hintergrund-Test</Text>
+        <Text style={s.h1}>Livetracking</Text>
 
         <View style={[s.badge, running ? s.badgeOn : s.badgeOff]}>
-          <Text style={s.badgeText}>{running ? 'AUFZEICHNUNG LÄUFT' : 'GESTOPPT'}</Text>
+          <Text style={s.badgeText}>
+            {running ? `SENDET ALS ${cfg.trackerId || 'TEAMAUTO'}` : 'GESTOPPT'}
+          </Text>
         </View>
 
         <Text style={s.status}>{status}</Text>
@@ -227,6 +459,89 @@ export default function App() {
           </Pressable>
         </View>
 
+        <Pressable style={[s.btn, s.btnGhost]} onPress={() => setShowCfg((v) => !v)}>
+          <Text style={s.btnText}>
+            {showCfg ? 'Einstellungen zuklappen' : 'Einstellungen'}
+            {cfgSaved ? '' : '  •'}
+          </Text>
+        </Pressable>
+
+        {showCfg && (
+          <View style={s.card}>
+            <Text style={s.h2}>Verbindung</Text>
+
+            <Text style={s.label}>Server-URL</Text>
+            <TextInput
+              style={s.input}
+              value={cfg.serverUrl}
+              onChangeText={(v) => editCfg('serverUrl', v)}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              placeholder="https://…"
+              placeholderTextColor="#5a6675"
+            />
+
+            <Text style={s.label}>Tracker-Key</Text>
+            <TextInput
+              style={s.input}
+              value={cfg.trackerKey}
+              onChangeText={(v) => editCfg('trackerKey', v)}
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="muss zu TRACKER_KEY auf Render passen"
+              placeholderTextColor="#5a6675"
+            />
+
+            <Text style={s.label}>Tracker-ID</Text>
+            <TextInput
+              style={s.input}
+              value={cfg.trackerId}
+              onChangeText={(v) => editCfg('trackerId', v)}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              placeholder="TEAMAUTO"
+              placeholderTextColor="#5a6675"
+            />
+            <Text style={s.hint}>
+              TEAMAUTO ergibt den roten Marker. Ein anderer Name erscheint als
+              normaler Tracker auf der Karte.
+            </Text>
+
+            <View style={s.row}>
+              <Pressable style={[s.btn, cfgSaved && s.btnDim]} onPress={saveCfg}>
+                <Text style={s.btnText}>Speichern</Text>
+              </Pressable>
+              <Pressable style={[s.btn, s.btnAlt]} onPress={testSend}>
+                <Text style={s.btnText}>Testpunkt</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {stats && stats.tally && (
+          <View style={s.card}>
+            <Text style={s.h2}>Versand</Text>
+            <Row k="Angekommen" v={String(stats.tally.ok)} />
+            <Row
+              k="Fehlgeschlagen"
+              v={String(stats.tally.err)}
+              bad={stats.tally.err > 0}
+            />
+            <Row k="Zu alt, nicht gesendet" v={String(stats.tally.alt)} />
+            <Row k="Vom Server verworfen" v={String(stats.tally.skip)} />
+            {stats.tally.cfg > 0 && (
+              <Row k="Ohne Konfiguration" v={String(stats.tally.cfg)} bad />
+            )}
+            {stats.lastErr && (
+              <Text style={s.mono}>
+                Letzter Fehler {clock(stats.lastErr.at)}:{' '}
+                {stats.lastErr.code ? 'HTTP ' + stats.lastErr.code : stats.lastErr.msg}
+              </Text>
+            )}
+          </View>
+        )}
+
         {stats && (
           <View style={s.card}>
             <Text style={s.h2}>Auswertung</Text>
@@ -244,11 +559,14 @@ export default function App() {
               v={stats.maxGap ? hms(stats.maxGap) : 'keine'}
               bad={stats.maxGap > 0}
             />
+            {stats.dropped > 0 && (
+              <Row k="Verworfene Alt-Fixes" v={String(stats.dropped)} />
+            )}
             <Text style={[s.verdict, ok ? s.verdictOk : s.verdictBad]}>
               {stats.count < 2
                 ? 'Noch zu wenig Daten'
                 : ok
-                ? 'Lückenlos — Stufe 1 bestanden'
+                ? 'Lückenlos'
                 : 'Lücken vorhanden — siehe Liste'}
             </Text>
           </View>
@@ -280,9 +598,9 @@ export default function App() {
           <Text style={s.h2}>Letzte Punkte</Text>
           {tail.length === 0 && <Text style={s.mono}>– noch nichts –</Text>}
           {tail.map((e, i) => (
-            <Text key={i} style={s.mono}>
+            <Text key={i} style={[s.mono, e.sent === 'err' && s.monoBad]}>
               {e.t
-                ? `${clock(e.t)}  ${e.lat}, ${e.lon}  ±${e.acc}m  ${e.spd ?? '–'}m/s`
+                ? `${clock(e.t)}  ${e.lat}, ${e.lon}  ±${e.acc}m  ${sentMark(e)}`
                 : `${clock(e.r)}  [${e.ev}]`}
             </Text>
           ))}
@@ -335,5 +653,14 @@ const s = StyleSheet.create({
   verdictOk: { color: '#4ade80' },
   verdictBad: { color: '#ff8f6b' },
   mono: { color: '#b9c6d4', fontSize: 13, fontFamily: MONO, paddingVertical: 2 },
+  monoBad: { color: '#ff8f6b' },
+  label: { color: '#8fa3b8', fontSize: 14, marginTop: 10, marginBottom: 4 },
+  input: {
+    backgroundColor: '#101317', color: '#fff', fontSize: 15, fontFamily: MONO,
+    borderRadius: 6, paddingHorizontal: 12, paddingVertical: 12,
+    borderWidth: 1, borderColor: '#2a3038',
+  },
+  hint: { color: '#6d7d8d', fontSize: 12, marginTop: 8, marginBottom: 4, lineHeight: 17 },
+  btnAlt: { backgroundColor: '#2f6d46' },
   foot: { color: '#5a6675', fontSize: 12, textAlign: 'center', marginTop: 12, fontFamily: MONO },
 });
