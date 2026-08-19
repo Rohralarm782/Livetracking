@@ -1,0 +1,1015 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<debugInfo>
+    <manifest filename="C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\manifest.xml"/>
+    <pcToLineNum>
+        <entry filename="c:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\bin\\gen\\006-B4061-00\\source\\Rez.mcgen" id="1" lineNum="7" parent="globals/Rez" pc="268435457" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="2" lineNum="50" parent="globals" pc="268435477" symbol="getApp"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="2" lineNum="51" parent="globals" pc="268435487" symbol="getApp"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="3" lineNum="55" parent="globals/LivetrackingCIQView" pc="268435498" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="3" lineNum="61" parent="globals/LivetrackingCIQView" pc="268435509" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="3" lineNum="70" parent="globals/LivetrackingCIQView" pc="268435521" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="3" lineNum="81" parent="globals/LivetrackingCIQView" pc="268435533" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="4" lineNum="142" parent="globals/LivetrackingCIQBleDelegate" pc="268435546" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="4" lineNum="149" parent="globals/LivetrackingCIQBleDelegate" pc="268435557" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="4" lineNum="151" parent="globals/LivetrackingCIQBleDelegate" pc="268435566" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="4" lineNum="153" parent="globals/LivetrackingCIQBleDelegate" pc="268435575" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="4" lineNum="180" parent="globals/LivetrackingCIQBleDelegate" pc="268435584" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="5" lineNum="6" parent="globals/LivetrackingCIQApp" pc="268435594" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="6" lineNum="286" parent="globals/LivetrackingCIQView" pc="268435606" symbol="gapUnit"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="6" lineNum="287" parent="globals/LivetrackingCIQView" pc="268435608" symbol="gapUnit"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="180" parent="globals/LivetrackingCIQView" pc="268435628" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="181" parent="globals/LivetrackingCIQView" pc="268435631" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="182" parent="globals/LivetrackingCIQView" pc="268435642" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="183" parent="globals/LivetrackingCIQView" pc="268435660" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="184" parent="globals/LivetrackingCIQView" pc="268435666" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="185" parent="globals/LivetrackingCIQView" pc="268435673" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="186" parent="globals/LivetrackingCIQView" pc="268435680" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="187" parent="globals/LivetrackingCIQView" pc="268435692" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="191" parent="globals/LivetrackingCIQView" pc="268435695" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="192" parent="globals/LivetrackingCIQView" pc="268435718" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="193" parent="globals/LivetrackingCIQView" pc="268435739" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="194" parent="globals/LivetrackingCIQView" pc="268435764" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="195" parent="globals/LivetrackingCIQView" pc="268435773" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="196" parent="globals/LivetrackingCIQView" pc="268435782" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="201" parent="globals/LivetrackingCIQView" pc="268435803" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="7" lineNum="202" parent="globals/LivetrackingCIQView" pc="268435824" symbol="fitContent"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="299" parent="globals/LivetrackingCIQView" pc="268435834" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="300" parent="globals/LivetrackingCIQView" pc="268435837" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="301" parent="globals/LivetrackingCIQView" pc="268435846" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="302" parent="globals/LivetrackingCIQView" pc="268435858" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="303" parent="globals/LivetrackingCIQView" pc="268435871" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="305" parent="globals/LivetrackingCIQView" pc="268435873" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="306" parent="globals/LivetrackingCIQView" pc="268435876" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="307" parent="globals/LivetrackingCIQView" pc="268435888" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="308" parent="globals/LivetrackingCIQView" pc="268435915" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="309" parent="globals/LivetrackingCIQView" pc="268435922" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="8" lineNum="311" parent="globals/LivetrackingCIQView" pc="268435932" symbol="trailSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="398" parent="globals/LivetrackingCIQView" pc="268435935" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="399" parent="globals/LivetrackingCIQView" pc="268435938" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="400" parent="globals/LivetrackingCIQView" pc="268435954" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="401" parent="globals/LivetrackingCIQView" pc="268435974" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="402" parent="globals/LivetrackingCIQView" pc="268435984" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="403" parent="globals/LivetrackingCIQView" pc="268436000" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="404" parent="globals/LivetrackingCIQView" pc="268436007" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="405" parent="globals/LivetrackingCIQView" pc="268436026" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="406" parent="globals/LivetrackingCIQView" pc="268436032" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="410" parent="globals/LivetrackingCIQView" pc="268436051" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="411" parent="globals/LivetrackingCIQView" pc="268436076" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="9" lineNum="412" parent="globals/LivetrackingCIQView" pc="268436102" symbol="drawMixed"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="10" lineNum="317" parent="globals/LivetrackingCIQView" pc="268436132" symbol="segWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="10" lineNum="318" parent="globals/LivetrackingCIQView" pc="268436135" symbol="segWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="10" lineNum="319" parent="globals/LivetrackingCIQView" pc="268436150" symbol="segWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="10" lineNum="320" parent="globals/LivetrackingCIQView" pc="268436173" symbol="segWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="10" lineNum="321" parent="globals/LivetrackingCIQView" pc="268436180" symbol="segWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="10" lineNum="323" parent="globals/LivetrackingCIQView" pc="268436200" symbol="segWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="267" parent="globals/LivetrackingCIQView" pc="268436203" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="268" parent="globals/LivetrackingCIQView" pc="268436206" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="269" parent="globals/LivetrackingCIQView" pc="268436222" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="270" parent="globals/LivetrackingCIQView" pc="268436232" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="272" parent="globals/LivetrackingCIQView" pc="268436235" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="273" parent="globals/LivetrackingCIQView" pc="268436248" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="274" parent="globals/LivetrackingCIQView" pc="268436264" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="275" parent="globals/LivetrackingCIQView" pc="268436277" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="276" parent="globals/LivetrackingCIQView" pc="268436293" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="11" lineNum="280" parent="globals/LivetrackingCIQView" pc="268436315" symbol="hasDigits"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="373" parent="globals/LivetrackingCIQView" pc="268436317" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="374" parent="globals/LivetrackingCIQView" pc="268436320" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="375" parent="globals/LivetrackingCIQView" pc="268436336" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="376" parent="globals/LivetrackingCIQView" pc="268436339" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="377" parent="globals/LivetrackingCIQView" pc="268436355" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="378" parent="globals/LivetrackingCIQView" pc="268436362" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="12" lineNum="380" parent="globals/LivetrackingCIQView" pc="268436408" symbol="lineWidth"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="326" parent="globals/LivetrackingCIQView" pc="268436411" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="327" parent="globals/LivetrackingCIQView" pc="268436414" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="330" parent="globals/LivetrackingCIQView" pc="268436418" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="331" parent="globals/LivetrackingCIQView" pc="268436425" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="332" parent="globals/LivetrackingCIQView" pc="268436446" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="334" parent="globals/LivetrackingCIQView" pc="268436449" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="335" parent="globals/LivetrackingCIQView" pc="268436456" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="336" parent="globals/LivetrackingCIQView" pc="268436477" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="338" parent="globals/LivetrackingCIQView" pc="268436480" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="339" parent="globals/LivetrackingCIQView" pc="268436489" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="340" parent="globals/LivetrackingCIQView" pc="268436496" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="341" parent="globals/LivetrackingCIQView" pc="268436499" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="342" parent="globals/LivetrackingCIQView" pc="268436502" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="343" parent="globals/LivetrackingCIQView" pc="268436518" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="344" parent="globals/LivetrackingCIQView" pc="268436525" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="346" parent="globals/LivetrackingCIQView" pc="268436534" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="347" parent="globals/LivetrackingCIQView" pc="268436552" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="348" parent="globals/LivetrackingCIQView" pc="268436558" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="349" parent="globals/LivetrackingCIQView" pc="268436562" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="350" parent="globals/LivetrackingCIQView" pc="268436568" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="351" parent="globals/LivetrackingCIQView" pc="268436576" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="352" parent="globals/LivetrackingCIQView" pc="268436600" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="353" parent="globals/LivetrackingCIQView" pc="268436607" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="355" parent="globals/LivetrackingCIQView" pc="268436611" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="357" parent="globals/LivetrackingCIQView" pc="268436633" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="358" parent="globals/LivetrackingCIQView" pc="268436645" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="13" lineNum="360" parent="globals/LivetrackingCIQView" pc="268436669" symbol="segments"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="14" lineNum="103" parent="globals/LivetrackingCIQView" pc="268436672" symbol="compute"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="14" lineNum="104" parent="globals/LivetrackingCIQView" pc="268436674" symbol="compute"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="14" lineNum="105" parent="globals/LivetrackingCIQView" pc="268436683" symbol="compute"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="383" parent="globals/LivetrackingCIQView" pc="268436696" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="384" parent="globals/LivetrackingCIQView" pc="268436699" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="385" parent="globals/LivetrackingCIQView" pc="268436715" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="386" parent="globals/LivetrackingCIQView" pc="268436718" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="387" parent="globals/LivetrackingCIQView" pc="268436734" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="388" parent="globals/LivetrackingCIQView" pc="268436741" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="389" parent="globals/LivetrackingCIQView" pc="268436769" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="389" parent="globals/LivetrackingCIQView" pc="268436777" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="15" lineNum="391" parent="globals/LivetrackingCIQView" pc="268436791" symbol="lineHeight"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="16" lineNum="95" parent="globals/LivetrackingCIQView" pc="268436794" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="16" lineNum="96" parent="globals/LivetrackingCIQView" pc="268436796" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="16" lineNum="97" parent="globals/LivetrackingCIQView" pc="268436808" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="17" lineNum="363" parent="globals/LivetrackingCIQView" pc="268436818" symbol="fontForSeg"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="17" lineNum="364" parent="globals/LivetrackingCIQView" pc="268436820" symbol="fontForSeg"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="17" lineNum="365" parent="globals/LivetrackingCIQView" pc="268436827" symbol="fontForSeg"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="17" lineNum="367" parent="globals/LivetrackingCIQView" pc="268436836" symbol="fontForSeg"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="17" lineNum="368" parent="globals/LivetrackingCIQView" pc="268436843" symbol="fontForSeg"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="17" lineNum="370" parent="globals/LivetrackingCIQView" pc="268436852" symbol="fontForSeg"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="109" parent="globals/LivetrackingCIQView" pc="268436861" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="110" parent="globals/LivetrackingCIQView" pc="268436864" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="111" parent="globals/LivetrackingCIQView" pc="268436872" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="113" parent="globals/LivetrackingCIQView" pc="268436890" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="114" parent="globals/LivetrackingCIQView" pc="268436904" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="115" parent="globals/LivetrackingCIQView" pc="268436912" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="117" parent="globals/LivetrackingCIQView" pc="268436926" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="118" parent="globals/LivetrackingCIQView" pc="268436933" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="119" parent="globals/LivetrackingCIQView" pc="268436940" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="120" parent="globals/LivetrackingCIQView" pc="268436947" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="121" parent="globals/LivetrackingCIQView" pc="268436956" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="122" parent="globals/LivetrackingCIQView" pc="268436969" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="123" parent="globals/LivetrackingCIQView" pc="268436982" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="125" parent="globals/LivetrackingCIQView" pc="268436995" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="126" parent="globals/LivetrackingCIQView" pc="268437007" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="129" parent="globals/LivetrackingCIQView" pc="268437008" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="129" parent="globals/LivetrackingCIQView" pc="268437026" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="130" parent="globals/LivetrackingCIQView" pc="268437040" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="130" parent="globals/LivetrackingCIQView" pc="268437058" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="132" parent="globals/LivetrackingCIQView" pc="268437072" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="133" parent="globals/LivetrackingCIQView" pc="268437081" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="134" parent="globals/LivetrackingCIQView" pc="268437090" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="135" parent="globals/LivetrackingCIQView" pc="268437097" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="136" parent="globals/LivetrackingCIQView" pc="268437104" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="136" parent="globals/LivetrackingCIQView" pc="268437112" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="137" parent="globals/LivetrackingCIQView" pc="268437116" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="137" parent="globals/LivetrackingCIQView" pc="268437124" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="138" parent="globals/LivetrackingCIQView" pc="268437128" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="139" parent="globals/LivetrackingCIQView" pc="268437138" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="141" parent="globals/LivetrackingCIQView" pc="268437148" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="142" parent="globals/LivetrackingCIQView" pc="268437171" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="143" parent="globals/LivetrackingCIQView" pc="268437187" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="145" parent="globals/LivetrackingCIQView" pc="268437213" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="146" parent="globals/LivetrackingCIQView" pc="268437241" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="147" parent="globals/LivetrackingCIQView" pc="268437262" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="150" parent="globals/LivetrackingCIQView" pc="268437271" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="151" parent="globals/LivetrackingCIQView" pc="268437292" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="152" parent="globals/LivetrackingCIQView" pc="268437298" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="153" parent="globals/LivetrackingCIQView" pc="268437305" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="154" parent="globals/LivetrackingCIQView" pc="268437312" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="155" parent="globals/LivetrackingCIQView" pc="268437321" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="156" parent="globals/LivetrackingCIQView" pc="268437328" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="159" parent="globals/LivetrackingCIQView" pc="268437329" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="160" parent="globals/LivetrackingCIQView" pc="268437332" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="161" parent="globals/LivetrackingCIQView" pc="268437343" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="164" parent="globals/LivetrackingCIQView" pc="268437388" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="165" parent="globals/LivetrackingCIQView" pc="268437398" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="165" parent="globals/LivetrackingCIQView" pc="268437405" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="166" parent="globals/LivetrackingCIQView" pc="268437408" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="167" parent="globals/LivetrackingCIQView" pc="268437419" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="168" parent="globals/LivetrackingCIQView" pc="268437451" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="18" lineNum="169" parent="globals/LivetrackingCIQView" pc="268437491" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="208" parent="globals/LivetrackingCIQView" pc="268437509" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="209" parent="globals/LivetrackingCIQView" pc="268437512" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="210" parent="globals/LivetrackingCIQView" pc="268437519" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="215" parent="globals/LivetrackingCIQView" pc="268437539" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="216" parent="globals/LivetrackingCIQView" pc="268437543" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="217" parent="globals/LivetrackingCIQView" pc="268437547" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="218" parent="globals/LivetrackingCIQView" pc="268437551" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="219" parent="globals/LivetrackingCIQView" pc="268437567" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="220" parent="globals/LivetrackingCIQView" pc="268437577" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="222" parent="globals/LivetrackingCIQView" pc="268437580" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="223" parent="globals/LivetrackingCIQView" pc="268437595" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="224" parent="globals/LivetrackingCIQView" pc="268437610" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="226" parent="globals/LivetrackingCIQView" pc="268437635" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="227" parent="globals/LivetrackingCIQView" pc="268437643" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="230" parent="globals/LivetrackingCIQView" pc="268437663" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="231" parent="globals/LivetrackingCIQView" pc="268437667" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="232" parent="globals/LivetrackingCIQView" pc="268437671" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="233" parent="globals/LivetrackingCIQView" pc="268437675" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="234" parent="globals/LivetrackingCIQView" pc="268437687" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="235" parent="globals/LivetrackingCIQView" pc="268437701" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="236" parent="globals/LivetrackingCIQView" pc="268437715" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="238" parent="globals/LivetrackingCIQView" pc="268437726" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="239" parent="globals/LivetrackingCIQView" pc="268437739" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="240" parent="globals/LivetrackingCIQView" pc="268437754" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="241" parent="globals/LivetrackingCIQView" pc="268437765" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="19" lineNum="243" parent="globals/LivetrackingCIQView" pc="268437776" symbol="applyDrop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="246" parent="globals/LivetrackingCIQView" pc="268437796" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="247" parent="globals/LivetrackingCIQView" pc="268437799" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="248" parent="globals/LivetrackingCIQView" pc="268437802" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="249" parent="globals/LivetrackingCIQView" pc="268437818" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="250" parent="globals/LivetrackingCIQView" pc="268437825" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="251" parent="globals/LivetrackingCIQView" pc="268437855" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="253" parent="globals/LivetrackingCIQView" pc="268437857" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="20" lineNum="255" parent="globals/LivetrackingCIQView" pc="268437896" symbol="fitsAll"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="21" lineNum="290" parent="globals/LivetrackingCIQView" pc="268437902" symbol="leadSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="21" lineNum="291" parent="globals/LivetrackingCIQView" pc="268437905" symbol="leadSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="21" lineNum="292" parent="globals/LivetrackingCIQView" pc="268437914" symbol="leadSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="21" lineNum="293" parent="globals/LivetrackingCIQView" pc="268437917" symbol="leadSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="21" lineNum="294" parent="globals/LivetrackingCIQView" pc="268437950" symbol="leadSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQView.mc" id="21" lineNum="296" parent="globals/LivetrackingCIQView" pc="268437960" symbol="leadSpaces"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="520" parent="globals/LivetrackingCIQBleDelegate" pc="268437963" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="521" parent="globals/LivetrackingCIQBleDelegate" pc="268437966" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="523" parent="globals/LivetrackingCIQBleDelegate" pc="268437969" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="524" parent="globals/LivetrackingCIQBleDelegate" pc="268437991" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="525" parent="globals/LivetrackingCIQBleDelegate" pc="268437995" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="527" parent="globals/LivetrackingCIQBleDelegate" pc="268438003" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="528" parent="globals/LivetrackingCIQBleDelegate" pc="268438022" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="529" parent="globals/LivetrackingCIQBleDelegate" pc="268438031" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="530" parent="globals/LivetrackingCIQBleDelegate" pc="268438039" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="532" parent="globals/LivetrackingCIQBleDelegate" pc="268438040" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="534" parent="globals/LivetrackingCIQBleDelegate" pc="268438048" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="535" parent="globals/LivetrackingCIQBleDelegate" pc="268438073" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="22" lineNum="536" parent="globals/LivetrackingCIQBleDelegate" pc="268438077" symbol="loadBinding"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="650" parent="globals/LivetrackingCIQBleDelegate" pc="268438089" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="651" parent="globals/LivetrackingCIQBleDelegate" pc="268438092" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="652" parent="globals/LivetrackingCIQBleDelegate" pc="268438096" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="653" parent="globals/LivetrackingCIQBleDelegate" pc="268438100" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="654" parent="globals/LivetrackingCIQBleDelegate" pc="268438104" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="655" parent="globals/LivetrackingCIQBleDelegate" pc="268438111" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="656" parent="globals/LivetrackingCIQBleDelegate" pc="268438118" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="657" parent="globals/LivetrackingCIQBleDelegate" pc="268438121" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="658" parent="globals/LivetrackingCIQBleDelegate" pc="268438124" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="659" parent="globals/LivetrackingCIQBleDelegate" pc="268438140" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="660" parent="globals/LivetrackingCIQBleDelegate" pc="268438147" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="661" parent="globals/LivetrackingCIQBleDelegate" pc="268438163" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="662" parent="globals/LivetrackingCIQBleDelegate" pc="268438188" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="663" parent="globals/LivetrackingCIQBleDelegate" pc="268438200" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="664" parent="globals/LivetrackingCIQBleDelegate" pc="268438212" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="666" parent="globals/LivetrackingCIQBleDelegate" pc="268438224" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="667" parent="globals/LivetrackingCIQBleDelegate" pc="268438231" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="669" parent="globals/LivetrackingCIQBleDelegate" pc="268438234" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="670" parent="globals/LivetrackingCIQBleDelegate" pc="268438241" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="671" parent="globals/LivetrackingCIQBleDelegate" pc="268438270" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="672" parent="globals/LivetrackingCIQBleDelegate" pc="268438286" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="673" parent="globals/LivetrackingCIQBleDelegate" pc="268438301" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="674" parent="globals/LivetrackingCIQBleDelegate" pc="268438308" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="675" parent="globals/LivetrackingCIQBleDelegate" pc="268438315" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="676" parent="globals/LivetrackingCIQBleDelegate" pc="268438331" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="680" parent="globals/LivetrackingCIQBleDelegate" pc="268438344" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="681" parent="globals/LivetrackingCIQBleDelegate" pc="268438369" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="682" parent="globals/LivetrackingCIQBleDelegate" pc="268438381" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="683" parent="globals/LivetrackingCIQBleDelegate" pc="268438393" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="685" parent="globals/LivetrackingCIQBleDelegate" pc="268438405" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="686" parent="globals/LivetrackingCIQBleDelegate" pc="268438414" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="687" parent="globals/LivetrackingCIQBleDelegate" pc="268438423" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="23" lineNum="689" parent="globals/LivetrackingCIQBleDelegate" pc="268438432" symbol="bytesToLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="362" parent="globals/LivetrackingCIQBleDelegate" pc="268438462" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="363" parent="globals/LivetrackingCIQBleDelegate" pc="268438465" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="364" parent="globals/LivetrackingCIQBleDelegate" pc="268438481" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="366" parent="globals/LivetrackingCIQBleDelegate" pc="268438487" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="367" parent="globals/LivetrackingCIQBleDelegate" pc="268438491" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="368" parent="globals/LivetrackingCIQBleDelegate" pc="268438511" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="370" parent="globals/LivetrackingCIQBleDelegate" pc="268438539" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="371" parent="globals/LivetrackingCIQBleDelegate" pc="268438557" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="372" parent="globals/LivetrackingCIQBleDelegate" pc="268438564" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="374" parent="globals/LivetrackingCIQBleDelegate" pc="268438567" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="375" parent="globals/LivetrackingCIQBleDelegate" pc="268438588" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="24" lineNum="377" parent="globals/LivetrackingCIQBleDelegate" pc="268438602" symbol="getNumeric"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="25" lineNum="486" parent="globals/LivetrackingCIQBleDelegate" pc="268438605" symbol="flushRx"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="25" lineNum="487" parent="globals/LivetrackingCIQBleDelegate" pc="268438607" symbol="flushRx"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="25" lineNum="488" parent="globals/LivetrackingCIQBleDelegate" pc="268438623" symbol="flushRx"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="25" lineNum="489" parent="globals/LivetrackingCIQBleDelegate" pc="268438637" symbol="flushRx"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="25" lineNum="491" parent="globals/LivetrackingCIQBleDelegate" pc="268438654" symbol="flushRx"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="26" lineNum="499" parent="globals/LivetrackingCIQBleDelegate" pc="268438664" symbol="beginSearch"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="26" lineNum="500" parent="globals/LivetrackingCIQBleDelegate" pc="268438667" symbol="beginSearch"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="26" lineNum="501" parent="globals/LivetrackingCIQBleDelegate" pc="268438679" symbol="beginSearch"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="26" lineNum="502" parent="globals/LivetrackingCIQBleDelegate" pc="268438688" symbol="beginSearch"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="26" lineNum="503" parent="globals/LivetrackingCIQBleDelegate" pc="268438697" symbol="beginSearch"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="336" parent="globals/LivetrackingCIQBleDelegate" pc="268438705" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="337" parent="globals/LivetrackingCIQBleDelegate" pc="268438708" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="338" parent="globals/LivetrackingCIQBleDelegate" pc="268438724" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="340" parent="globals/LivetrackingCIQBleDelegate" pc="268438737" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="341" parent="globals/LivetrackingCIQBleDelegate" pc="268438755" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="342" parent="globals/LivetrackingCIQBleDelegate" pc="268438762" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="344" parent="globals/LivetrackingCIQBleDelegate" pc="268438765" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="347" parent="globals/LivetrackingCIQBleDelegate" pc="268438774" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="348" parent="globals/LivetrackingCIQBleDelegate" pc="268438778" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="349" parent="globals/LivetrackingCIQBleDelegate" pc="268438798" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="351" parent="globals/LivetrackingCIQBleDelegate" pc="268438826" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="352" parent="globals/LivetrackingCIQBleDelegate" pc="268438838" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="354" parent="globals/LivetrackingCIQBleDelegate" pc="268438870" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="27" lineNum="356" parent="globals/LivetrackingCIQBleDelegate" pc="268438873" symbol="getLines"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="28" lineNum="393" parent="globals/LivetrackingCIQBleDelegate" pc="268438879" symbol="onProfileRegister"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="28" lineNum="394" parent="globals/LivetrackingCIQBleDelegate" pc="268438881" symbol="onProfileRegister"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="28" lineNum="395" parent="globals/LivetrackingCIQBleDelegate" pc="268438888" symbol="onProfileRegister"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="28" lineNum="396" parent="globals/LivetrackingCIQBleDelegate" pc="268438900" symbol="onProfileRegister"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="28" lineNum="398" parent="globals/LivetrackingCIQBleDelegate" pc="268438908" symbol="onProfileRegister"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="541" parent="globals/LivetrackingCIQBleDelegate" pc="268438929" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="542" parent="globals/LivetrackingCIQBleDelegate" pc="268438932" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="543" parent="globals/LivetrackingCIQBleDelegate" pc="268438938" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="545" parent="globals/LivetrackingCIQBleDelegate" pc="268438940" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="546" parent="globals/LivetrackingCIQBleDelegate" pc="268438944" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="547" parent="globals/LivetrackingCIQBleDelegate" pc="268438957" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="548" parent="globals/LivetrackingCIQBleDelegate" pc="268438970" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="550" parent="globals/LivetrackingCIQBleDelegate" pc="268438972" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="551" parent="globals/LivetrackingCIQBleDelegate" pc="268439001" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="29" lineNum="553" parent="globals/LivetrackingCIQBleDelegate" pc="268439003" symbol="idFromName"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="406" parent="globals/LivetrackingCIQBleDelegate" pc="268439022" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="407" parent="globals/LivetrackingCIQBleDelegate" pc="268439025" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="408" parent="globals/LivetrackingCIQBleDelegate" pc="268439040" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="409" parent="globals/LivetrackingCIQBleDelegate" pc="268439053" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="412" parent="globals/LivetrackingCIQBleDelegate" pc="268439065" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="414" parent="globals/LivetrackingCIQBleDelegate" pc="268439088" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="415" parent="globals/LivetrackingCIQBleDelegate" pc="268439095" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="416" parent="globals/LivetrackingCIQBleDelegate" pc="268439111" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="417" parent="globals/LivetrackingCIQBleDelegate" pc="268439115" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="30" lineNum="418" parent="globals/LivetrackingCIQBleDelegate" pc="268439127" symbol="onScanResults"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="305" parent="globals/LivetrackingCIQBleDelegate" pc="268439150" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="307" parent="globals/LivetrackingCIQBleDelegate" pc="268439153" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="308" parent="globals/LivetrackingCIQBleDelegate" pc="268439174" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="311" parent="globals/LivetrackingCIQBleDelegate" pc="268439183" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="312" parent="globals/LivetrackingCIQBleDelegate" pc="268439191" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="313" parent="globals/LivetrackingCIQBleDelegate" pc="268439199" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="315" parent="globals/LivetrackingCIQBleDelegate" pc="268439206" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="317" parent="globals/LivetrackingCIQBleDelegate" pc="268439215" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="318" parent="globals/LivetrackingCIQBleDelegate" pc="268439236" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="321" parent="globals/LivetrackingCIQBleDelegate" pc="268439245" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="323" parent="globals/LivetrackingCIQBleDelegate" pc="268439253" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="324" parent="globals/LivetrackingCIQBleDelegate" pc="268439265" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="325" parent="globals/LivetrackingCIQBleDelegate" pc="268439274" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="326" parent="globals/LivetrackingCIQBleDelegate" pc="268439283" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="31" lineNum="327" parent="globals/LivetrackingCIQBleDelegate" pc="268439292" symbol="reloadSettings"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="464" parent="globals/LivetrackingCIQBleDelegate" pc="268439300" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="465" parent="globals/LivetrackingCIQBleDelegate" pc="268439303" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="466" parent="globals/LivetrackingCIQBleDelegate" pc="268439327" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="468" parent="globals/LivetrackingCIQBleDelegate" pc="268439328" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="469" parent="globals/LivetrackingCIQBleDelegate" pc="268439344" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="470" parent="globals/LivetrackingCIQBleDelegate" pc="268439351" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="472" parent="globals/LivetrackingCIQBleDelegate" pc="268439359" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="473" parent="globals/LivetrackingCIQBleDelegate" pc="268439368" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="474" parent="globals/LivetrackingCIQBleDelegate" pc="268439388" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="475" parent="globals/LivetrackingCIQBleDelegate" pc="268439396" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="476" parent="globals/LivetrackingCIQBleDelegate" pc="268439406" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="477" parent="globals/LivetrackingCIQBleDelegate" pc="268439423" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="478" parent="globals/LivetrackingCIQBleDelegate" pc="268439439" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="32" lineNum="480" parent="globals/LivetrackingCIQBleDelegate" pc="268439456" symbol="onCharacteristicChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="602" parent="globals/LivetrackingCIQBleDelegate" pc="268439483" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="603" parent="globals/LivetrackingCIQBleDelegate" pc="268439486" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="604" parent="globals/LivetrackingCIQBleDelegate" pc="268439495" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="606" parent="globals/LivetrackingCIQBleDelegate" pc="268439496" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="607" parent="globals/LivetrackingCIQBleDelegate" pc="268439516" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="608" parent="globals/LivetrackingCIQBleDelegate" pc="268439522" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="609" parent="globals/LivetrackingCIQBleDelegate" pc="268439534" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="611" parent="globals/LivetrackingCIQBleDelegate" pc="268439535" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="612" parent="globals/LivetrackingCIQBleDelegate" pc="268439551" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="613" parent="globals/LivetrackingCIQBleDelegate" pc="268439557" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="614" parent="globals/LivetrackingCIQBleDelegate" pc="268439569" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="616" parent="globals/LivetrackingCIQBleDelegate" pc="268439570" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="617" parent="globals/LivetrackingCIQBleDelegate" pc="268439591" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="618" parent="globals/LivetrackingCIQBleDelegate" pc="268439597" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="619" parent="globals/LivetrackingCIQBleDelegate" pc="268439609" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="623" parent="globals/LivetrackingCIQBleDelegate" pc="268439610" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="624" parent="globals/LivetrackingCIQBleDelegate" pc="268439625" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="625" parent="globals/LivetrackingCIQBleDelegate" pc="268439638" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="33" lineNum="626" parent="globals/LivetrackingCIQBleDelegate" pc="268439642" symbol="subscribe"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="34" lineNum="456" parent="globals/LivetrackingCIQBleDelegate" pc="268439658" symbol="onDescriptorWrite"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="34" lineNum="457" parent="globals/LivetrackingCIQBleDelegate" pc="268439660" symbol="onDescriptorWrite"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="34" lineNum="458" parent="globals/LivetrackingCIQBleDelegate" pc="268439667" symbol="onDescriptorWrite"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="34" lineNum="460" parent="globals/LivetrackingCIQBleDelegate" pc="268439680" symbol="onDescriptorWrite"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="639" parent="globals/LivetrackingCIQBleDelegate" pc="268439701" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="640" parent="globals/LivetrackingCIQBleDelegate" pc="268439704" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="641" parent="globals/LivetrackingCIQBleDelegate" pc="268439717" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="642" parent="globals/LivetrackingCIQBleDelegate" pc="268439721" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="643" parent="globals/LivetrackingCIQBleDelegate" pc="268439737" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="645" parent="globals/LivetrackingCIQBleDelegate" pc="268439762" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="646" parent="globals/LivetrackingCIQBleDelegate" pc="268439773" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="35" lineNum="647" parent="globals/LivetrackingCIQBleDelegate" pc="268439790" symbol="injectTestText"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="195" parent="globals/LivetrackingCIQBleDelegate" pc="268439803" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="196" parent="globals/LivetrackingCIQBleDelegate" pc="268439806" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="197" parent="globals/LivetrackingCIQBleDelegate" pc="268439818" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="207" parent="globals/LivetrackingCIQBleDelegate" pc="268439888" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="208" parent="globals/LivetrackingCIQBleDelegate" pc="268439906" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="209" parent="globals/LivetrackingCIQBleDelegate" pc="268439910" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="211" parent="globals/LivetrackingCIQBleDelegate" pc="268439927" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="36" lineNum="212" parent="globals/LivetrackingCIQBleDelegate" pc="268439943" symbol="start"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="37" lineNum="402" parent="globals/LivetrackingCIQBleDelegate" pc="268439951" symbol="onScanStateChange"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="37" lineNum="403" parent="globals/LivetrackingCIQBleDelegate" pc="268439953" symbol="onScanStateChange"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="425" parent="globals/LivetrackingCIQBleDelegate" pc="268439966" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="426" parent="globals/LivetrackingCIQBleDelegate" pc="268439969" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="427" parent="globals/LivetrackingCIQBleDelegate" pc="268439977" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="428" parent="globals/LivetrackingCIQBleDelegate" pc="268439986" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="430" parent="globals/LivetrackingCIQBleDelegate" pc="268439998" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="431" parent="globals/LivetrackingCIQBleDelegate" pc="268440016" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="433" parent="globals/LivetrackingCIQBleDelegate" pc="268440028" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="434" parent="globals/LivetrackingCIQBleDelegate" pc="268440054" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="438" parent="globals/LivetrackingCIQBleDelegate" pc="268440063" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="441" parent="globals/LivetrackingCIQBleDelegate" pc="268440071" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="442" parent="globals/LivetrackingCIQBleDelegate" pc="268440083" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="443" parent="globals/LivetrackingCIQBleDelegate" pc="268440095" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="444" parent="globals/LivetrackingCIQBleDelegate" pc="268440104" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="445" parent="globals/LivetrackingCIQBleDelegate" pc="268440113" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="446" parent="globals/LivetrackingCIQBleDelegate" pc="268440122" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="448" parent="globals/LivetrackingCIQBleDelegate" pc="268440130" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="449" parent="globals/LivetrackingCIQBleDelegate" pc="268440148" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="38" lineNum="452" parent="globals/LivetrackingCIQBleDelegate" pc="268440157" symbol="onConnectedStateChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="39" lineNum="506" parent="globals/LivetrackingCIQBleDelegate" pc="268440165" symbol="stopScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="39" lineNum="507" parent="globals/LivetrackingCIQBleDelegate" pc="268440168" symbol="stopScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="39" lineNum="508" parent="globals/LivetrackingCIQBleDelegate" pc="268440177" symbol="stopScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="39" lineNum="511" parent="globals/LivetrackingCIQBleDelegate" pc="268440178" symbol="stopScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="39" lineNum="512" parent="globals/LivetrackingCIQBleDelegate" pc="268440192" symbol="stopScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="39" lineNum="513" parent="globals/LivetrackingCIQBleDelegate" pc="268440201" symbol="stopScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="235" parent="globals/LivetrackingCIQBleDelegate" pc="268440209" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="238" parent="globals/LivetrackingCIQBleDelegate" pc="268440212" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="239" parent="globals/LivetrackingCIQBleDelegate" pc="268440228" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="240" parent="globals/LivetrackingCIQBleDelegate" pc="268440246" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="241" parent="globals/LivetrackingCIQBleDelegate" pc="268440262" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="244" parent="globals/LivetrackingCIQBleDelegate" pc="268440269" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="247" parent="globals/LivetrackingCIQBleDelegate" pc="268440285" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="248" parent="globals/LivetrackingCIQBleDelegate" pc="268440302" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="250" parent="globals/LivetrackingCIQBleDelegate" pc="268440303" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="251" parent="globals/LivetrackingCIQBleDelegate" pc="268440312" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="253" parent="globals/LivetrackingCIQBleDelegate" pc="268440313" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="254" parent="globals/LivetrackingCIQBleDelegate" pc="268440323" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="257" parent="globals/LivetrackingCIQBleDelegate" pc="268440324" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="258" parent="globals/LivetrackingCIQBleDelegate" pc="268440336" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="259" parent="globals/LivetrackingCIQBleDelegate" pc="268440346" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="260" parent="globals/LivetrackingCIQBleDelegate" pc="268440353" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="264" parent="globals/LivetrackingCIQBleDelegate" pc="268440356" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="266" parent="globals/LivetrackingCIQBleDelegate" pc="268440384" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="267" parent="globals/LivetrackingCIQBleDelegate" pc="268440405" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="270" parent="globals/LivetrackingCIQBleDelegate" pc="268440414" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="274" parent="globals/LivetrackingCIQBleDelegate" pc="268440422" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="275" parent="globals/LivetrackingCIQBleDelegate" pc="268440432" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="276" parent="globals/LivetrackingCIQBleDelegate" pc="268440439" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="280" parent="globals/LivetrackingCIQBleDelegate" pc="268440440" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="281" parent="globals/LivetrackingCIQBleDelegate" pc="268440450" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="282" parent="globals/LivetrackingCIQBleDelegate" pc="268440457" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="284" parent="globals/LivetrackingCIQBleDelegate" pc="268440460" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="285" parent="globals/LivetrackingCIQBleDelegate" pc="268440468" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="286" parent="globals/LivetrackingCIQBleDelegate" pc="268440477" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="287" parent="globals/LivetrackingCIQBleDelegate" pc="268440484" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="290" parent="globals/LivetrackingCIQBleDelegate" pc="268440496" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="291" parent="globals/LivetrackingCIQBleDelegate" pc="268440506" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="292" parent="globals/LivetrackingCIQBleDelegate" pc="268440513" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="40" lineNum="298" parent="globals/LivetrackingCIQBleDelegate" pc="268440522" symbol="tick"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="556" parent="globals/LivetrackingCIQBleDelegate" pc="268440535" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="557" parent="globals/LivetrackingCIQBleDelegate" pc="268440538" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="558" parent="globals/LivetrackingCIQBleDelegate" pc="268440546" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="561" parent="globals/LivetrackingCIQBleDelegate" pc="268440547" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="562" parent="globals/LivetrackingCIQBleDelegate" pc="268440562" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="563" parent="globals/LivetrackingCIQBleDelegate" pc="268440570" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="564" parent="globals/LivetrackingCIQBleDelegate" pc="268440583" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="41" lineNum="565" parent="globals/LivetrackingCIQBleDelegate" pc="268440587" symbol="startScan"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="42" lineNum="382" parent="globals/LivetrackingCIQBleDelegate" pc="268440603" symbol="getOptional"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="42" lineNum="383" parent="globals/LivetrackingCIQBleDelegate" pc="268440605" symbol="getOptional"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="42" lineNum="384" parent="globals/LivetrackingCIQBleDelegate" pc="268440621" symbol="getOptional"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="42" lineNum="386" parent="globals/LivetrackingCIQBleDelegate" pc="268440627" symbol="getOptional"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="217" parent="globals/LivetrackingCIQBleDelegate" pc="268440633" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="219" parent="globals/LivetrackingCIQBleDelegate" pc="268440636" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="220" parent="globals/LivetrackingCIQBleDelegate" pc="268440644" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="221" parent="globals/LivetrackingCIQBleDelegate" pc="268440658" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="223" parent="globals/LivetrackingCIQBleDelegate" pc="268440666" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="224" parent="globals/LivetrackingCIQBleDelegate" pc="268440675" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="225" parent="globals/LivetrackingCIQBleDelegate" pc="268440693" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="43" lineNum="227" parent="globals/LivetrackingCIQBleDelegate" pc="268440702" symbol="stop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="44" lineNum="183" parent="globals/LivetrackingCIQBleDelegate" pc="268440710" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="44" lineNum="184" parent="globals/LivetrackingCIQBleDelegate" pc="268440712" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="44" lineNum="185" parent="globals/LivetrackingCIQBleDelegate" pc="268440724" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="44" lineNum="186" parent="globals/LivetrackingCIQBleDelegate" pc="268440748" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="44" lineNum="187" parent="globals/LivetrackingCIQBleDelegate" pc="268440772" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="580" parent="globals/LivetrackingCIQBleDelegate" pc="268440780" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="581" parent="globals/LivetrackingCIQBleDelegate" pc="268440783" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="583" parent="globals/LivetrackingCIQBleDelegate" pc="268440800" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="584" parent="globals/LivetrackingCIQBleDelegate" pc="268440809" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="587" parent="globals/LivetrackingCIQBleDelegate" pc="268440834" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="588" parent="globals/LivetrackingCIQBleDelegate" pc="268440840" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="590" parent="globals/LivetrackingCIQBleDelegate" pc="268440842" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="591" parent="globals/LivetrackingCIQBleDelegate" pc="268440851" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="592" parent="globals/LivetrackingCIQBleDelegate" pc="268440857" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="593" parent="globals/LivetrackingCIQBleDelegate" pc="268440873" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="594" parent="globals/LivetrackingCIQBleDelegate" pc="268440891" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQBleDelegate.mc" id="45" lineNum="598" parent="globals/LivetrackingCIQBleDelegate" pc="268440906" symbol="isOurTracker"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="46" lineNum="17" parent="globals/LivetrackingCIQApp" pc="268440908" symbol="onStart"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="46" lineNum="20" parent="globals/LivetrackingCIQApp" pc="268440910" symbol="onStart"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="46" lineNum="21" parent="globals/LivetrackingCIQApp" pc="268440925" symbol="onStart"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="46" lineNum="22" parent="globals/LivetrackingCIQApp" pc="268440950" symbol="onStart"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="46" lineNum="23" parent="globals/LivetrackingCIQApp" pc="268440968" symbol="onStart"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="47" lineNum="37" parent="globals/LivetrackingCIQApp" pc="268440981" symbol="onSettingsChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="47" lineNum="38" parent="globals/LivetrackingCIQApp" pc="268440983" symbol="onSettingsChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="47" lineNum="39" parent="globals/LivetrackingCIQApp" pc="268440992" symbol="onSettingsChanged"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="48" lineNum="44" parent="globals/LivetrackingCIQApp" pc="268441005" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="48" lineNum="45" parent="globals/LivetrackingCIQApp" pc="268441007" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="49" lineNum="12" parent="globals/LivetrackingCIQApp" pc="268441038" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="49" lineNum="13" parent="globals/LivetrackingCIQApp" pc="268441040" symbol="initialize"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="50" lineNum="28" parent="globals/LivetrackingCIQApp" pc="268441053" symbol="onStop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="50" lineNum="29" parent="globals/LivetrackingCIQApp" pc="268441055" symbol="onStop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="50" lineNum="30" parent="globals/LivetrackingCIQApp" pc="268441064" symbol="onStop"/>
+        <entry filename="C:\\Users\\User\\Desktop\\Livetracking\\Garmin\\LivetrackingCIQ\\source\\LivetrackingCIQApp.mc" id="50" lineNum="31" parent="globals/LivetrackingCIQApp" pc="268441076" symbol="onStop"/>
+    </pcToLineNum>
+    <symbolTable>
+        <entry id="33" method="true" symbol="getOptional"/>
+        <entry id="8388639" module="true" symbol="Graphics"/>
+        <entry field="true" id="54" symbol="mWindowStartMs"/>
+        <entry id="27" method="true" symbol="trailSpaces"/>
+        <entry id="8388632" method="true" symbol="&lt;init&gt;"/>
+        <entry id="30" method="true" symbol="flushRx"/>
+        <entry field="true" id="50" symbol="mSearchStartMs"/>
+        <entry id="8389683" method="true" symbol="onSettingsChanged"/>
+        <entry id="37" method="true" symbol="loadBinding"/>
+        <entry id="28" method="true" symbol="beginSearch"/>
+        <entry field="true" id="44" symbol="mNumeric"/>
+        <entry field="true" id="53" symbol="mValue"/>
+        <entry id="13" method="true" symbol="gapUnit"/>
+        <entry id="10" method="true" symbol="fitContent"/>
+        <entry id="15" method="true" symbol="leadSpaces"/>
+        <entry field="true" id="8388611" module="true" symbol="Toybox"/>
+        <entry id="8391256" method="true" symbol="onScanResults"/>
+        <entry id="29" method="true" symbol="bytesToLines"/>
+        <entry field="true" id="62" symbol="AppName"/>
+        <entry id="8391255" method="true" symbol="onScanStateChange"/>
+        <entry id="8391262" method="true" symbol="onDescriptorWrite"/>
+        <entry id="35" method="true" symbol="injectTestText"/>
+        <entry id="4" module="true" symbol="globals/Rez/Strings"/>
+        <entry field="true" id="40" symbol="mDevice"/>
+        <entry id="8388631" module="true" symbol="Activity"/>
+        <entry id="8388648" module="true" symbol="WatchUi"/>
+        <entry field="true" id="19" symbol="mCacheDrop"/>
+        <entry id="2" module="true" symbol="globals/Rez"/>
+        <entry id="8391340" symbol="descriptors"/>
+        <entry id="8389124" method="true" symbol="onUpdate"/>
+        <entry field="true" id="64" symbol="SettingTrackerIdPrompt"/>
+        <entry id="7" object="true" symbol="LivetrackingCIQView"/>
+        <entry id="26" method="true" symbol="segments"/>
+        <entry id="8391263" method="true" symbol="onCharacteristicChanged"/>
+        <entry id="8388771" module="true" object="true" symbol="Drawables"/>
+        <entry id="8391258" method="true" symbol="onConnectedStateChanged"/>
+        <entry field="true" id="48" symbol="mRxMs"/>
+        <entry id="36" method="true" symbol="isOurTracker"/>
+        <entry id="8389275" method="true" symbol="getApp"/>
+        <entry field="true" id="20" symbol="mCacheKey"/>
+        <entry id="58" method="true" symbol="subscribe"/>
+        <entry id="8389137" method="true" symbol="compute"/>
+        <entry field="true" id="63" symbol="SettingTrackerIdLabel"/>
+        <entry field="true" id="43" symbol="mLines"/>
+        <entry id="57" method="true" symbol="stopScan"/>
+        <entry id="59" method="true" symbol="tick"/>
+        <entry field="true" id="38" symbol="mBoundId"/>
+        <entry id="16" method="true" symbol="lineHeight"/>
+        <entry field="true" id="18" symbol="mBle"/>
+        <entry field="true" id="39" symbol="mCharUuid"/>
+        <entry field="true" id="47" symbol="mRxBuf"/>
+        <entry id="3" module="true" symbol="globals/Rez/Drawables"/>
+        <entry id="31" method="true" symbol="getLines"/>
+        <entry field="true" id="49" symbol="mScanning"/>
+        <entry id="34" method="true" symbol="idFromName"/>
+        <entry id="23" symbol="mOptFonts"/>
+        <entry id="8388699" method="true" symbol="stop"/>
+        <entry field="true" id="41" symbol="mForced"/>
+        <entry field="true" id="42" symbol="mLastRxMs"/>
+        <entry id="8388644" module="true" symbol="System"/>
+        <entry id="8391257" method="true" symbol="onProfileRegister"/>
+        <entry id="17" method="true" symbol="lineWidth"/>
+        <entry id="8388769" module="true" object="true" symbol="Rez"/>
+        <entry id="32" method="true" symbol="getNumeric"/>
+        <entry id="8388640" module="true" symbol="Lang"/>
+        <entry field="true" id="61" symbol="LauncherIcon"/>
+        <entry id="8388610" symbol="statics"/>
+        <entry id="11" method="true" symbol="fitsAll"/>
+        <entry field="true" id="52" symbol="mStatus"/>
+        <entry field="true" id="46" symbol="mPendingId"/>
+        <entry id="8389350" module="true" symbol="globals"/>
+        <entry id="22" symbol="mNumFonts"/>
+        <entry id="8391334" symbol="uuid"/>
+        <entry id="24" symbol="mTxtFonts"/>
+        <entry id="8388770" module="true" object="true" symbol="Strings"/>
+        <entry id="8391193" module="true" symbol="BluetoothLowEnergy"/>
+        <entry id="8388702" method="true" symbol="initialize"/>
+        <entry id="8389279" method="true" symbol="onStart"/>
+        <entry id="8" method="true" symbol="applyDrop"/>
+        <entry field="true" id="21" symbol="mCacheLevel"/>
+        <entry id="8389280" method="true" symbol="getInitialView"/>
+        <entry id="8389281" method="true" symbol="onStop"/>
+        <entry id="9" method="true" symbol="drawMixed"/>
+        <entry id="55" method="true" symbol="reloadSettings"/>
+        <entry id="8391341" symbol="characteristics"/>
+        <entry field="true" id="45" symbol="mOptional"/>
+        <entry id="12" method="true" symbol="fontForSeg"/>
+        <entry id="8388698" method="true" symbol="start"/>
+        <entry id="56" method="true" symbol="startScan"/>
+        <entry field="true" id="51" symbol="mServiceUuid"/>
+        <entry id="6" object="true" symbol="LivetrackingCIQBleDelegate"/>
+        <entry id="25" method="true" symbol="segWidth"/>
+        <entry id="14" method="true" symbol="hasDigits"/>
+        <entry id="5" object="true" symbol="LivetrackingCIQApp"/>
+        <entry id="8388635" module="true" symbol="Application"/>
+        <entry field="true" id="60" symbol="mBleDelegate"/>
+    </symbolTable>
+    <localVars>
+        <entry arg="true" endPc="268435627" name="dc" stackId="1" startPc="268435606"/>
+        <entry arg="true" endPc="268435627" name="f" stackId="2" startPc="268435606"/>
+        <entry arg="true" endPc="268435833" name="dc" stackId="1" startPc="268435628"/>
+        <entry arg="true" endPc="268435833" name="lines" stackId="2" startPc="268435628"/>
+        <entry arg="true" endPc="268435833" name="nums" stackId="3" startPc="268435628"/>
+        <entry arg="true" endPc="268435833" name="opts" stackId="4" startPc="268435628"/>
+        <entry arg="true" endPc="268435833" name="maxW" stackId="5" startPc="268435628"/>
+        <entry arg="true" endPc="268435833" name="maxH" stackId="6" startPc="268435628"/>
+        <entry endPc="268435802" name="drop" stackId="7" startPc="268435642"/>
+        <entry endPc="268435792" name="v" stackId="8" startPc="268435642"/>
+        <entry endPc="268435792" name="vl" stackId="9" startPc="268435642"/>
+        <entry endPc="268435792" name="vn" stackId="10" startPc="268435642"/>
+        <entry endPc="268435792" name="vo" stackId="11" startPc="268435642"/>
+        <entry endPc="268435792" name="start" stackId="12" startPc="268435642"/>
+        <entry endPc="268435792" name="lvl" stackId="13" startPc="268435739"/>
+        <entry arg="true" endPc="268435934" name="txt" stackId="1" startPc="268435834"/>
+        <entry arg="true" endPc="268436131" name="dc" stackId="1" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="cx" stackId="2" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="y" stackId="3" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="line" stackId="4" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="isNum" stackId="5" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="isOpt" stackId="6" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="lvl" stackId="7" startPc="268435935"/>
+        <entry arg="true" endPc="268436131" name="lh" stackId="8" startPc="268435935"/>
+        <entry endPc="268436130" name="segs" stackId="9" startPc="268435938"/>
+        <entry endPc="268436130" name="total" stackId="10" startPc="268435938"/>
+        <entry endPc="268436130" name="x" stackId="11" startPc="268435938"/>
+        <entry endPc="268436130" name="i" stackId="12" startPc="268436000"/>
+        <entry endPc="268436120" name="seg" stackId="13" startPc="268436000"/>
+        <entry endPc="268436120" name="f" stackId="14" startPc="268436000"/>
+        <entry endPc="268436120" name="txt" stackId="15" startPc="268436000"/>
+        <entry endPc="268436120" name="dy" stackId="16" startPc="268436000"/>
+        <entry endPc="268436120" name="lg" stackId="17" startPc="268436000"/>
+        <entry arg="true" endPc="268436202" name="dc" stackId="1" startPc="268436132"/>
+        <entry arg="true" endPc="268436202" name="txt" stackId="2" startPc="268436132"/>
+        <entry arg="true" endPc="268436202" name="f" stackId="3" startPc="268436132"/>
+        <entry arg="true" endPc="268436316" name="lines" stackId="1" startPc="268436203"/>
+        <entry arg="true" endPc="268436316" name="opts" stackId="2" startPc="268436203"/>
+        <entry endPc="268436314" name="i" stackId="3" startPc="268436222"/>
+        <entry endPc="268436304" name="ch" stackId="4" startPc="268436222"/>
+        <entry endPc="268436304" name="j" stackId="5" startPc="268436264"/>
+        <entry endPc="268436294" name="cv" stackId="6" startPc="268436264"/>
+        <entry arg="true" endPc="268436410" name="dc" stackId="1" startPc="268436317"/>
+        <entry arg="true" endPc="268436410" name="line" stackId="2" startPc="268436317"/>
+        <entry arg="true" endPc="268436410" name="isNum" stackId="3" startPc="268436317"/>
+        <entry arg="true" endPc="268436410" name="isOpt" stackId="4" startPc="268436317"/>
+        <entry arg="true" endPc="268436410" name="lvl" stackId="5" startPc="268436317"/>
+        <entry endPc="268436407" name="i" stackId="8" startPc="268436355"/>
+        <entry endPc="268436397" name="seg" stackId="9" startPc="268436355"/>
+        <entry arg="true" endPc="268436671" name="line" stackId="1" startPc="268436411"/>
+        <entry arg="true" endPc="268436671" name="isNum" stackId="2" startPc="268436411"/>
+        <entry arg="true" endPc="268436671" name="isOpt" stackId="3" startPc="268436411"/>
+        <entry endPc="268436632" name="i" stackId="9" startPc="268436518"/>
+        <entry endPc="268436622" name="c" stackId="10" startPc="268436518"/>
+        <entry endPc="268436622" name="cv" stackId="11" startPc="268436518"/>
+        <entry endPc="268436622" name="thisNum" stackId="12" startPc="268436518"/>
+        <entry arg="true" endPc="268436695" name="info" stackId="1" startPc="268436672"/>
+        <entry arg="true" endPc="268436793" name="dc" stackId="1" startPc="268436696"/>
+        <entry arg="true" endPc="268436793" name="line" stackId="2" startPc="268436696"/>
+        <entry arg="true" endPc="268436793" name="isNum" stackId="3" startPc="268436696"/>
+        <entry arg="true" endPc="268436793" name="isOpt" stackId="4" startPc="268436696"/>
+        <entry arg="true" endPc="268436793" name="lvl" stackId="5" startPc="268436696"/>
+        <entry endPc="268436790" name="i" stackId="8" startPc="268436734"/>
+        <entry endPc="268436780" name="seg" stackId="9" startPc="268436734"/>
+        <entry endPc="268436780" name="fh" stackId="10" startPc="268436734"/>
+        <entry arg="true" endPc="268436817" name="bleDelegate" stackId="1" startPc="268436794"/>
+        <entry arg="true" endPc="268436860" name="segIsNum" stackId="1" startPc="268436818"/>
+        <entry arg="true" endPc="268436860" name="isOpt" stackId="2" startPc="268436818"/>
+        <entry arg="true" endPc="268436860" name="lvl" stackId="3" startPc="268436818"/>
+        <entry arg="true" endPc="268437508" name="dc" stackId="1" startPc="268436861"/>
+        <entry endPc="268437507" name="bg" stackId="2" startPc="268436864"/>
+        <entry endPc="268437507" name="fg" stackId="3" startPc="268436864"/>
+        <entry endPc="268437507" name="lines" stackId="4" startPc="268436864"/>
+        <entry endPc="268437507" name="nums" stackId="5" startPc="268436864"/>
+        <entry endPc="268437507" name="opts" stackId="6" startPc="268436864"/>
+        <entry endPc="268437507" name="w" stackId="7" startPc="268436864"/>
+        <entry endPc="268437507" name="h" stackId="8" startPc="268436864"/>
+        <entry endPc="268437507" name="padX" stackId="9" startPc="268436864"/>
+        <entry endPc="268437507" name="padY" stackId="10" startPc="268436864"/>
+        <entry endPc="268437507" name="maxW" stackId="11" startPc="268436864"/>
+        <entry endPc="268437507" name="maxH" stackId="12" startPc="268436864"/>
+        <entry endPc="268437507" name="key" stackId="13" startPc="268436864"/>
+        <entry endPc="268437212" name="i" stackId="14" startPc="268437187"/>
+        <entry endPc="268437507" name="shown" stackId="15" startPc="268436864"/>
+        <entry endPc="268437507" name="sl" stackId="16" startPc="268436864"/>
+        <entry endPc="268437507" name="sn" stackId="17" startPc="268436864"/>
+        <entry endPc="268437507" name="so" stackId="18" startPc="268436864"/>
+        <entry endPc="268437507" name="n" stackId="19" startPc="268436864"/>
+        <entry endPc="268437507" name="total" stackId="20" startPc="268436864"/>
+        <entry endPc="268437387" name="j" stackId="21" startPc="268437343"/>
+        <entry endPc="268437507" name="y" stackId="22" startPc="268436864"/>
+        <entry endPc="268437507" name="j" stackId="23" startPc="268437419"/>
+        <entry endPc="268437497" name="lh" stackId="24" startPc="268437419"/>
+        <entry arg="true" endPc="268437795" name="lines" stackId="1" startPc="268437509"/>
+        <entry arg="true" endPc="268437795" name="nums" stackId="2" startPc="268437509"/>
+        <entry arg="true" endPc="268437795" name="opts" stackId="3" startPc="268437509"/>
+        <entry arg="true" endPc="268437795" name="drop" stackId="4" startPc="268437509"/>
+        <entry endPc="268437634" name="i" stackId="8" startPc="268437567"/>
+        <entry arg="true" endPc="268437901" name="dc" stackId="1" startPc="268437796"/>
+        <entry arg="true" endPc="268437901" name="lines" stackId="2" startPc="268437796"/>
+        <entry arg="true" endPc="268437901" name="nums" stackId="3" startPc="268437796"/>
+        <entry arg="true" endPc="268437901" name="opts" stackId="4" startPc="268437796"/>
+        <entry arg="true" endPc="268437901" name="lvl" stackId="5" startPc="268437796"/>
+        <entry arg="true" endPc="268437901" name="maxW" stackId="6" startPc="268437796"/>
+        <entry arg="true" endPc="268437901" name="maxH" stackId="7" startPc="268437796"/>
+        <entry endPc="268437895" name="j" stackId="9" startPc="268437818"/>
+        <entry endPc="268437885" name="txt" stackId="10" startPc="268437818"/>
+        <entry arg="true" endPc="268437962" name="txt" stackId="1" startPc="268437902"/>
+        <entry endPc="268438001" name="e" stackId="2" startPc="268437991"/>
+        <entry endPc="268438086" name="e" stackId="3" startPc="268438073"/>
+        <entry arg="true" endPc="268438461" name="b" stackId="1" startPc="268438089"/>
+        <entry endPc="268438460" name="lines" stackId="2" startPc="268438092"/>
+        <entry endPc="268438460" name="nums" stackId="3" startPc="268438092"/>
+        <entry endPc="268438460" name="opts" stackId="4" startPc="268438092"/>
+        <entry endPc="268438460" name="cur" stackId="5" startPc="268438092"/>
+        <entry endPc="268438460" name="raw" stackId="6" startPc="268438092"/>
+        <entry endPc="268438460" name="curNum" stackId="7" startPc="268438092"/>
+        <entry endPc="268438460" name="curOpt" stackId="8" startPc="268438092"/>
+        <entry endPc="268438343" name="i" stackId="9" startPc="268438140"/>
+        <entry endPc="268438333" name="c" stackId="10" startPc="268438140"/>
+        <entry endPc="268438333" name="ch" stackId="11" startPc="268438286"/>
+        <entry endPc="268438538" name="i" stackId="2" startPc="268438511"/>
+        <entry endPc="268438703" name="now" stackId="1" startPc="268438667"/>
+        <entry endPc="268438825" name="i" stackId="3" startPc="268438798"/>
+        <entry arg="true" endPc="268438928" name="uuid" stackId="1" startPc="268438879"/>
+        <entry arg="true" endPc="268438928" name="status" stackId="2" startPc="268438879"/>
+        <entry arg="true" endPc="268439021" name="name" stackId="1" startPc="268438929"/>
+        <entry arg="true" endPc="268439149" name="scanResults" stackId="1" startPc="268439022"/>
+        <entry endPc="268439148" name="r" stackId="2" startPc="268439040"/>
+        <entry endPc="268439135" name="e" stackId="3" startPc="268439111"/>
+        <entry endPc="268439181" name="e" stackId="1" startPc="268439174"/>
+        <entry endPc="268439243" name="e" stackId="2" startPc="268439236"/>
+        <entry arg="true" endPc="268439482" name="characteristic" stackId="1" startPc="268439300"/>
+        <entry arg="true" endPc="268439482" name="value" stackId="2" startPc="268439300"/>
+        <entry endPc="268439481" name="i" stackId="3" startPc="268439344"/>
+        <entry endPc="268439471" name="c" stackId="4" startPc="268439344"/>
+        <entry endPc="268439655" name="e" stackId="4" startPc="268439638"/>
+        <entry arg="true" endPc="268439700" name="descriptor" stackId="1" startPc="268439658"/>
+        <entry arg="true" endPc="268439700" name="status" stackId="2" startPc="268439658"/>
+        <entry endPc="268439801" name="u" stackId="1" startPc="268439704"/>
+        <entry endPc="268439801" name="ba" stackId="2" startPc="268439704"/>
+        <entry endPc="268439761" name="i" stackId="3" startPc="268439737"/>
+        <entry endPc="268439949" name="profile" stackId="1" startPc="268439806"/>
+        <entry endPc="268439925" name="e" stackId="2" startPc="268439906"/>
+        <entry arg="true" endPc="268439965" name="scanState" stackId="1" startPc="268439951"/>
+        <entry arg="true" endPc="268439965" name="status" stackId="2" startPc="268439951"/>
+        <entry arg="true" endPc="268440164" name="device" stackId="1" startPc="268439966"/>
+        <entry arg="true" endPc="268440164" name="state" stackId="2" startPc="268439966"/>
+        <entry endPc="268440061" name="e" stackId="3" startPc="268440054"/>
+        <entry endPc="268440155" name="e" stackId="4" startPc="268440148"/>
+        <entry endPc="268440206" name="e" stackId="1" startPc="268440201"/>
+        <entry endPc="268440268" name="wait" stackId="1" startPc="268440228"/>
+        <entry endPc="268440533" name="now" stackId="2" startPc="268440212"/>
+        <entry endPc="268440533" name="searching" stackId="3" startPc="268440212"/>
+        <entry endPc="268440412" name="e" stackId="4" startPc="268440405"/>
+        <entry endPc="268440533" name="inWindow" stackId="5" startPc="268440212"/>
+        <entry endPc="268440600" name="e" stackId="1" startPc="268440583"/>
+        <entry endPc="268440707" name="e" stackId="1" startPc="268440702"/>
+        <entry arg="true" endPc="268440907" name="r" stackId="1" startPc="268440780"/>
+        <entry arg="true" endPc="268440980" name="state" stackId="1" startPc="268440908"/>
+        <entry arg="true" endPc="268441084" name="state" stackId="1" startPc="268441053"/>
+    </localVars>
+    <deviceInfo deviceVersion="2fd6344bcda9034f64198ee92abf3f1dc774e081" partNumber="006-B4061-00"/>
+    <annotations>
+        <annotationEntry annotation="initialized" class="Drawables" module="globals/Rez" symbol="LauncherIcon"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="SettingTrackerIdLabel"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="SettingTrackerIdPrompt"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="AppName"/>
+    </annotations>
+    <dataEntryOffsetMappings>
+        <dataEntry label="globals" offset="49" parentId="" symbolId="globals" type="module"/>
+        <dataEntry label="globals/Rez" offset="125" parentId="globals" symbolId="Rez" type="module"/>
+        <dataEntry label="globals/LivetrackingCIQView" offset="169" parentId="globals" symbolId="LivetrackingCIQView" type="class"/>
+        <dataEntry label="globals/LivetrackingCIQBleDelegate" offset="411" parentId="globals" symbolId="LivetrackingCIQBleDelegate" type="class"/>
+        <dataEntry label="globals/LivetrackingCIQApp" offset="815" parentId="globals" symbolId="LivetrackingCIQApp" type="class"/>
+        <dataEntry label="globals/Rez/Drawables" offset="904" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="939" parentId="Rez" symbolId="Strings" type="module"/>
+    </dataEntryOffsetMappings>
+    <functions>
+        <functionEntry accessMode="public" endPc="268435476" name="&lt;init&gt;" parent="Rez" startPc="268435457">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435497" name="getApp" startPc="268435477">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435545" name="&lt;init&gt;" parent="LivetrackingCIQView" startPc="268435498">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435593" name="&lt;init&gt;" parent="LivetrackingCIQBleDelegate" startPc="268435546">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435605" name="&lt;init&gt;" parent="LivetrackingCIQApp" startPc="268435594">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Drawables">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Strings">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268435627" name="gapUnit" parent="LivetrackingCIQView" startPc="268435606">
+            <param id="dc"/>
+            <param id="f"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268435833" name="fitContent" parent="LivetrackingCIQView" startPc="268435628">
+            <param id="dc"/>
+            <param id="lines"/>
+            <param id="nums"/>
+            <param id="opts"/>
+            <param id="maxW"/>
+            <param id="maxH"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268435934" name="trailSpaces" parent="LivetrackingCIQView" startPc="268435834">
+            <param id="txt"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436131" name="drawMixed" parent="LivetrackingCIQView" startPc="268435935">
+            <param id="dc"/>
+            <param id="cx"/>
+            <param id="y"/>
+            <param id="line"/>
+            <param id="isNum"/>
+            <param id="isOpt"/>
+            <param id="lvl"/>
+            <param id="lh"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436202" name="segWidth" parent="LivetrackingCIQView" startPc="268436132">
+            <param id="dc"/>
+            <param id="txt"/>
+            <param id="f"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436316" name="hasDigits" parent="LivetrackingCIQView" startPc="268436203">
+            <param id="lines"/>
+            <param id="opts"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436410" name="lineWidth" parent="LivetrackingCIQView" startPc="268436317">
+            <param id="dc"/>
+            <param id="line"/>
+            <param id="isNum"/>
+            <param id="isOpt"/>
+            <param id="lvl"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436671" name="segments" parent="LivetrackingCIQView" startPc="268436411">
+            <param id="line"/>
+            <param id="isNum"/>
+            <param id="isOpt"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436695" name="compute" parent="LivetrackingCIQView" startPc="268436672">
+            <param id="info"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436793" name="lineHeight" parent="LivetrackingCIQView" startPc="268436696">
+            <param id="dc"/>
+            <param id="line"/>
+            <param id="isNum"/>
+            <param id="isOpt"/>
+            <param id="lvl"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436817" name="initialize" parent="LivetrackingCIQView" startPc="268436794">
+            <param id="bleDelegate"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268436860" name="fontForSeg" parent="LivetrackingCIQView" startPc="268436818">
+            <param id="segIsNum"/>
+            <param id="isOpt"/>
+            <param id="lvl"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437508" name="onUpdate" parent="LivetrackingCIQView" startPc="268436861">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268437795" name="applyDrop" parent="LivetrackingCIQView" startPc="268437509">
+            <param id="lines"/>
+            <param id="nums"/>
+            <param id="opts"/>
+            <param id="drop"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268437901" name="fitsAll" parent="LivetrackingCIQView" startPc="268437796">
+            <param id="dc"/>
+            <param id="lines"/>
+            <param id="nums"/>
+            <param id="opts"/>
+            <param id="lvl"/>
+            <param id="maxW"/>
+            <param id="maxH"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268437962" name="leadSpaces" parent="LivetrackingCIQView" startPc="268437902">
+            <param id="txt"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268438088" name="loadBinding" parent="LivetrackingCIQBleDelegate" startPc="268437963">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268438461" name="bytesToLines" parent="LivetrackingCIQBleDelegate" startPc="268438089">
+            <param id="b"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438604" name="getNumeric" parent="LivetrackingCIQBleDelegate" startPc="268438462">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268438663" name="flushRx" parent="LivetrackingCIQBleDelegate" startPc="268438605">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268438704" name="beginSearch" parent="LivetrackingCIQBleDelegate" startPc="268438664">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438878" name="getLines" parent="LivetrackingCIQBleDelegate" startPc="268438705">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438928" name="onProfileRegister" parent="LivetrackingCIQBleDelegate" startPc="268438879">
+            <param id="uuid"/>
+            <param id="status"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268439021" name="idFromName" parent="LivetrackingCIQBleDelegate" startPc="268438929">
+            <param id="name"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439149" name="onScanResults" parent="LivetrackingCIQBleDelegate" startPc="268439022">
+            <param id="scanResults"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439299" name="reloadSettings" parent="LivetrackingCIQBleDelegate" startPc="268439150">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439482" name="onCharacteristicChanged" parent="LivetrackingCIQBleDelegate" startPc="268439300">
+            <param id="characteristic"/>
+            <param id="value"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268439657" name="subscribe" parent="LivetrackingCIQBleDelegate" startPc="268439483">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439700" name="onDescriptorWrite" parent="LivetrackingCIQBleDelegate" startPc="268439658">
+            <param id="descriptor"/>
+            <param id="status"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268439802" name="injectTestText" parent="LivetrackingCIQBleDelegate" startPc="268439701">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439950" name="start" parent="LivetrackingCIQBleDelegate" startPc="268439803">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268439965" name="onScanStateChange" parent="LivetrackingCIQBleDelegate" startPc="268439951">
+            <param id="scanState"/>
+            <param id="status"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268440164" name="onConnectedStateChanged" parent="LivetrackingCIQBleDelegate" startPc="268439966">
+            <param id="device"/>
+            <param id="state"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268440208" name="stopScan" parent="LivetrackingCIQBleDelegate" startPc="268440165">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268440534" name="tick" parent="LivetrackingCIQBleDelegate" startPc="268440209">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268440602" name="startScan" parent="LivetrackingCIQBleDelegate" startPc="268440535">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268440632" name="getOptional" parent="LivetrackingCIQBleDelegate" startPc="268440603">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268440709" name="stop" parent="LivetrackingCIQBleDelegate" startPc="268440633">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268440779" name="initialize" parent="LivetrackingCIQBleDelegate" startPc="268440710">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="protected" endPc="268440907" name="isOurTracker" parent="LivetrackingCIQBleDelegate" startPc="268440780">
+            <param id="r"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268440980" name="onStart" parent="LivetrackingCIQApp" startPc="268440908">
+            <param id="state"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268441004" name="onSettingsChanged" parent="LivetrackingCIQApp" startPc="268440981">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268441037" name="getInitialView" parent="LivetrackingCIQApp" startPc="268441005">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268441052" name="initialize" parent="LivetrackingCIQApp" startPc="268441038">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268441084" name="onStop" parent="LivetrackingCIQApp" startPc="268441053">
+            <param id="state"/>
+            <documentation/>
+        </functionEntry>
+    </functions>
+</debugInfo>

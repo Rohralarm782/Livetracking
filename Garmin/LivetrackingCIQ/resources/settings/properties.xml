@@ -1,0 +1,6 @@
+<properties>
+    <!-- Leerer Standardwert = Automatikbetrieb: der erste erfolgreich
+         verbundene Tracker wird angelernt und dauerhaft gespeichert.
+         Ein Eintrag wie "t2" erzwingt einen bestimmten Tracker. -->
+    <property id="trackerId" type="string"></property>
+</properties>

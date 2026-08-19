@@ -1,0 +1,2702 @@
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 44; @symbol_importdef<0> = [Toybox,44,7,13]; @symbol_importdef<1> = [Activity,44,14,22]; ]
+import Toybox.Activity;
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 45; @symbol_importdef<0> = [Toybox,45,7,13]; @symbol_importdef<1> = [Graphics,45,14,22]; ]
+import Toybox.Graphics;
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 46; @symbol_importdef<0> = [Toybox,46,7,13]; @symbol_importdef<1> = [Lang,46,14,18]; ]
+import Toybox.Lang;
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 47; @symbol_importdef<0> = [Toybox,47,7,13]; @symbol_importdef<1> = [WatchUi,47,14,21]; ]
+import Toybox.WatchUi;
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 53; @position = 6; @symbol_constdef = [LT_TEXT_LEVEL,53,6,19]; ]
+const LT_TEXT_LEVEL = 4;
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 55; @symbol_classdef = [LivetrackingCIQView,55,6,25]; @symbol_extends<0> = [WatchUi,55,34,41]; @symbol_extends<1> = [DataField,55,42,51]; ]
+class LivetrackingCIQView extends WatchUi.DataField {
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 55; ]
+    <init> {
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 61 15 ]
+        %tmp.1 = newa 7;
+        symbol [ Graphics %tmp.2 62 8 16 ];
+        %tmp.2 = getm $.Toybox.Graphics;
+        symbol [ FONT_NUMBER_THAI_HOT %tmp.3 62 17 37 ];
+        %tmp.3 = getv %tmp.2 :FONT_NUMBER_THAI_HOT;
+        %tmp.4 = dup %tmp.1;
+        %tmp.5 = aputv %tmp.4 0 %tmp.3;
+        symbol [ Graphics %tmp.6 63 8 16 ];
+        %tmp.6 = getm $.Toybox.Graphics;
+        symbol [ FONT_NUMBER_HOT %tmp.7 63 17 32 ];
+        %tmp.7 = getv %tmp.6 :FONT_NUMBER_HOT;
+        %tmp.8 = dup %tmp.5;
+        %tmp.9 = aputv %tmp.8 1 %tmp.7;
+        symbol [ Graphics %tmp.10 64 8 16 ];
+        %tmp.10 = getm $.Toybox.Graphics;
+        symbol [ FONT_NUMBER_MEDIUM %tmp.11 64 17 35 ];
+        %tmp.11 = getv %tmp.10 :FONT_NUMBER_MEDIUM;
+        %tmp.12 = dup %tmp.9;
+        %tmp.13 = aputv %tmp.12 2 %tmp.11;
+        symbol [ Graphics %tmp.14 65 8 16 ];
+        %tmp.14 = getm $.Toybox.Graphics;
+        symbol [ FONT_NUMBER_MILD %tmp.15 65 17 33 ];
+        %tmp.15 = getv %tmp.14 :FONT_NUMBER_MILD;
+        %tmp.16 = dup %tmp.13;
+        %tmp.17 = aputv %tmp.16 3 %tmp.15;
+        symbol [ Graphics %tmp.18 66 8 16 ];
+        %tmp.18 = getm $.Toybox.Graphics;
+        symbol [ FONT_LARGE %tmp.19 66 17 27 ];
+        %tmp.19 = getv %tmp.18 :FONT_LARGE;
+        %tmp.20 = dup %tmp.17;
+        %tmp.21 = aputv %tmp.20 4 %tmp.19;
+        symbol [ Graphics %tmp.22 67 8 16 ];
+        %tmp.22 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.23 67 17 28 ];
+        %tmp.23 = getv %tmp.22 :FONT_MEDIUM;
+        %tmp.24 = dup %tmp.21;
+        %tmp.25 = aputv %tmp.24 5 %tmp.23;
+        symbol [ Graphics %tmp.26 68 8 16 ];
+        %tmp.26 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.27 68 17 27 ];
+        %tmp.27 = getv %tmp.26 :FONT_SMALL;
+        %tmp.28 = dup %tmp.25;
+        %tmp.29 = aputv %tmp.28 6 %tmp.27;
+        putv self :mNumFonts %tmp.29;
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 70 15 ]
+        %tmp.30 = newa 7;
+        symbol [ Graphics %tmp.31 71 8 16 ];
+        %tmp.31 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.32 71 17 28 ];
+        %tmp.32 = getv %tmp.31 :FONT_MEDIUM;
+        %tmp.33 = dup %tmp.30;
+        %tmp.34 = aputv %tmp.33 0 %tmp.32;
+        symbol [ Graphics %tmp.35 72 8 16 ];
+        %tmp.35 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.36 72 17 28 ];
+        %tmp.36 = getv %tmp.35 :FONT_MEDIUM;
+        %tmp.37 = dup %tmp.34;
+        %tmp.38 = aputv %tmp.37 1 %tmp.36;
+        symbol [ Graphics %tmp.39 73 8 16 ];
+        %tmp.39 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.40 73 17 27 ];
+        %tmp.40 = getv %tmp.39 :FONT_SMALL;
+        %tmp.41 = dup %tmp.38;
+        %tmp.42 = aputv %tmp.41 2 %tmp.40;
+        symbol [ Graphics %tmp.43 74 8 16 ];
+        %tmp.43 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.44 74 17 27 ];
+        %tmp.44 = getv %tmp.43 :FONT_SMALL;
+        %tmp.45 = dup %tmp.42;
+        %tmp.46 = aputv %tmp.45 3 %tmp.44;
+        symbol [ Graphics %tmp.47 75 8 16 ];
+        %tmp.47 = getm $.Toybox.Graphics;
+        symbol [ FONT_LARGE %tmp.48 75 17 27 ];
+        %tmp.48 = getv %tmp.47 :FONT_LARGE;
+        %tmp.49 = dup %tmp.46;
+        %tmp.50 = aputv %tmp.49 4 %tmp.48;
+        symbol [ Graphics %tmp.51 76 8 16 ];
+        %tmp.51 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.52 76 17 28 ];
+        %tmp.52 = getv %tmp.51 :FONT_MEDIUM;
+        %tmp.53 = dup %tmp.50;
+        %tmp.54 = aputv %tmp.53 5 %tmp.52;
+        symbol [ Graphics %tmp.55 77 8 16 ];
+        %tmp.55 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.56 77 17 27 ];
+        %tmp.56 = getv %tmp.55 :FONT_SMALL;
+        %tmp.57 = dup %tmp.54;
+        %tmp.58 = aputv %tmp.57 6 %tmp.56;
+        putv self :mTxtFonts %tmp.58;
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 81 15 ]
+        %tmp.59 = newa 7;
+        symbol [ Graphics %tmp.60 82 8 16 ];
+        %tmp.60 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.61 82 17 27 ];
+        %tmp.61 = getv %tmp.60 :FONT_SMALL;
+        %tmp.62 = dup %tmp.59;
+        %tmp.63 = aputv %tmp.62 0 %tmp.61;
+        symbol [ Graphics %tmp.64 83 8 16 ];
+        %tmp.64 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.65 83 17 27 ];
+        %tmp.65 = getv %tmp.64 :FONT_SMALL;
+        %tmp.66 = dup %tmp.63;
+        %tmp.67 = aputv %tmp.66 1 %tmp.65;
+        symbol [ Graphics %tmp.68 84 8 16 ];
+        %tmp.68 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.69 84 17 27 ];
+        %tmp.69 = getv %tmp.68 :FONT_SMALL;
+        %tmp.70 = dup %tmp.67;
+        %tmp.71 = aputv %tmp.70 2 %tmp.69;
+        symbol [ Graphics %tmp.72 85 8 16 ];
+        %tmp.72 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.73 85 17 27 ];
+        %tmp.73 = getv %tmp.72 :FONT_SMALL;
+        %tmp.74 = dup %tmp.71;
+        %tmp.75 = aputv %tmp.74 3 %tmp.73;
+        symbol [ Graphics %tmp.76 86 8 16 ];
+        %tmp.76 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.77 86 17 27 ];
+        %tmp.77 = getv %tmp.76 :FONT_SMALL;
+        %tmp.78 = dup %tmp.75;
+        %tmp.79 = aputv %tmp.78 4 %tmp.77;
+        symbol [ Graphics %tmp.80 87 8 16 ];
+        %tmp.80 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.81 87 17 27 ];
+        %tmp.81 = getv %tmp.80 :FONT_SMALL;
+        %tmp.82 = dup %tmp.79;
+        %tmp.83 = aputv %tmp.82 5 %tmp.81;
+        symbol [ Graphics %tmp.84 88 8 16 ];
+        %tmp.84 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.85 88 17 27 ];
+        %tmp.85 = getv %tmp.84 :FONT_SMALL;
+        %tmp.86 = dup %tmp.83;
+        %tmp.87 = aputv %tmp.86 6 %tmp.85;
+        putv self :mOptFonts %tmp.87;
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 55; ]
+    static
+    <init> {
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 57; @position = 15; @symbol_vardef = [mBle,57,15,19]; @symbol_type<0> = [LivetrackingCIQBleDelegate,57,23,49]; ]
+    protected
+    var mBle as LivetrackingCIQBleDelegate or Null = null;
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 61; @position = 15; @symbol_vardef = [mNumFonts,61,15,24]; @symbol_type<0> = [Array,61,28,33]; ]
+    protected
+    var mNumFonts as Array;
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 70; @position = 15; @symbol_vardef = [mTxtFonts,70,15,24]; @symbol_type<0> = [Array,70,28,33]; ]
+    protected
+    var mTxtFonts as Array;
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 81; @position = 15; @symbol_vardef = [mOptFonts,81,15,24]; @symbol_type<0> = [Array,81,28,33]; ]
+    protected
+    var mOptFonts as Array;
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 91; @position = 15; @symbol_vardef = [mCacheKey,91,15,24]; ]
+    protected
+    var mCacheKey = "";
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 92; @position = 15; @symbol_vardef = [mCacheLevel,92,15,26]; ]
+    protected
+    var mCacheLevel = -1;
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 93; @position = 15; @symbol_vardef = [mCacheDrop,93,15,25]; ]
+    protected
+    var mCacheDrop = 0;
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 95; @symbol_functiondef = [initialize,95,13,23]; @symbol_param<0> = [bleDelegate,95,24,35]; @symbol_param<0>_type<0> = [LivetrackingCIQBleDelegate,95,39,65]; ]
+    function initialize(bleDelegate as LivetrackingCIQBleDelegate or Null) as Void {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_95_68_98_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 96 8 ]
+        symbol [ DataField %tmp.2 96 8 17 ];
+        %tmp.2 = getv ? :DataField;
+        symbol [ initialize %tmp.3 96 18 28 ];
+        %tmp.3 = getv function %tmp.2 :initialize;
+        invoke %tmp.2 %tmp.3();
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 97 8 ]
+        %tmp.4 = lgetv %bleDelegate;
+        symbol [ bleDelegate %tmp.4 97 15 26 ];
+        symbol [ mBle ? 97 8 12 ];
+        putv self :mBle %tmp.4;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_95_68_98_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 103; @symbol_functiondef = [compute,103,13,20]; @symbol_param<0> = [info,103,21,25]; @symbol_param<0>_type<0> = [Activity,103,29,37]; @symbol_param<0>_type<1> = [Info,103,38,42]; ]
+    function compute(info as Activity.Info) as Void {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_103_52_107_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 104 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_8_106_8_if_stmt:
+        symbol [ mBle %tmp.2 104 12 16 ];
+        %tmp.2 = getv ? :mBle;
+        %tmp.3 = null;
+        %tmp.4 = ne %tmp.2 %tmp.3;
+        bf %tmp.4 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_8_106_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_8_106_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_26_106_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 105 12 ]
+        symbol [ mBle %tmp.6 105 12 16 ];
+        %tmp.6 = getv ? :mBle;
+        %tmp.7 = as %tmp.6 { (!Null) };
+        symbol [ tick %tmp.8 105 17 21 ];
+        %tmp.8 = getv function %tmp.7 :tick;
+        invoke %tmp.7 %tmp.8();
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_26_106_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_8_106_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_104_8_106_8_if_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_103_52_107_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 109; @symbol_functiondef = [onUpdate,109,13,21]; @symbol_param<0> = [dc,109,22,24]; @symbol_param<0>_type<0> = [Dc,109,28,30]; ]
+    function onUpdate(dc as Dc) as Void {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 110 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %bg.1 = local;
+        symbol [ bg %bg.1 110 12 14 ];
+        %tmp.1 = self;
+        symbol [ getBackgroundColor %tmp.2 110 17 35 ];
+        %tmp.2 = getv function %tmp.1 :getBackgroundColor;
+        %tmp.3 = invoke %tmp.1 %tmp.2();
+        lputv %bg.1 %tmp.3;
+        symbol [ bg %bg.1 110 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 111 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %fg.2 = local;
+        symbol [ fg %fg.2 111 12 14 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_begin:
+        %tmp.4 = lgetv %bg.1;
+        symbol [ bg %tmp.4 111 18 20 ];
+        symbol [ Graphics %tmp.5 111 24 32 ];
+        %tmp.5 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.6 111 33 44 ];
+        %tmp.6 = getv %tmp.5 :COLOR_BLACK;
+        %tmp.7 = eq %tmp.4 %tmp.6;
+        bf %tmp.7 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_else_false;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_true:
+        symbol [ Graphics %tmp.8 111 48 56 ];
+        %tmp.8 = getm $.Toybox.Graphics;
+        symbol [ COLOR_WHITE %tmp.9 111 57 68 ];
+        %tmp.9 = getv %tmp.8 :COLOR_WHITE;
+        push %tmp.9;
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_else_false:
+        symbol [ Graphics %tmp.10 111 71 79 ];
+        %tmp.10 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.11 111 80 91 ];
+        %tmp.11 = getv %tmp.10 :COLOR_BLACK;
+        push %tmp.11;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_end:
+        %tmp.12 = phi [%tmp.7 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_begin] [%tmp.9 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_true] [%tmp.11 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_else_false] [%tmp.12 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_111_17_111_80_end];
+        lputv %fg.2 %tmp.12;
+        symbol [ fg %fg.2 111 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 113 8 ]
+        %tmp.13 = lgetv %dc;
+        symbol [ dc %tmp.13 113 8 10 ];
+        symbol [ setColor %tmp.14 113 11 19 ];
+        %tmp.14 = getv function %tmp.13 :setColor;
+        %tmp.15 = lgetv %bg.1;
+        symbol [ bg %tmp.15 113 20 22 ];
+        %tmp.16 = lgetv %bg.1;
+        symbol [ bg %tmp.16 113 24 26 ];
+        invoke %tmp.13 %tmp.14(%tmp.15, %tmp.16);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 114 8 ]
+        %tmp.17 = lgetv %dc;
+        symbol [ dc %tmp.17 114 8 10 ];
+        symbol [ clear %tmp.18 114 11 16 ];
+        %tmp.18 = getv function %tmp.17 :clear;
+        invoke %tmp.17 %tmp.18();
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 115 8 ]
+        %tmp.19 = lgetv %dc;
+        symbol [ dc %tmp.19 115 8 10 ];
+        symbol [ setColor %tmp.20 115 11 19 ];
+        %tmp.20 = getv function %tmp.19 :setColor;
+        %tmp.21 = lgetv %fg.2;
+        symbol [ fg %tmp.21 115 20 22 ];
+        symbol [ Graphics %tmp.22 115 24 32 ];
+        %tmp.22 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.23 115 33 50 ];
+        %tmp.23 = getv %tmp.22 :COLOR_TRANSPARENT;
+        invoke %tmp.19 %tmp.20(%tmp.21, %tmp.23);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 117 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %lines.3 = local;
+        symbol [ lines %lines.3 117 12 17 ];
+        %tmp.24 = newa 1;
+        %tmp.25 = "NO BLE";
+        %tmp.26 = dup %tmp.24;
+        %tmp.27 = aputv %tmp.26 0 %tmp.25;
+        lputv %lines.3 %tmp.27;
+        symbol [ lines %lines.3 117 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 118 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %nums.4 = local;
+        symbol [ nums %nums.4 118 12 16 ];
+        %tmp.28 = newa 1;
+        %tmp.29 = false;
+        %tmp.30 = dup %tmp.28;
+        %tmp.31 = aputv %tmp.30 0 %tmp.29;
+        lputv %nums.4 %tmp.31;
+        symbol [ nums %nums.4 118 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 119 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %opts.5 = local;
+        symbol [ opts %opts.5 119 12 16 ];
+        %tmp.32 = newa 1;
+        %tmp.33 = false;
+        %tmp.34 = dup %tmp.32;
+        %tmp.35 = aputv %tmp.34 0 %tmp.33;
+        lputv %opts.5 %tmp.35;
+        symbol [ opts %opts.5 119 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 120 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_8_124_8_if_stmt:
+        symbol [ mBle %tmp.37 120 12 16 ];
+        %tmp.37 = getv ? :mBle;
+        %tmp.38 = null;
+        %tmp.39 = ne %tmp.37 %tmp.38;
+        bf %tmp.39 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_8_124_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_8_124_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_26_124_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 121 12 ]
+        symbol [ mBle %tmp.41 121 20 24 ];
+        %tmp.41 = getv ? :mBle;
+        %tmp.42 = as %tmp.41 { (!Null) };
+        symbol [ getLines %tmp.43 121 25 33 ];
+        %tmp.43 = getv function %tmp.42 :getLines;
+        %tmp.44 = invoke %tmp.42 %tmp.43();
+        lputv %lines.3 %tmp.44;
+        symbol [ lines %lines.3 121 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 122 12 ]
+        symbol [ mBle %tmp.46 122 20 24 ];
+        %tmp.46 = getv ? :mBle;
+        symbol [ getNumeric %tmp.47 122 25 35 ];
+        %tmp.47 = getv function %tmp.46 :getNumeric;
+        %tmp.48 = invoke %tmp.46 %tmp.47();
+        lputv %nums.4 %tmp.48;
+        symbol [ nums %nums.4 122 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 123 12 ]
+        symbol [ mBle %tmp.50 123 20 24 ];
+        %tmp.50 = getv ? :mBle;
+        symbol [ getOptional %tmp.51 123 25 36 ];
+        %tmp.51 = getv function %tmp.50 :getOptional;
+        %tmp.52 = invoke %tmp.50 %tmp.51();
+        lputv %opts.5 %tmp.52;
+        symbol [ opts %opts.5 123 12 16 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_26_124_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_8_124_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_120_8_124_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 125 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_8_127_8_if_stmt:
+        %tmp.53 = lgetv %lines.3;
+        symbol [ lines %tmp.53 125 12 17 ];
+        symbol [ size %tmp.54 125 18 22 ];
+        %tmp.54 = getv function %tmp.53 :size;
+        %tmp.55 = invoke %tmp.53 %tmp.54();
+        %tmp.56 = 0;
+        %tmp.57 = lte %tmp.55 %tmp.56;
+        bf %tmp.57 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_8_127_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_8_127_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_31_127_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 126 12 ]
+        ret ?;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_31_127_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_8_127_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_125_8_127_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 129 8 ]
+        while @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_test:
+        %tmp.58 = lgetv %nums.4;
+        symbol [ nums %tmp.58 129 15 19 ];
+        symbol [ size %tmp.59 129 20 24 ];
+        %tmp.59 = getv function %tmp.58 :size;
+        %tmp.60 = invoke %tmp.58 %tmp.59();
+        %tmp.61 = lgetv %lines.3;
+        symbol [ lines %tmp.61 129 29 34 ];
+        symbol [ size %tmp.62 129 35 39 ];
+        %tmp.62 = getv function %tmp.61 :size;
+        %tmp.63 = invoke %tmp.61 %tmp.62();
+        %tmp.64 = lt %tmp.60 %tmp.63;
+        bf %tmp.64 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_43_129_62_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 129 45 ]
+        %tmp.65 = lgetv %nums.4;
+        symbol [ nums %tmp.65 129 45 49 ];
+        symbol [ add %tmp.66 129 50 53 ];
+        %tmp.66 = getv function %tmp.65 :add;
+        %tmp.67 = false;
+        invoke %tmp.65 %tmp.66(%tmp.67);
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_43_129_62_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_129_8_129_62_while_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 130 8 ]
+        while @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_test:
+        %tmp.68 = lgetv %opts.5;
+        symbol [ opts %tmp.68 130 15 19 ];
+        symbol [ size %tmp.69 130 20 24 ];
+        %tmp.69 = getv function %tmp.68 :size;
+        %tmp.70 = invoke %tmp.68 %tmp.69();
+        %tmp.71 = lgetv %lines.3;
+        symbol [ lines %tmp.71 130 29 34 ];
+        symbol [ size %tmp.72 130 35 39 ];
+        %tmp.72 = getv function %tmp.71 :size;
+        %tmp.73 = invoke %tmp.71 %tmp.72();
+        %tmp.74 = lt %tmp.70 %tmp.73;
+        bf %tmp.74 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_43_130_62_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 130 45 ]
+        %tmp.75 = lgetv %opts.5;
+        symbol [ opts %tmp.75 130 45 49 ];
+        symbol [ add %tmp.76 130 50 53 ];
+        %tmp.76 = getv function %tmp.75 :add;
+        %tmp.77 = false;
+        invoke %tmp.75 %tmp.76(%tmp.77);
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_43_130_62_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_130_8_130_62_while_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 132 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %w.6 = local;
+        symbol [ w %w.6 132 12 13 ];
+        %tmp.78 = lgetv %dc;
+        symbol [ dc %tmp.78 132 16 18 ];
+        symbol [ getWidth %tmp.79 132 19 27 ];
+        %tmp.79 = getv function %tmp.78 :getWidth;
+        %tmp.80 = invoke %tmp.78 %tmp.79();
+        lputv %w.6 %tmp.80;
+        symbol [ w %w.6 132 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 133 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %h.7 = local;
+        symbol [ h %h.7 133 12 13 ];
+        %tmp.81 = lgetv %dc;
+        symbol [ dc %tmp.81 133 16 18 ];
+        symbol [ getHeight %tmp.82 133 19 28 ];
+        %tmp.82 = getv function %tmp.81 :getHeight;
+        %tmp.83 = invoke %tmp.81 %tmp.82();
+        lputv %h.7 %tmp.83;
+        symbol [ h %h.7 133 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 134 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %padX.8 = local;
+        symbol [ padX %padX.8 134 12 16 ];
+        %tmp.84 = lgetv %w.6;
+        symbol [ w %tmp.84 134 19 20 ];
+        %tmp.85 = 20;
+        %tmp.86 = div %tmp.84 %tmp.85;
+        lputv %padX.8 %tmp.86;
+        symbol [ padX %padX.8 134 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 135 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %padY.9 = local;
+        symbol [ padY %padY.9 135 12 16 ];
+        %tmp.87 = lgetv %h.7;
+        symbol [ h %tmp.87 135 19 20 ];
+        %tmp.88 = 20;
+        %tmp.89 = div %tmp.87 %tmp.88;
+        lputv %padY.9 %tmp.89;
+        symbol [ padY %padY.9 135 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 136 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_8_136_34_if_stmt:
+        %tmp.90 = lgetv %padX.8;
+        symbol [ padX %tmp.90 136 12 16 ];
+        %tmp.91 = 3;
+        %tmp.92 = lt %tmp.90 %tmp.91;
+        bf %tmp.92 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_8_136_34_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_8_136_34_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_22_136_34_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 136 24 ]
+        %tmp.93 = 3;
+        lputv %padX.8 %tmp.93;
+        symbol [ padX %padX.8 136 24 28 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_22_136_34_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_8_136_34_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_136_8_136_34_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 137 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_8_137_34_if_stmt:
+        %tmp.94 = lgetv %padY.9;
+        symbol [ padY %tmp.94 137 12 16 ];
+        %tmp.95 = 2;
+        %tmp.96 = lt %tmp.94 %tmp.95;
+        bf %tmp.96 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_8_137_34_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_8_137_34_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_22_137_34_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 137 24 ]
+        %tmp.97 = 2;
+        lputv %padY.9 %tmp.97;
+        symbol [ padY %padY.9 137 24 28 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_22_137_34_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_8_137_34_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_137_8_137_34_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 138 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %maxW.10 = local;
+        symbol [ maxW %maxW.10 138 12 16 ];
+        %tmp.98 = lgetv %w.6;
+        symbol [ w %tmp.98 138 19 20 ];
+        %tmp.99 = 2;
+        %tmp.100 = lgetv %padX.8;
+        symbol [ padX %tmp.100 138 27 31 ];
+        %tmp.101 = mul %tmp.99 %tmp.100;
+        %tmp.102 = sub %tmp.98 %tmp.101;
+        lputv %maxW.10 %tmp.102;
+        symbol [ maxW %maxW.10 138 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 139 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %maxH.11 = local;
+        symbol [ maxH %maxH.11 139 12 16 ];
+        %tmp.103 = lgetv %h.7;
+        symbol [ h %tmp.103 139 19 20 ];
+        %tmp.104 = 2;
+        %tmp.105 = lgetv %padY.9;
+        symbol [ padY %tmp.105 139 27 31 ];
+        %tmp.106 = mul %tmp.104 %tmp.105;
+        %tmp.107 = sub %tmp.103 %tmp.106;
+        lputv %maxH.11 %tmp.107;
+        symbol [ maxH %maxH.11 139 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 141 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %key.12 = local;
+        symbol [ key %key.12 141 12 15 ];
+        %tmp.108 = lgetv %w.6;
+        symbol [ w %tmp.108 141 18 19 ];
+        symbol [ toString %tmp.109 141 20 28 ];
+        %tmp.109 = getv function %tmp.108 :toString;
+        %tmp.110 = invoke %tmp.108 %tmp.109();
+        %tmp.111 = "x";
+        %tmp.112 = add %tmp.110 %tmp.111;
+        %tmp.113 = lgetv %h.7;
+        symbol [ h %tmp.113 141 39 40 ];
+        symbol [ toString %tmp.114 141 41 49 ];
+        %tmp.114 = getv function %tmp.113 :toString;
+        %tmp.115 = invoke %tmp.113 %tmp.114();
+        %tmp.116 = add %tmp.112 %tmp.115;
+        lputv %key.12 %tmp.116;
+        symbol [ key %key.12 141 12 15 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 142 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_end" ]
+        %i.13 = local;
+        symbol [ i %i.13 142 17 18 ];
+        %tmp.117 = 0;
+        lputv %i.13 %tmp.117;
+        symbol [ i %i.13 142 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_test:
+        %tmp.118 = lgetv %i.13;
+        symbol [ i %tmp.118 142 24 25 ];
+        %tmp.119 = lgetv %lines.3;
+        symbol [ lines %tmp.119 142 28 33 ];
+        symbol [ size %tmp.120 142 34 38 ];
+        %tmp.120 = getv function %tmp.119 :size;
+        %tmp.121 = invoke %tmp.119 %tmp.120();
+        %tmp.122 = lt %tmp.118 %tmp.121;
+        bf %tmp.122 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_47_144_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 143 12 ]
+        %tmp.123 = lgetv %key.12;
+        symbol [ key %tmp.123 143 18 21 ];
+        %tmp.124 = "|";
+        %tmp.125 = add %tmp.123 %tmp.124;
+        %tmp.126 = lgetv %lines.3;
+        symbol [ lines %tmp.126 143 31 36 ];
+        %tmp.127 = lgetv %i.13;
+        symbol [ i %tmp.127 143 37 38 ];
+        %tmp.128 = agetv %tmp.126 %tmp.127;
+        %tmp.129 = as %tmp.128 String;
+        symbol [ String %tmp.129 143 43 49 ];
+        %tmp.130 = add %tmp.125 %tmp.129;
+        lputv %key.12 %tmp.130;
+        symbol [ key %key.12 143 12 15 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_47_144_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 142 ]
+        %tmp.133 = lgetv %i.13;
+        symbol [ i %tmp.133 142 42 43 ];
+        %tmp.134 = add %tmp.133 1;
+        lputv %i.13 %tmp.134;
+        symbol [ i %i.13 142 42 43 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_142_8_144_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 145 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_8_148_8_if_stmt:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_12_145_52_begin:
+        %tmp.135 = lgetv %key.12;
+        symbol [ key %tmp.135 145 13 16 ];
+        symbol [ equals %tmp.136 145 17 23 ];
+        %tmp.136 = getv function %tmp.135 :equals;
+        symbol [ mCacheKey %tmp.138 145 24 33 ];
+        %tmp.138 = getv ? :mCacheKey;
+        %tmp.139 = invoke %tmp.135 %tmp.136(%tmp.138);
+        %tmp.140 = not %tmp.139;
+        bt %tmp.140 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_8_148_8_if_true;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_38_145_52_false:
+        symbol [ mCacheLevel %tmp.142 145 38 49 ];
+        %tmp.142 = getv ? :mCacheLevel;
+        %tmp.143 = 0;
+        %tmp.144 = lt %tmp.142 %tmp.143;
+        push %tmp.144;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_38_145_52_end:
+        %tmp.145 = phi [%tmp.140 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_12_145_52_begin] [%tmp.144 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_38_145_52_false] [%tmp.145 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_38_145_52_end];
+        bf %tmp.145 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_8_148_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_8_148_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_55_148_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 146 12 ]
+        %tmp.146 = self;
+        symbol [ fitContent %tmp.147 146 12 22 ];
+        %tmp.147 = getv function %tmp.146 :fitContent;
+        %tmp.148 = lgetv %dc;
+        symbol [ dc %tmp.148 146 23 25 ];
+        %tmp.149 = lgetv %lines.3;
+        symbol [ lines %tmp.149 146 27 32 ];
+        %tmp.150 = lgetv %nums.4;
+        symbol [ nums %tmp.150 146 34 38 ];
+        %tmp.151 = lgetv %opts.5;
+        symbol [ opts %tmp.151 146 40 44 ];
+        %tmp.152 = lgetv %maxW.10;
+        symbol [ maxW %tmp.152 146 46 50 ];
+        %tmp.153 = lgetv %maxH.11;
+        symbol [ maxH %tmp.153 146 52 56 ];
+        invoke %tmp.146 %tmp.147(%tmp.148, %tmp.149, %tmp.150, %tmp.151, %tmp.152, %tmp.153);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 147 12 ]
+        %tmp.154 = lgetv %key.12;
+        symbol [ key %tmp.154 147 24 27 ];
+        symbol [ mCacheKey ? 147 12 21 ];
+        putv self :mCacheKey %tmp.154;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_55_148_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_8_148_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_145_8_148_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 150 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %shown.14 = local;
+        symbol [ shown %shown.14 150 12 17 ];
+        %tmp.155 = self;
+        symbol [ applyDrop %tmp.156 150 20 29 ];
+        %tmp.156 = getv function %tmp.155 :applyDrop;
+        %tmp.157 = lgetv %lines.3;
+        symbol [ lines %tmp.157 150 30 35 ];
+        %tmp.158 = lgetv %nums.4;
+        symbol [ nums %tmp.158 150 37 41 ];
+        %tmp.159 = lgetv %opts.5;
+        symbol [ opts %tmp.159 150 43 47 ];
+        symbol [ mCacheDrop %tmp.161 150 49 59 ];
+        %tmp.161 = getv ? :mCacheDrop;
+        %tmp.162 = invoke %tmp.155 %tmp.156(%tmp.157, %tmp.158, %tmp.159, %tmp.161);
+        lputv %shown.14 %tmp.162;
+        symbol [ shown %shown.14 150 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 151 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %sl.15 = local;
+        symbol [ sl %sl.15 151 12 14 ];
+        %tmp.163 = lgetv %shown.14;
+        symbol [ shown %tmp.163 151 17 22 ];
+        %tmp.164 = 0;
+        %tmp.165 = agetv %tmp.163 %tmp.164;
+        lputv %sl.15 %tmp.165;
+        symbol [ sl %sl.15 151 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 152 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %sn.16 = local;
+        symbol [ sn %sn.16 152 12 14 ];
+        %tmp.166 = lgetv %shown.14;
+        symbol [ shown %tmp.166 152 17 22 ];
+        %tmp.167 = 1;
+        %tmp.168 = agetv %tmp.166 %tmp.167;
+        lputv %sn.16 %tmp.168;
+        symbol [ sn %sn.16 152 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 153 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %so.17 = local;
+        symbol [ so %so.17 153 12 14 ];
+        %tmp.169 = lgetv %shown.14;
+        symbol [ shown %tmp.169 153 17 22 ];
+        %tmp.170 = 2;
+        %tmp.171 = agetv %tmp.169 %tmp.170;
+        lputv %so.17 %tmp.171;
+        symbol [ so %so.17 153 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 154 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %n.18 = local;
+        symbol [ n %n.18 154 12 13 ];
+        %tmp.172 = lgetv %sl.15;
+        symbol [ sl %tmp.172 154 17 19 ];
+        symbol [ size %tmp.173 154 20 24 ];
+        %tmp.173 = getv function %tmp.172 :size;
+        %tmp.174 = invoke %tmp.172 %tmp.173();
+        lputv %n.18 %tmp.174;
+        symbol [ n %n.18 154 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 155 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_8_157_8_if_stmt:
+        %tmp.175 = lgetv %n.18;
+        symbol [ n %tmp.175 155 12 13 ];
+        %tmp.176 = 0;
+        %tmp.177 = lte %tmp.175 %tmp.176;
+        bf %tmp.177 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_8_157_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_8_157_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_20_157_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 156 12 ]
+        ret ?;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_20_157_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_8_157_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_155_8_157_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 159 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %total.19 = local;
+        symbol [ total %total.19 159 12 17 ];
+        %tmp.178 = 0;
+        lputv %total.19 %tmp.178;
+        symbol [ total %total.19 159 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 160 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_end" ]
+        %j.20 = local;
+        symbol [ j %j.20 160 17 18 ];
+        %tmp.179 = 0;
+        lputv %j.20 %tmp.179;
+        symbol [ j %j.20 160 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_test:
+        %tmp.180 = lgetv %j.20;
+        symbol [ j %tmp.180 160 24 25 ];
+        %tmp.181 = lgetv %n.18;
+        symbol [ n %tmp.181 160 28 29 ];
+        %tmp.182 = lt %tmp.180 %tmp.181;
+        bf %tmp.182 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_36_162_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 161 12 ]
+        %tmp.183 = lgetv %total.19;
+        symbol [ total %tmp.183 161 20 25 ];
+        %tmp.184 = self;
+        symbol [ lineHeight %tmp.185 161 28 38 ];
+        %tmp.185 = getv function %tmp.184 :lineHeight;
+        %tmp.186 = lgetv %dc;
+        symbol [ dc %tmp.186 161 39 41 ];
+        %tmp.187 = lgetv %sl.15;
+        symbol [ sl %tmp.187 161 43 45 ];
+        %tmp.188 = lgetv %j.20;
+        symbol [ j %tmp.188 161 46 47 ];
+        %tmp.189 = agetv %tmp.187 %tmp.188;
+        %tmp.190 = as %tmp.189 String;
+        symbol [ String %tmp.190 161 52 58 ];
+        %tmp.191 = lgetv %sn.16;
+        symbol [ sn %tmp.191 161 60 62 ];
+        %tmp.192 = lgetv %j.20;
+        symbol [ j %tmp.192 161 63 64 ];
+        %tmp.193 = agetv %tmp.191 %tmp.192;
+        %tmp.194 = lgetv %so.17;
+        symbol [ so %tmp.194 161 67 69 ];
+        %tmp.195 = lgetv %j.20;
+        symbol [ j %tmp.195 161 70 71 ];
+        %tmp.196 = agetv %tmp.194 %tmp.195;
+        symbol [ mCacheLevel %tmp.198 161 74 85 ];
+        %tmp.198 = getv ? :mCacheLevel;
+        %tmp.199 = invoke %tmp.184 %tmp.185(%tmp.186, %tmp.190, %tmp.193, %tmp.196, %tmp.198);
+        %tmp.200 = add %tmp.183 %tmp.199;
+        lputv %total.19 %tmp.200;
+        symbol [ total %total.19 161 12 17 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_36_162_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 160 ]
+        %tmp.203 = lgetv %j.20;
+        symbol [ j %tmp.203 160 31 32 ];
+        %tmp.204 = add %tmp.203 1;
+        lputv %j.20 %tmp.204;
+        symbol [ j %j.20 160 31 32 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_160_8_162_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 164 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop" ]
+        %y.21 = local;
+        symbol [ y %y.21 164 12 13 ];
+        %tmp.205 = lgetv %h.7;
+        symbol [ h %tmp.205 164 17 18 ];
+        %tmp.206 = lgetv %total.19;
+        symbol [ total %tmp.206 164 21 26 ];
+        %tmp.207 = sub %tmp.205 %tmp.206;
+        %tmp.208 = 2;
+        %tmp.209 = div %tmp.207 %tmp.208;
+        lputv %y.21 %tmp.209;
+        symbol [ y %y.21 164 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 165 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_8_165_28_if_stmt:
+        %tmp.210 = lgetv %y.21;
+        symbol [ y %tmp.210 165 12 13 ];
+        %tmp.211 = 0;
+        %tmp.212 = lt %tmp.210 %tmp.211;
+        bf %tmp.212 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_8_165_28_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_8_165_28_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_19_165_28_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 165 21 ]
+        %tmp.213 = 0;
+        lputv %y.21 %tmp.213;
+        symbol [ y %y.21 165 21 22 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_19_165_28_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_8_165_28_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_165_8_165_28_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 166 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_end" ]
+        %j.22 = local;
+        symbol [ j %j.22 166 17 18 ];
+        %tmp.214 = 0;
+        lputv %j.22 %tmp.214;
+        symbol [ j %j.22 166 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_test:
+        %tmp.215 = lgetv %j.22;
+        symbol [ j %tmp.215 166 24 25 ];
+        %tmp.216 = lgetv %n.18;
+        symbol [ n %tmp.216 166 28 29 ];
+        %tmp.217 = lt %tmp.215 %tmp.216;
+        bf %tmp.217 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_36_170_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 167 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_36_170_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_36_170_8_stop" ]
+        %lh.23 = local;
+        symbol [ lh %lh.23 167 16 18 ];
+        %tmp.218 = self;
+        symbol [ lineHeight %tmp.219 167 21 31 ];
+        %tmp.219 = getv function %tmp.218 :lineHeight;
+        %tmp.220 = lgetv %dc;
+        symbol [ dc %tmp.220 167 32 34 ];
+        %tmp.221 = lgetv %sl.15;
+        symbol [ sl %tmp.221 167 36 38 ];
+        %tmp.222 = lgetv %j.22;
+        symbol [ j %tmp.222 167 39 40 ];
+        %tmp.223 = agetv %tmp.221 %tmp.222;
+        %tmp.224 = as %tmp.223 String;
+        symbol [ String %tmp.224 167 45 51 ];
+        %tmp.225 = lgetv %sn.16;
+        symbol [ sn %tmp.225 167 53 55 ];
+        %tmp.226 = lgetv %j.22;
+        symbol [ j %tmp.226 167 56 57 ];
+        %tmp.227 = agetv %tmp.225 %tmp.226;
+        %tmp.228 = lgetv %so.17;
+        symbol [ so %tmp.228 167 60 62 ];
+        %tmp.229 = lgetv %j.22;
+        symbol [ j %tmp.229 167 63 64 ];
+        %tmp.230 = agetv %tmp.228 %tmp.229;
+        symbol [ mCacheLevel %tmp.232 167 67 78 ];
+        %tmp.232 = getv ? :mCacheLevel;
+        %tmp.233 = invoke %tmp.218 %tmp.219(%tmp.220, %tmp.224, %tmp.227, %tmp.230, %tmp.232);
+        lputv %lh.23 %tmp.233;
+        symbol [ lh %lh.23 167 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 168 12 ]
+        %tmp.234 = self;
+        symbol [ drawMixed %tmp.235 168 12 21 ];
+        %tmp.235 = getv function %tmp.234 :drawMixed;
+        %tmp.236 = lgetv %dc;
+        symbol [ dc %tmp.236 168 22 24 ];
+        %tmp.237 = lgetv %w.6;
+        symbol [ w %tmp.237 168 26 27 ];
+        %tmp.238 = 2;
+        %tmp.239 = div %tmp.237 %tmp.238;
+        %tmp.240 = lgetv %y.21;
+        symbol [ y %tmp.240 168 33 34 ];
+        %tmp.241 = lgetv %sl.15;
+        symbol [ sl %tmp.241 168 36 38 ];
+        %tmp.242 = lgetv %j.22;
+        symbol [ j %tmp.242 168 39 40 ];
+        %tmp.243 = agetv %tmp.241 %tmp.242;
+        %tmp.244 = as %tmp.243 String;
+        symbol [ String %tmp.244 168 45 51 ];
+        %tmp.245 = lgetv %sn.16;
+        symbol [ sn %tmp.245 168 53 55 ];
+        %tmp.246 = lgetv %j.22;
+        symbol [ j %tmp.246 168 56 57 ];
+        %tmp.247 = agetv %tmp.245 %tmp.246;
+        %tmp.248 = lgetv %so.17;
+        symbol [ so %tmp.248 168 60 62 ];
+        %tmp.249 = lgetv %j.22;
+        symbol [ j %tmp.249 168 63 64 ];
+        %tmp.250 = agetv %tmp.248 %tmp.249;
+        symbol [ mCacheLevel %tmp.252 168 67 78 ];
+        %tmp.252 = getv ? :mCacheLevel;
+        %tmp.253 = lgetv %lh.23;
+        symbol [ lh %tmp.253 168 80 82 ];
+        invoke %tmp.234 %tmp.235(%tmp.236, %tmp.239, %tmp.240, %tmp.244, %tmp.247, %tmp.250, %tmp.252, %tmp.253);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 169 12 ]
+        %tmp.254 = lgetv %y.21;
+        symbol [ y %tmp.254 169 16 17 ];
+        %tmp.255 = lgetv %lh.23;
+        symbol [ lh %tmp.255 169 20 22 ];
+        %tmp.256 = add %tmp.254 %tmp.255;
+        lputv %y.21 %tmp.256;
+        symbol [ y %y.21 169 12 13 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_36_170_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 166 ]
+        %tmp.259 = lgetv %j.22;
+        symbol [ j %tmp.259 166 31 32 ];
+        %tmp.260 = add %tmp.259 1;
+        lputv %j.22 %tmp.260;
+        symbol [ j %j.22 166 31 32 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_166_8_170_8_for_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_109_40_171_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 180; @symbol_functiondef = [fitContent,180,20,30]; @symbol_param<0> = [dc,180,31,33]; @symbol_param<0>_type<0> = [Dc,180,37,39]; @symbol_param<1> = [lines,180,41,46]; @symbol_param<2> = [nums,180,48,52]; @symbol_param<3> = [opts,180,54,58]; @symbol_param<4> = [maxW,180,60,64]; @symbol_param<5> = [maxH,180,66,70]; ]
+    protected
+    function fitContent(dc as Dc, lines, nums, opts, maxW, maxH) as Void {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_180_80_203_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 181 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_end" ]
+        %drop.1 = local;
+        symbol [ drop %drop.1 181 17 21 ];
+        %tmp.1 = 0;
+        lputv %drop.1 %tmp.1;
+        symbol [ drop %drop.1 181 17 21 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_test:
+        %tmp.2 = lgetv %drop.1;
+        symbol [ drop %tmp.2 181 27 31 ];
+        %tmp.3 = 2;
+        %tmp.4 = lte %tmp.2 %tmp.3;
+        bf %tmp.4 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 182 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_stop" ]
+        %v.2 = local;
+        symbol [ v %v.2 182 16 17 ];
+        %tmp.5 = self;
+        symbol [ applyDrop %tmp.6 182 21 30 ];
+        %tmp.6 = getv function %tmp.5 :applyDrop;
+        %tmp.7 = lgetv %lines;
+        symbol [ lines %tmp.7 182 31 36 ];
+        %tmp.8 = lgetv %nums;
+        symbol [ nums %tmp.8 182 38 42 ];
+        %tmp.9 = lgetv %opts;
+        symbol [ opts %tmp.9 182 44 48 ];
+        %tmp.10 = lgetv %drop.1;
+        symbol [ drop %tmp.10 182 50 54 ];
+        %tmp.11 = invoke %tmp.5 %tmp.6(%tmp.7, %tmp.8, %tmp.9, %tmp.10);
+        lputv %v.2 %tmp.11;
+        symbol [ v %v.2 182 16 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 183 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_stop" ]
+        %vl.3 = local;
+        symbol [ vl %vl.3 183 16 18 ];
+        %tmp.12 = lgetv %v.2;
+        symbol [ v %tmp.12 183 21 22 ];
+        %tmp.13 = 0;
+        %tmp.14 = agetv %tmp.12 %tmp.13;
+        lputv %vl.3 %tmp.14;
+        symbol [ vl %vl.3 183 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 184 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_stop" ]
+        %vn.4 = local;
+        symbol [ vn %vn.4 184 16 18 ];
+        %tmp.15 = lgetv %v.2;
+        symbol [ v %tmp.15 184 21 22 ];
+        %tmp.16 = 1;
+        %tmp.17 = agetv %tmp.15 %tmp.16;
+        lputv %vn.4 %tmp.17;
+        symbol [ vn %vn.4 184 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 185 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_stop" ]
+        %vo.5 = local;
+        symbol [ vo %vo.5 185 16 18 ];
+        %tmp.18 = lgetv %v.2;
+        symbol [ v %tmp.18 185 21 22 ];
+        %tmp.19 = 2;
+        %tmp.20 = agetv %tmp.18 %tmp.19;
+        lputv %vo.5 %tmp.20;
+        symbol [ vo %vo.5 185 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 186 12 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_12_188_12_if_stmt:
+        %tmp.21 = lgetv %vl.3;
+        symbol [ vl %tmp.21 186 16 18 ];
+        symbol [ size %tmp.22 186 19 23 ];
+        %tmp.22 = getv function %tmp.21 :size;
+        %tmp.23 = invoke %tmp.21 %tmp.22();
+        %tmp.24 = 0;
+        %tmp.25 = lte %tmp.23 %tmp.24;
+        bf %tmp.25 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_12_188_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_12_188_12_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_32_188_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 187 16 ]
+        goto break @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_incr;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_32_188_12_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_12_188_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_186_12_188_12_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 191 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_stop" ]
+        %start.6 = local;
+        symbol [ start %start.6 191 16 21 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_begin:
+        %tmp.26 = self;
+        symbol [ hasDigits %tmp.27 191 24 33 ];
+        %tmp.27 = getv function %tmp.26 :hasDigits;
+        %tmp.28 = lgetv %vl.3;
+        symbol [ vl %tmp.28 191 34 36 ];
+        %tmp.29 = lgetv %vo.5;
+        symbol [ vo %tmp.29 191 38 40 ];
+        %tmp.30 = invoke %tmp.26 %tmp.27(%tmp.28, %tmp.29);
+        bf %tmp.30 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_else_false;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_true:
+        %tmp.31 = 0;
+        push %tmp.31;
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_else_false:
+        symbol [ LT_TEXT_LEVEL %tmp.33 191 48 61 ];
+        %tmp.33 = getv ? :LT_TEXT_LEVEL;
+        push %tmp.33;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_end:
+        %tmp.34 = phi [%tmp.30 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_begin] [%tmp.31 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_true] [%tmp.33 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_else_false] [%tmp.34 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_191_24_191_48_end];
+        lputv %start.6 %tmp.34;
+        symbol [ start %start.6 191 16 21 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 192 12 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_end" ]
+        %lvl.7 = local;
+        symbol [ lvl %lvl.7 192 21 24 ];
+        %tmp.35 = lgetv %start.6;
+        symbol [ start %tmp.35 192 27 32 ];
+        lputv %lvl.7 %tmp.35;
+        symbol [ lvl %lvl.7 192 21 24 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_test:
+        %tmp.36 = lgetv %lvl.7;
+        symbol [ lvl %tmp.36 192 34 37 ];
+        symbol [ mNumFonts %tmp.38 192 40 49 ];
+        %tmp.38 = getv ? :mNumFonts;
+        symbol [ size %tmp.39 192 50 54 ];
+        %tmp.39 = getv function %tmp.38 :size;
+        %tmp.40 = invoke %tmp.38 %tmp.39();
+        %tmp.41 = lt %tmp.36 %tmp.40;
+        bf %tmp.41 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_65_198_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 193 16 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_16_197_16_if_stmt:
+        %tmp.42 = self;
+        symbol [ fitsAll %tmp.43 193 20 27 ];
+        %tmp.43 = getv function %tmp.42 :fitsAll;
+        %tmp.44 = lgetv %dc;
+        symbol [ dc %tmp.44 193 28 30 ];
+        %tmp.45 = lgetv %vl.3;
+        symbol [ vl %tmp.45 193 32 34 ];
+        %tmp.46 = lgetv %vn.4;
+        symbol [ vn %tmp.46 193 36 38 ];
+        %tmp.47 = lgetv %vo.5;
+        symbol [ vo %tmp.47 193 40 42 ];
+        %tmp.48 = lgetv %lvl.7;
+        symbol [ lvl %tmp.48 193 44 47 ];
+        %tmp.49 = lgetv %maxW;
+        symbol [ maxW %tmp.49 193 49 53 ];
+        %tmp.50 = lgetv %maxH;
+        symbol [ maxH %tmp.50 193 55 59 ];
+        %tmp.51 = invoke %tmp.42 %tmp.43(%tmp.44, %tmp.45, %tmp.46, %tmp.47, %tmp.48, %tmp.49, %tmp.50);
+        bf %tmp.51 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_16_197_16_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_16_197_16_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_62_197_16_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 194 20 ]
+        %tmp.52 = lgetv %lvl.7;
+        symbol [ lvl %tmp.52 194 34 37 ];
+        symbol [ mCacheLevel ? 194 20 31 ];
+        putv self :mCacheLevel %tmp.52;
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 195 20 ]
+        %tmp.53 = lgetv %drop.1;
+        symbol [ drop %tmp.53 195 34 38 ];
+        symbol [ mCacheDrop ? 195 20 30 ];
+        putv self :mCacheDrop %tmp.53;
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 196 20 ]
+        ret ?;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_62_197_16_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_16_197_16_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_193_16_197_16_if_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_65_198_12_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 192 ]
+        %tmp.56 = lgetv %lvl.7;
+        symbol [ lvl %tmp.56 192 58 61 ];
+        %tmp.57 = add %tmp.56 1;
+        lputv %lvl.7 %tmp.57;
+        symbol [ lvl %lvl.7 192 58 61 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_192_12_198_12_for_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_46_199_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 181 ]
+        %tmp.60 = lgetv %drop.1;
+        symbol [ drop %tmp.60 181 38 42 ];
+        %tmp.61 = add %tmp.60 1;
+        lputv %drop.1 %tmp.61;
+        symbol [ drop %drop.1 181 38 42 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_181_8_199_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 201 8 ]
+        symbol [ mNumFonts %tmp.63 201 22 31 ];
+        %tmp.63 = getv ? :mNumFonts;
+        symbol [ size %tmp.64 201 32 36 ];
+        %tmp.64 = getv function %tmp.63 :size;
+        %tmp.65 = invoke %tmp.63 %tmp.64();
+        %tmp.66 = 1;
+        %tmp.67 = sub %tmp.65 %tmp.66;
+        symbol [ mCacheLevel ? 201 8 19 ];
+        putv self :mCacheLevel %tmp.67;
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 202 8 ]
+        %tmp.68 = 2;
+        symbol [ mCacheDrop ? 202 8 18 ];
+        putv self :mCacheDrop %tmp.68;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_180_80_203_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 208; @symbol_functiondef = [applyDrop,208,20,29]; @symbol_param<0> = [lines,208,30,35]; @symbol_param<1> = [nums,208,37,41]; @symbol_param<2> = [opts,208,43,47]; @symbol_param<3> = [drop,208,49,53]; ]
+    protected
+    function applyDrop(lines, nums, opts, drop) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 209 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_8_211_8_if_stmt:
+        %tmp.1 = lgetv %drop;
+        symbol [ drop %tmp.1 209 12 16 ];
+        %tmp.2 = 0;
+        %tmp.3 = lte %tmp.1 %tmp.2;
+        bf %tmp.3 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_8_211_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_8_211_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_23_211_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 210 12 ]
+        %tmp.4 = newa 3;
+        %tmp.5 = lgetv %lines;
+        symbol [ lines %tmp.5 210 21 26 ];
+        %tmp.6 = dup %tmp.4;
+        %tmp.7 = aputv %tmp.6 0 %tmp.5;
+        %tmp.8 = lgetv %nums;
+        symbol [ nums %tmp.8 210 28 32 ];
+        %tmp.9 = dup %tmp.7;
+        %tmp.10 = aputv %tmp.9 1 %tmp.8;
+        %tmp.11 = lgetv %opts;
+        symbol [ opts %tmp.11 210 34 38 ];
+        %tmp.12 = dup %tmp.10;
+        %tmp.13 = aputv %tmp.12 2 %tmp.11;
+        ret %tmp.13;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_23_211_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_8_211_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_209_8_211_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 215 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop" ]
+        %ol.1 = local;
+        symbol [ ol %ol.1 215 12 14 ];
+        %tmp.14 = newa 0 Array;
+        symbol [ Array %tmp.14 215 23 28 ];
+        lputv %ol.1 %tmp.14;
+        symbol [ ol %ol.1 215 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 216 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop" ]
+        %on.2 = local;
+        symbol [ on %on.2 216 12 14 ];
+        %tmp.15 = newa 0 Array;
+        symbol [ Array %tmp.15 216 23 28 ];
+        lputv %on.2 %tmp.15;
+        symbol [ on %on.2 216 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 217 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop" ]
+        %oo.3 = local;
+        symbol [ oo %oo.3 217 12 14 ];
+        %tmp.16 = newa 0 Array;
+        symbol [ Array %tmp.16 217 23 28 ];
+        lputv %oo.3 %tmp.16;
+        symbol [ oo %oo.3 217 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 218 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_end" ]
+        %i.4 = local;
+        symbol [ i %i.4 218 17 18 ];
+        %tmp.17 = 0;
+        lputv %i.4 %tmp.17;
+        symbol [ i %i.4 218 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_test:
+        %tmp.18 = lgetv %i.4;
+        symbol [ i %tmp.18 218 24 25 ];
+        %tmp.19 = lgetv %lines;
+        symbol [ lines %tmp.19 218 28 33 ];
+        symbol [ size %tmp.20 218 34 38 ];
+        %tmp.20 = getv function %tmp.19 :size;
+        %tmp.21 = invoke %tmp.19 %tmp.20();
+        %tmp.22 = lt %tmp.18 %tmp.21;
+        bf %tmp.22 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_47_225_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 219 12 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_12_221_12_if_stmt:
+        %tmp.23 = lgetv %opts;
+        symbol [ opts %tmp.23 219 16 20 ];
+        %tmp.24 = lgetv %i.4;
+        symbol [ i %tmp.24 219 21 22 ];
+        %tmp.25 = agetv %tmp.23 %tmp.24;
+        %tmp.26 = true;
+        %tmp.27 = eq %tmp.25 %tmp.26;
+        bf %tmp.27 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_12_221_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_12_221_12_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_33_221_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 220 16 ]
+        goto break @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_incr;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_33_221_12_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_12_221_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_219_12_221_12_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 222 12 ]
+        %tmp.28 = lgetv %ol.1;
+        symbol [ ol %tmp.28 222 12 14 ];
+        symbol [ add %tmp.29 222 15 18 ];
+        %tmp.29 = getv function %tmp.28 :add;
+        %tmp.30 = lgetv %lines;
+        symbol [ lines %tmp.30 222 19 24 ];
+        %tmp.31 = lgetv %i.4;
+        symbol [ i %tmp.31 222 25 26 ];
+        %tmp.32 = agetv %tmp.30 %tmp.31;
+        invoke %tmp.28 %tmp.29(%tmp.32);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 223 12 ]
+        %tmp.33 = lgetv %on.2;
+        symbol [ on %tmp.33 223 12 14 ];
+        symbol [ add %tmp.34 223 15 18 ];
+        %tmp.34 = getv function %tmp.33 :add;
+        %tmp.35 = lgetv %nums;
+        symbol [ nums %tmp.35 223 19 23 ];
+        %tmp.36 = lgetv %i.4;
+        symbol [ i %tmp.36 223 24 25 ];
+        %tmp.37 = agetv %tmp.35 %tmp.36;
+        invoke %tmp.33 %tmp.34(%tmp.37);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 224 12 ]
+        %tmp.38 = lgetv %oo.3;
+        symbol [ oo %tmp.38 224 12 14 ];
+        symbol [ add %tmp.39 224 15 18 ];
+        %tmp.39 = getv function %tmp.38 :add;
+        %tmp.40 = lgetv %opts;
+        symbol [ opts %tmp.40 224 19 23 ];
+        %tmp.41 = lgetv %i.4;
+        symbol [ i %tmp.41 224 24 25 ];
+        %tmp.42 = agetv %tmp.40 %tmp.41;
+        invoke %tmp.38 %tmp.39(%tmp.42);
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_47_225_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 218 ]
+        %tmp.45 = lgetv %i.4;
+        symbol [ i %tmp.45 218 42 43 ];
+        %tmp.46 = add %tmp.45 1;
+        lputv %i.4 %tmp.46;
+        symbol [ i %i.4 218 42 43 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_218_8_225_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 226 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_8_228_8_if_stmt:
+        %tmp.47 = lgetv %drop;
+        symbol [ drop %tmp.47 226 12 16 ];
+        %tmp.48 = 1;
+        %tmp.49 = eq %tmp.47 %tmp.48;
+        bf %tmp.49 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_8_228_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_8_228_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_23_228_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 227 12 ]
+        %tmp.50 = newa 3;
+        %tmp.51 = lgetv %ol.1;
+        symbol [ ol %tmp.51 227 21 23 ];
+        %tmp.52 = dup %tmp.50;
+        %tmp.53 = aputv %tmp.52 0 %tmp.51;
+        %tmp.54 = lgetv %on.2;
+        symbol [ on %tmp.54 227 25 27 ];
+        %tmp.55 = dup %tmp.53;
+        %tmp.56 = aputv %tmp.55 1 %tmp.54;
+        %tmp.57 = lgetv %oo.3;
+        symbol [ oo %tmp.57 227 29 31 ];
+        %tmp.58 = dup %tmp.56;
+        %tmp.59 = aputv %tmp.58 2 %tmp.57;
+        ret %tmp.59;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_23_228_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_8_228_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_226_8_228_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 230 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop" ]
+        %fl.5 = local;
+        symbol [ fl %fl.5 230 12 14 ];
+        %tmp.60 = newa 0;
+        lputv %fl.5 %tmp.60;
+        symbol [ fl %fl.5 230 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 231 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop" ]
+        %fn.6 = local;
+        symbol [ fn %fn.6 231 12 14 ];
+        %tmp.61 = newa 0;
+        lputv %fn.6 %tmp.61;
+        symbol [ fn %fn.6 231 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 232 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop" ]
+        %fo.7 = local;
+        symbol [ fo %fo.7 232 12 14 ];
+        %tmp.62 = newa 0;
+        lputv %fo.7 %tmp.62;
+        symbol [ fo %fo.7 232 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 233 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_8_237_8_if_stmt:
+        %tmp.63 = lgetv %ol.1;
+        symbol [ ol %tmp.63 233 12 14 ];
+        symbol [ size %tmp.64 233 15 19 ];
+        %tmp.64 = getv function %tmp.63 :size;
+        %tmp.65 = invoke %tmp.63 %tmp.64();
+        %tmp.66 = 0;
+        %tmp.67 = gt %tmp.65 %tmp.66;
+        bf %tmp.67 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_8_237_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_8_237_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_27_237_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 234 12 ]
+        %tmp.68 = lgetv %fl.5;
+        symbol [ fl %tmp.68 234 12 14 ];
+        symbol [ add %tmp.69 234 15 18 ];
+        %tmp.69 = getv function %tmp.68 :add;
+        %tmp.70 = lgetv %ol.1;
+        symbol [ ol %tmp.70 234 19 21 ];
+        %tmp.71 = 0;
+        %tmp.72 = agetv %tmp.70 %tmp.71;
+        invoke %tmp.68 %tmp.69(%tmp.72);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 235 12 ]
+        %tmp.73 = lgetv %fn.6;
+        symbol [ fn %tmp.73 235 12 14 ];
+        symbol [ add %tmp.74 235 15 18 ];
+        %tmp.74 = getv function %tmp.73 :add;
+        %tmp.75 = lgetv %on.2;
+        symbol [ on %tmp.75 235 19 21 ];
+        %tmp.76 = 0;
+        %tmp.77 = agetv %tmp.75 %tmp.76;
+        invoke %tmp.73 %tmp.74(%tmp.77);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 236 12 ]
+        %tmp.78 = lgetv %fo.7;
+        symbol [ fo %tmp.78 236 12 14 ];
+        symbol [ add %tmp.79 236 15 18 ];
+        %tmp.79 = getv function %tmp.78 :add;
+        %tmp.80 = false;
+        invoke %tmp.78 %tmp.79(%tmp.80);
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_27_237_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_8_237_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_233_8_237_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 238 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_8_242_8_if_stmt:
+        %tmp.81 = lgetv %ol.1;
+        symbol [ ol %tmp.81 238 12 14 ];
+        symbol [ size %tmp.82 238 15 19 ];
+        %tmp.82 = getv function %tmp.81 :size;
+        %tmp.83 = invoke %tmp.81 %tmp.82();
+        %tmp.84 = 1;
+        %tmp.85 = gt %tmp.83 %tmp.84;
+        bf %tmp.85 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_8_242_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_8_242_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_27_242_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 239 12 ]
+        %tmp.86 = lgetv %fl.5;
+        symbol [ fl %tmp.86 239 12 14 ];
+        symbol [ add %tmp.87 239 15 18 ];
+        %tmp.87 = getv function %tmp.86 :add;
+        %tmp.88 = "...";
+        invoke %tmp.86 %tmp.87(%tmp.88);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 240 12 ]
+        %tmp.89 = lgetv %fn.6;
+        symbol [ fn %tmp.89 240 12 14 ];
+        symbol [ add %tmp.90 240 15 18 ];
+        %tmp.90 = getv function %tmp.89 :add;
+        %tmp.91 = false;
+        invoke %tmp.89 %tmp.90(%tmp.91);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 241 12 ]
+        %tmp.92 = lgetv %fo.7;
+        symbol [ fo %tmp.92 241 12 14 ];
+        symbol [ add %tmp.93 241 15 18 ];
+        %tmp.93 = getv function %tmp.92 :add;
+        %tmp.94 = false;
+        invoke %tmp.92 %tmp.93(%tmp.94);
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_27_242_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_8_242_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_238_8_242_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 243 8 ]
+        %tmp.95 = newa 3;
+        %tmp.96 = lgetv %fl.5;
+        symbol [ fl %tmp.96 243 17 19 ];
+        %tmp.97 = dup %tmp.95;
+        %tmp.98 = aputv %tmp.97 0 %tmp.96;
+        %tmp.99 = lgetv %fn.6;
+        symbol [ fn %tmp.99 243 21 23 ];
+        %tmp.100 = dup %tmp.98;
+        %tmp.101 = aputv %tmp.100 1 %tmp.99;
+        %tmp.102 = lgetv %fo.7;
+        symbol [ fo %tmp.102 243 25 27 ];
+        %tmp.103 = dup %tmp.101;
+        %tmp.104 = aputv %tmp.103 2 %tmp.102;
+        ret %tmp.104;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_208_55_244_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 246; @symbol_functiondef = [fitsAll,246,20,27]; @symbol_param<0> = [dc,246,28,30]; @symbol_param<0>_type<0> = [Dc,246,34,36]; @symbol_param<1> = [lines,246,38,43]; @symbol_param<2> = [nums,246,45,49]; @symbol_param<3> = [opts,246,51,55]; @symbol_param<4> = [lvl,246,57,60]; @symbol_param<5> = [maxW,246,62,66]; @symbol_param<6> = [maxH,246,68,72]; ]
+    protected
+    function fitsAll(dc as Dc, lines, nums, opts, lvl, maxW, maxH) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_246_74_256_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 247 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_246_74_256_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_246_74_256_4_stop" ]
+        %total.1 = local;
+        symbol [ total %total.1 247 12 17 ];
+        %tmp.1 = 0;
+        lputv %total.1 %tmp.1;
+        symbol [ total %total.1 247 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 248 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_end" ]
+        %j.2 = local;
+        symbol [ j %j.2 248 17 18 ];
+        %tmp.2 = 0;
+        lputv %j.2 %tmp.2;
+        symbol [ j %j.2 248 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_test:
+        %tmp.3 = lgetv %j.2;
+        symbol [ j %tmp.3 248 24 25 ];
+        %tmp.4 = lgetv %lines;
+        symbol [ lines %tmp.4 248 28 33 ];
+        symbol [ size %tmp.5 248 34 38 ];
+        %tmp.5 = getv function %tmp.4 :size;
+        %tmp.6 = invoke %tmp.4 %tmp.5();
+        %tmp.7 = lt %tmp.3 %tmp.6;
+        bf %tmp.7 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_47_254_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 249 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_47_254_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_47_254_8_stop" ]
+        %txt.3 = local;
+        symbol [ txt %txt.3 249 16 19 ];
+        %tmp.8 = lgetv %lines;
+        symbol [ lines %tmp.8 249 22 27 ];
+        %tmp.9 = lgetv %j.2;
+        symbol [ j %tmp.9 249 28 29 ];
+        %tmp.10 = agetv %tmp.8 %tmp.9;
+        %tmp.11 = as %tmp.10 String;
+        symbol [ String %tmp.11 249 34 40 ];
+        lputv %txt.3 %tmp.11;
+        symbol [ txt %txt.3 249 16 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 250 12 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_12_252_12_if_stmt:
+        %tmp.12 = self;
+        symbol [ lineWidth %tmp.13 250 16 25 ];
+        %tmp.13 = getv function %tmp.12 :lineWidth;
+        %tmp.14 = lgetv %dc;
+        symbol [ dc %tmp.14 250 26 28 ];
+        %tmp.15 = lgetv %txt.3;
+        symbol [ txt %tmp.15 250 30 33 ];
+        %tmp.16 = lgetv %nums;
+        symbol [ nums %tmp.16 250 35 39 ];
+        %tmp.17 = lgetv %j.2;
+        symbol [ j %tmp.17 250 40 41 ];
+        %tmp.18 = agetv %tmp.16 %tmp.17;
+        %tmp.19 = lgetv %opts;
+        symbol [ opts %tmp.19 250 44 48 ];
+        %tmp.20 = lgetv %j.2;
+        symbol [ j %tmp.20 250 49 50 ];
+        %tmp.21 = agetv %tmp.19 %tmp.20;
+        %tmp.22 = lgetv %lvl;
+        symbol [ lvl %tmp.22 250 53 56 ];
+        %tmp.23 = invoke %tmp.12 %tmp.13(%tmp.14, %tmp.15, %tmp.18, %tmp.21, %tmp.22);
+        %tmp.24 = lgetv %maxW;
+        symbol [ maxW %tmp.24 250 60 64 ];
+        %tmp.25 = gt %tmp.23 %tmp.24;
+        bf %tmp.25 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_12_252_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_12_252_12_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_66_252_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 251 16 ]
+        %tmp.26 = false;
+        ret %tmp.26;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_66_252_12_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_12_252_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_250_12_252_12_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 253 12 ]
+        %tmp.27 = lgetv %total.1;
+        symbol [ total %tmp.27 253 20 25 ];
+        %tmp.28 = self;
+        symbol [ lineHeight %tmp.29 253 28 38 ];
+        %tmp.29 = getv function %tmp.28 :lineHeight;
+        %tmp.30 = lgetv %dc;
+        symbol [ dc %tmp.30 253 39 41 ];
+        %tmp.31 = lgetv %txt.3;
+        symbol [ txt %tmp.31 253 43 46 ];
+        %tmp.32 = lgetv %nums;
+        symbol [ nums %tmp.32 253 48 52 ];
+        %tmp.33 = lgetv %j.2;
+        symbol [ j %tmp.33 253 53 54 ];
+        %tmp.34 = agetv %tmp.32 %tmp.33;
+        %tmp.35 = lgetv %opts;
+        symbol [ opts %tmp.35 253 57 61 ];
+        %tmp.36 = lgetv %j.2;
+        symbol [ j %tmp.36 253 62 63 ];
+        %tmp.37 = agetv %tmp.35 %tmp.36;
+        %tmp.38 = lgetv %lvl;
+        symbol [ lvl %tmp.38 253 66 69 ];
+        %tmp.39 = invoke %tmp.28 %tmp.29(%tmp.30, %tmp.31, %tmp.34, %tmp.37, %tmp.38);
+        %tmp.40 = add %tmp.27 %tmp.39;
+        lputv %total.1 %tmp.40;
+        symbol [ total %total.1 253 12 17 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_47_254_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 248 ]
+        %tmp.43 = lgetv %j.2;
+        symbol [ j %tmp.43 248 42 43 ];
+        %tmp.44 = add %tmp.43 1;
+        lputv %j.2 %tmp.44;
+        symbol [ j %j.2 248 42 43 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_248_8_254_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 255 8 ]
+        %tmp.45 = lgetv %total.1;
+        symbol [ total %tmp.45 255 15 20 ];
+        %tmp.46 = lgetv %maxH;
+        symbol [ maxH %tmp.46 255 24 28 ];
+        %tmp.47 = lte %tmp.45 %tmp.46;
+        ret %tmp.47;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_246_74_256_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 267; @symbol_functiondef = [hasDigits,267,20,29]; @symbol_param<0> = [lines,267,30,35]; @symbol_param<0>_type<0> = [Array,267,39,44]; @symbol_param<1> = [opts,267,46,50]; @symbol_param<1>_type<0> = [Array,267,54,59]; ]
+    protected
+    function hasDigits(lines as Array, opts as Array) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_267_61_281_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 268 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_end" ]
+        %i.1 = local;
+        symbol [ i %i.1 268 17 18 ];
+        %tmp.1 = 0;
+        lputv %i.1 %tmp.1;
+        symbol [ i %i.1 268 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_test:
+        %tmp.2 = lgetv %i.1;
+        symbol [ i %tmp.2 268 24 25 ];
+        %tmp.3 = lgetv %lines;
+        symbol [ lines %tmp.3 268 28 33 ];
+        symbol [ size %tmp.4 268 34 38 ];
+        %tmp.4 = getv function %tmp.3 :size;
+        %tmp.5 = invoke %tmp.3 %tmp.4();
+        %tmp.6 = lt %tmp.2 %tmp.5;
+        bf %tmp.6 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_47_279_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 269 12 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_12_271_12_if_stmt:
+        %tmp.7 = lgetv %opts;
+        symbol [ opts %tmp.7 269 16 20 ];
+        %tmp.8 = lgetv %i.1;
+        symbol [ i %tmp.8 269 21 22 ];
+        %tmp.9 = agetv %tmp.7 %tmp.8;
+        %tmp.10 = true;
+        %tmp.11 = eq %tmp.9 %tmp.10;
+        bf %tmp.11 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_12_271_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_12_271_12_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_33_271_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 270 16 ]
+        goto break @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_incr;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_33_271_12_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_12_271_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_269_12_271_12_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 272 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_47_279_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_47_279_8_stop" ]
+        %ch.2 = local;
+        symbol [ ch %ch.2 272 16 18 ];
+        %tmp.12 = lgetv %lines;
+        symbol [ lines %tmp.12 272 22 27 ];
+        %tmp.13 = lgetv %i.1;
+        symbol [ i %tmp.13 272 28 29 ];
+        %tmp.14 = agetv %tmp.12 %tmp.13;
+        %tmp.15 = as %tmp.14 String;
+        symbol [ String %tmp.15 272 34 40 ];
+        symbol [ toCharArray %tmp.16 272 42 53 ];
+        %tmp.16 = getv function %tmp.15 :toCharArray;
+        %tmp.17 = invoke %tmp.15 %tmp.16();
+        lputv %ch.2 %tmp.17;
+        symbol [ ch %ch.2 272 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 273 12 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_end" ]
+        %j.3 = local;
+        symbol [ j %j.3 273 21 22 ];
+        %tmp.18 = 0;
+        lputv %j.3 %tmp.18;
+        symbol [ j %j.3 273 21 22 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_test:
+        %tmp.19 = lgetv %j.3;
+        symbol [ j %tmp.19 273 28 29 ];
+        %tmp.20 = lgetv %ch.2;
+        symbol [ ch %tmp.20 273 32 34 ];
+        symbol [ size %tmp.21 273 35 39 ];
+        %tmp.21 = getv function %tmp.20 :size;
+        %tmp.22 = invoke %tmp.20 %tmp.21();
+        %tmp.23 = lt %tmp.19 %tmp.22;
+        bf %tmp.23 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_48_278_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 274 16 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_48_278_12_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_48_278_12_stop" ]
+        %cv.4 = local;
+        symbol [ cv %cv.4 274 20 22 ];
+        %tmp.24 = lgetv %ch.2;
+        symbol [ ch %tmp.24 274 25 27 ];
+        %tmp.25 = lgetv %j.3;
+        symbol [ j %tmp.25 274 28 29 ];
+        %tmp.26 = agetv %tmp.24 %tmp.25;
+        symbol [ toNumber %tmp.27 274 31 39 ];
+        %tmp.27 = getv function %tmp.26 :toNumber;
+        %tmp.28 = invoke %tmp.26 %tmp.27();
+        lputv %cv.4 %tmp.28;
+        symbol [ cv %cv.4 274 20 22 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 275 16 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_16_277_16_if_stmt:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_20_275_38_begin:
+        %tmp.29 = lgetv %cv.4;
+        symbol [ cv %tmp.29 275 20 22 ];
+        %tmp.30 = 48;
+        %tmp.31 = gte %tmp.29 %tmp.30;
+        bf %tmp.31 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_16_277_16_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_32_275_38_true:
+        %tmp.32 = lgetv %cv.4;
+        symbol [ cv %tmp.32 275 32 34 ];
+        %tmp.33 = 57;
+        %tmp.34 = lte %tmp.32 %tmp.33;
+        push %tmp.34;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_32_275_38_end:
+        %tmp.35 = phi [%tmp.31 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_20_275_38_begin] [%tmp.34 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_32_275_38_true] [%tmp.35 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_32_275_38_end];
+        bf %tmp.35 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_16_277_16_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_16_277_16_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_42_277_16_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 276 20 ]
+        %tmp.36 = true;
+        ret %tmp.36;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_42_277_16_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_16_277_16_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_275_16_277_16_if_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_48_278_12_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 273 ]
+        %tmp.39 = lgetv %j.3;
+        symbol [ j %tmp.39 273 43 44 ];
+        %tmp.40 = add %tmp.39 1;
+        lputv %j.3 %tmp.40;
+        symbol [ j %j.3 273 43 44 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_273_12_278_12_for_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_47_279_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 268 ]
+        %tmp.43 = lgetv %i.1;
+        symbol [ i %tmp.43 268 42 43 ];
+        %tmp.44 = add %tmp.43 1;
+        lputv %i.1 %tmp.44;
+        symbol [ i %i.1 268 42 43 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_268_8_279_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 280 8 ]
+        %tmp.45 = false;
+        ret %tmp.45;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_267_61_281_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 286; @symbol_functiondef = [gapUnit,286,20,27]; @symbol_param<0> = [dc,286,28,30]; @symbol_param<0>_type<0> = [Dc,286,34,36]; @symbol_param<1> = [f,286,38,39]; ]
+    protected
+    function gapUnit(dc as Dc, f) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_286_41_288_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 287 8 ]
+        %tmp.1 = lgetv %dc;
+        symbol [ dc %tmp.1 287 15 17 ];
+        symbol [ getTextWidthInPixels %tmp.2 287 18 38 ];
+        %tmp.2 = getv function %tmp.1 :getTextWidthInPixels;
+        %tmp.3 = "0";
+        %tmp.4 = lgetv %f;
+        symbol [ f %tmp.4 287 44 45 ];
+        %tmp.5 = invoke %tmp.1 %tmp.2(%tmp.3, %tmp.4);
+        %tmp.6 = 3;
+        %tmp.7 = div %tmp.5 %tmp.6;
+        ret %tmp.7;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_286_41_288_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 290; @symbol_functiondef = [leadSpaces,290,20,30]; @symbol_param<0> = [txt,290,31,34]; @symbol_param<0>_type<0> = [String,290,38,44]; ]
+    protected
+    function leadSpaces(txt as String) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_290_46_297_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 291 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_290_46_297_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_290_46_297_4_stop" ]
+        %ch.1 = local;
+        symbol [ ch %ch.1 291 12 14 ];
+        %tmp.1 = lgetv %txt;
+        symbol [ txt %tmp.1 291 17 20 ];
+        symbol [ toCharArray %tmp.2 291 21 32 ];
+        %tmp.2 = getv function %tmp.1 :toCharArray;
+        %tmp.3 = invoke %tmp.1 %tmp.2();
+        lputv %ch.1 %tmp.3;
+        symbol [ ch %ch.1 291 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 292 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_290_46_297_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_290_46_297_4_stop" ]
+        %n.2 = local;
+        symbol [ n %n.2 292 12 13 ];
+        %tmp.4 = 0;
+        lputv %n.2 %tmp.4;
+        symbol [ n %n.2 292 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 293 8 ]
+        while @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_test:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_15_293_52_begin:
+        %tmp.5 = lgetv %n.2;
+        symbol [ n %tmp.5 293 15 16 ];
+        %tmp.6 = lgetv %ch.1;
+        symbol [ ch %tmp.6 293 19 21 ];
+        symbol [ size %tmp.7 293 22 26 ];
+        %tmp.7 = getv function %tmp.6 :size;
+        %tmp.8 = invoke %tmp.6 %tmp.7();
+        %tmp.9 = lt %tmp.5 %tmp.8;
+        %tmp.10 = dup %tmp.9;
+        bf %tmp.10 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_32_293_52_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_32_293_52_true:
+        %tmp.11 = lgetv %ch.1;
+        symbol [ ch %tmp.11 293 32 34 ];
+        %tmp.12 = lgetv %n.2;
+        symbol [ n %tmp.12 293 35 36 ];
+        %tmp.13 = agetv %tmp.11 %tmp.12;
+        symbol [ toNumber %tmp.14 293 38 46 ];
+        %tmp.14 = getv function %tmp.13 :toNumber;
+        %tmp.15 = invoke %tmp.13 %tmp.14();
+        %tmp.16 = 32;
+        %tmp.17 = eq %tmp.15 %tmp.16;
+        %tmp.18 = and %tmp.9 %tmp.17;
+        push %tmp.18;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_32_293_52_end:
+        %tmp.19 = phi [%tmp.10 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_15_293_52_begin] [%tmp.18 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_32_293_52_true] [%tmp.19 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_32_293_52_end];
+        bf %tmp.19 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_56_295_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 294 12 ]
+        %tmp.22 = lgetv %n.2;
+        symbol [ n %tmp.22 294 12 13 ];
+        %tmp.23 = add %tmp.22 1;
+        lputv %n.2 %tmp.23;
+        symbol [ n %n.2 294 12 13 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_56_295_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_293_8_295_8_while_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 296 8 ]
+        %tmp.24 = lgetv %n.2;
+        symbol [ n %tmp.24 296 15 16 ];
+        ret %tmp.24;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_290_46_297_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 299; @symbol_functiondef = [trailSpaces,299,20,31]; @symbol_param<0> = [txt,299,32,35]; @symbol_param<0>_type<0> = [String,299,39,45]; ]
+    protected
+    function trailSpaces(txt as String) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 300 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_stop" ]
+        %ch.1 = local;
+        symbol [ ch %ch.1 300 12 14 ];
+        %tmp.1 = lgetv %txt;
+        symbol [ txt %tmp.1 300 19 22 ];
+        symbol [ toCharArray %tmp.2 300 23 34 ];
+        %tmp.2 = getv function %tmp.1 :toCharArray;
+        %tmp.3 = invoke %tmp.1 %tmp.2();
+        lputv %ch.1 %tmp.3;
+        symbol [ ch %ch.1 300 12 14 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 301 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_stop" ]
+        %lead.2 = local;
+        symbol [ lead %lead.2 301 12 16 ];
+        %tmp.4 = self;
+        symbol [ leadSpaces %tmp.5 301 19 29 ];
+        %tmp.5 = getv function %tmp.4 :leadSpaces;
+        %tmp.6 = lgetv %txt;
+        symbol [ txt %tmp.6 301 30 33 ];
+        %tmp.7 = invoke %tmp.4 %tmp.5(%tmp.6);
+        lputv %lead.2 %tmp.7;
+        symbol [ lead %lead.2 301 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 302 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_8_304_8_if_stmt:
+        %tmp.8 = lgetv %lead.2;
+        symbol [ lead %tmp.8 302 12 16 ];
+        %tmp.9 = lgetv %ch.1;
+        symbol [ ch %tmp.9 302 20 22 ];
+        symbol [ size %tmp.10 302 23 27 ];
+        %tmp.10 = getv function %tmp.9 :size;
+        %tmp.11 = invoke %tmp.9 %tmp.10();
+        %tmp.12 = gte %tmp.8 %tmp.11;
+        bf %tmp.12 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_8_304_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_8_304_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_31_304_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 303 12 ]
+        %tmp.13 = 0;
+        ret %tmp.13;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_31_304_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_8_304_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_302_8_304_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 305 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_stop" ]
+        %n.3 = local;
+        symbol [ n %n.3 305 12 13 ];
+        %tmp.14 = 0;
+        lputv %n.3 %tmp.14;
+        symbol [ n %n.3 305 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 306 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_stop" ]
+        %j.4 = local;
+        symbol [ j %j.4 306 12 13 ];
+        %tmp.15 = lgetv %ch.1;
+        symbol [ ch %tmp.15 306 16 18 ];
+        symbol [ size %tmp.16 306 19 23 ];
+        %tmp.16 = getv function %tmp.15 :size;
+        %tmp.17 = invoke %tmp.15 %tmp.16();
+        %tmp.18 = 1;
+        %tmp.19 = sub %tmp.17 %tmp.18;
+        lputv %j.4 %tmp.19;
+        symbol [ j %j.4 306 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 307 8 ]
+        while @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_test:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_15_307_45_begin:
+        %tmp.20 = lgetv %j.4;
+        symbol [ j %tmp.20 307 15 16 ];
+        %tmp.21 = 0;
+        %tmp.22 = gte %tmp.20 %tmp.21;
+        %tmp.23 = dup %tmp.22;
+        bf %tmp.23 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_25_307_45_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_25_307_45_true:
+        %tmp.24 = lgetv %ch.1;
+        symbol [ ch %tmp.24 307 25 27 ];
+        %tmp.25 = lgetv %j.4;
+        symbol [ j %tmp.25 307 28 29 ];
+        %tmp.26 = agetv %tmp.24 %tmp.25;
+        symbol [ toNumber %tmp.27 307 31 39 ];
+        %tmp.27 = getv function %tmp.26 :toNumber;
+        %tmp.28 = invoke %tmp.26 %tmp.27();
+        %tmp.29 = 32;
+        %tmp.30 = eq %tmp.28 %tmp.29;
+        %tmp.31 = and %tmp.22 %tmp.30;
+        push %tmp.31;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_25_307_45_end:
+        %tmp.32 = phi [%tmp.23 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_15_307_45_begin] [%tmp.31 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_25_307_45_true] [%tmp.32 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_25_307_45_end];
+        bf %tmp.32 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_49_310_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 308 12 ]
+        %tmp.35 = lgetv %n.3;
+        symbol [ n %tmp.35 308 12 13 ];
+        %tmp.36 = add %tmp.35 1;
+        lputv %n.3 %tmp.36;
+        symbol [ n %n.3 308 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 309 12 ]
+        %tmp.39 = lgetv %j.4;
+        symbol [ j %tmp.39 309 12 13 ];
+        %tmp.40 = sub %tmp.39 1;
+        lputv %j.4 %tmp.40;
+        symbol [ j %j.4 309 12 13 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_49_310_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_307_8_310_8_while_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 311 8 ]
+        %tmp.41 = lgetv %n.3;
+        symbol [ n %tmp.41 311 15 16 ];
+        ret %tmp.41;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_299_47_312_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 317; @symbol_functiondef = [segWidth,317,20,28]; @symbol_param<0> = [dc,317,29,31]; @symbol_param<0>_type<0> = [Dc,317,35,37]; @symbol_param<1> = [txt,317,39,42]; @symbol_param<1>_type<0> = [String,317,46,52]; @symbol_param<2> = [f,317,54,55]; ]
+    protected
+    function segWidth(dc as Dc, txt as String, f) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_317_57_324_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 318 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_317_57_324_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_317_57_324_4_stop" ]
+        %w.1 = local;
+        symbol [ w %w.1 318 12 13 ];
+        %tmp.1 = lgetv %dc;
+        symbol [ dc %tmp.1 318 16 18 ];
+        symbol [ getTextWidthInPixels %tmp.2 318 19 39 ];
+        %tmp.2 = getv function %tmp.1 :getTextWidthInPixels;
+        %tmp.3 = lgetv %txt;
+        symbol [ txt %tmp.3 318 40 43 ];
+        %tmp.4 = lgetv %f;
+        symbol [ f %tmp.4 318 45 46 ];
+        %tmp.5 = invoke %tmp.1 %tmp.2(%tmp.3, %tmp.4);
+        lputv %w.1 %tmp.5;
+        symbol [ w %w.1 318 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 319 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_317_57_324_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_317_57_324_4_stop" ]
+        %n.2 = local;
+        symbol [ n %n.2 319 12 13 ];
+        %tmp.6 = self;
+        symbol [ leadSpaces %tmp.7 319 16 26 ];
+        %tmp.7 = getv function %tmp.6 :leadSpaces;
+        %tmp.8 = lgetv %txt;
+        symbol [ txt %tmp.8 319 27 30 ];
+        %tmp.9 = invoke %tmp.6 %tmp.7(%tmp.8);
+        %tmp.10 = self;
+        symbol [ trailSpaces %tmp.11 319 34 45 ];
+        %tmp.11 = getv function %tmp.10 :trailSpaces;
+        %tmp.12 = lgetv %txt;
+        symbol [ txt %tmp.12 319 46 49 ];
+        %tmp.13 = invoke %tmp.10 %tmp.11(%tmp.12);
+        %tmp.14 = add %tmp.9 %tmp.13;
+        lputv %n.2 %tmp.14;
+        symbol [ n %n.2 319 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 320 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_8_322_8_if_stmt:
+        %tmp.15 = lgetv %n.2;
+        symbol [ n %tmp.15 320 12 13 ];
+        %tmp.16 = 0;
+        %tmp.17 = gt %tmp.15 %tmp.16;
+        bf %tmp.17 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_8_322_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_8_322_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_19_322_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 321 12 ]
+        %tmp.18 = lgetv %w.1;
+        symbol [ w %tmp.18 321 16 17 ];
+        %tmp.19 = lgetv %n.2;
+        symbol [ n %tmp.19 321 20 21 ];
+        %tmp.20 = self;
+        symbol [ gapUnit %tmp.21 321 24 31 ];
+        %tmp.21 = getv function %tmp.20 :gapUnit;
+        %tmp.22 = lgetv %dc;
+        symbol [ dc %tmp.22 321 32 34 ];
+        %tmp.23 = lgetv %f;
+        symbol [ f %tmp.23 321 36 37 ];
+        %tmp.24 = invoke %tmp.20 %tmp.21(%tmp.22, %tmp.23);
+        %tmp.25 = mul %tmp.19 %tmp.24;
+        %tmp.26 = add %tmp.18 %tmp.25;
+        lputv %w.1 %tmp.26;
+        symbol [ w %w.1 321 12 13 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_19_322_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_8_322_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_320_8_322_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 323 8 ]
+        %tmp.27 = lgetv %w.1;
+        symbol [ w %tmp.27 323 15 16 ];
+        ret %tmp.27;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_317_57_324_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 326; @symbol_functiondef = [segments,326,20,28]; @symbol_param<0> = [line,326,29,33]; @symbol_param<0>_type<0> = [String,326,37,43]; @symbol_param<1> = [isNum,326,45,50]; @symbol_param<2> = [isOpt,326,52,57]; ]
+    protected
+    function segments(line as String, isNum, isOpt) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 327 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_stop" ]
+        %out.1 = local;
+        symbol [ out %out.1 327 12 15 ];
+        %tmp.1 = newa 0;
+        lputv %out.1 %tmp.1;
+        symbol [ out %out.1 327 12 15 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 330 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_8_333_8_if_stmt:
+        %tmp.2 = lgetv %isOpt;
+        symbol [ isOpt %tmp.2 330 12 17 ];
+        %tmp.3 = true;
+        %tmp.4 = eq %tmp.2 %tmp.3;
+        bf %tmp.4 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_8_333_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_8_333_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_27_333_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 331 12 ]
+        %tmp.5 = lgetv %out.1;
+        symbol [ out %tmp.5 331 12 15 ];
+        symbol [ add %tmp.6 331 16 19 ];
+        %tmp.6 = getv function %tmp.5 :add;
+        %tmp.7 = newa 2;
+        %tmp.8 = lgetv %line;
+        symbol [ line %tmp.8 331 22 26 ];
+        %tmp.9 = dup %tmp.7;
+        %tmp.10 = aputv %tmp.9 0 %tmp.8;
+        %tmp.11 = false;
+        %tmp.12 = dup %tmp.10;
+        %tmp.13 = aputv %tmp.12 1 %tmp.11;
+        invoke %tmp.5 %tmp.6(%tmp.13);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 332 12 ]
+        %tmp.14 = lgetv %out.1;
+        symbol [ out %tmp.14 332 19 22 ];
+        ret %tmp.14;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_27_333_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_8_333_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_330_8_333_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 334 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_8_337_8_if_stmt:
+        %tmp.15 = lgetv %isNum;
+        symbol [ isNum %tmp.15 334 12 17 ];
+        %tmp.16 = true;
+        %tmp.17 = eq %tmp.15 %tmp.16;
+        bf %tmp.17 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_8_337_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_8_337_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_27_337_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 335 12 ]
+        %tmp.18 = lgetv %out.1;
+        symbol [ out %tmp.18 335 12 15 ];
+        symbol [ add %tmp.19 335 16 19 ];
+        %tmp.19 = getv function %tmp.18 :add;
+        %tmp.20 = newa 2;
+        %tmp.21 = lgetv %line;
+        symbol [ line %tmp.21 335 22 26 ];
+        %tmp.22 = dup %tmp.20;
+        %tmp.23 = aputv %tmp.22 0 %tmp.21;
+        %tmp.24 = true;
+        %tmp.25 = dup %tmp.23;
+        %tmp.26 = aputv %tmp.25 1 %tmp.24;
+        invoke %tmp.18 %tmp.19(%tmp.26);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 336 12 ]
+        %tmp.27 = lgetv %out.1;
+        symbol [ out %tmp.27 336 19 22 ];
+        ret %tmp.27;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_27_337_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_8_337_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_334_8_337_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 338 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_stop" ]
+        %chars.2 = local;
+        symbol [ chars %chars.2 338 12 17 ];
+        %tmp.28 = lgetv %line;
+        symbol [ line %tmp.28 338 20 24 ];
+        symbol [ toCharArray %tmp.29 338 25 36 ];
+        %tmp.29 = getv function %tmp.28 :toCharArray;
+        %tmp.30 = invoke %tmp.28 %tmp.29();
+        lputv %chars.2 %tmp.30;
+        symbol [ chars %chars.2 338 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 339 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_stop" ]
+        %cur.3 = local;
+        symbol [ cur %cur.3 339 12 15 ];
+        %tmp.31 = "";
+        lputv %cur.3 %tmp.31;
+        symbol [ cur %cur.3 339 12 15 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 340 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_stop" ]
+        %curIsNum.4 = local;
+        symbol [ curIsNum %curIsNum.4 340 12 20 ];
+        %tmp.32 = false;
+        lputv %curIsNum.4 %tmp.32;
+        symbol [ curIsNum %curIsNum.4 340 12 20 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 341 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_stop" ]
+        %started.5 = local;
+        symbol [ started %started.5 341 12 19 ];
+        %tmp.33 = false;
+        lputv %started.5 %tmp.33;
+        symbol [ started %started.5 341 12 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 342 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_end" ]
+        %i.6 = local;
+        symbol [ i %i.6 342 17 18 ];
+        %tmp.34 = 0;
+        lputv %i.6 %tmp.34;
+        symbol [ i %i.6 342 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_test:
+        %tmp.35 = lgetv %i.6;
+        symbol [ i %tmp.35 342 24 25 ];
+        %tmp.36 = lgetv %chars.2;
+        symbol [ chars %tmp.36 342 28 33 ];
+        symbol [ size %tmp.37 342 34 38 ];
+        %tmp.37 = getv function %tmp.36 :size;
+        %tmp.38 = invoke %tmp.36 %tmp.37();
+        %tmp.39 = lt %tmp.35 %tmp.38;
+        bf %tmp.39 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 343 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_stop" ]
+        %c.7 = local;
+        symbol [ c %c.7 343 16 17 ];
+        %tmp.40 = lgetv %chars.2;
+        symbol [ chars %tmp.40 343 21 26 ];
+        %tmp.41 = lgetv %i.6;
+        symbol [ i %tmp.41 343 27 28 ];
+        %tmp.42 = agetv %tmp.40 %tmp.41;
+        lputv %c.7 %tmp.42;
+        symbol [ c %c.7 343 16 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 344 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_stop" ]
+        %cv.8 = local;
+        symbol [ cv %cv.8 344 16 18 ];
+        %tmp.43 = lgetv %c.7;
+        symbol [ c %tmp.43 344 21 22 ];
+        symbol [ toNumber %tmp.44 344 23 31 ];
+        %tmp.44 = getv function %tmp.43 :toNumber;
+        %tmp.45 = invoke %tmp.43 %tmp.44();
+        lputv %cv.8 %tmp.45;
+        symbol [ cv %cv.8 344 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 346 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_stop" ]
+        %thisNum.9 = local;
+        symbol [ thisNum %thisNum.9 346 16 23 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_27_346_45_begin:
+        %tmp.46 = lgetv %cv.8;
+        symbol [ cv %tmp.46 346 27 29 ];
+        %tmp.47 = 48;
+        %tmp.48 = gte %tmp.46 %tmp.47;
+        %tmp.49 = dup %tmp.48;
+        bf %tmp.49 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_39_346_45_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_39_346_45_true:
+        %tmp.50 = lgetv %cv.8;
+        symbol [ cv %tmp.50 346 39 41 ];
+        %tmp.51 = 58;
+        %tmp.52 = lte %tmp.50 %tmp.51;
+        %tmp.53 = and %tmp.48 %tmp.52;
+        push %tmp.53;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_39_346_45_end:
+        %tmp.54 = phi [%tmp.49 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_27_346_45_begin] [%tmp.53 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_39_346_45_true] [%tmp.54 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_346_39_346_45_end];
+        lputv %thisNum.9 %tmp.54;
+        symbol [ thisNum %thisNum.9 346 16 23 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 347 12 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_12_354_12_if_stmt:
+        %tmp.55 = lgetv %started.5;
+        symbol [ started %tmp.55 347 17 24 ];
+        %tmp.56 = not %tmp.55;
+        bf %tmp.56 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_12_354_12_if_false;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_12_354_12_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_26_350_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 348 16 ]
+        %tmp.57 = lgetv %thisNum.9;
+        symbol [ thisNum %tmp.57 348 27 34 ];
+        lputv %curIsNum.4 %tmp.57;
+        symbol [ curIsNum %curIsNum.4 348 16 24 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 349 16 ]
+        %tmp.58 = true;
+        lputv %started.5 %tmp.58;
+        symbol [ started %started.5 349 16 23 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_26_350_12_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_12_354_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_12_354_12_if_false:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 350 19 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_19_354_12_if_stmt:
+        %tmp.59 = lgetv %thisNum.9;
+        symbol [ thisNum %tmp.59 350 23 30 ];
+        %tmp.60 = lgetv %curIsNum.4;
+        symbol [ curIsNum %tmp.60 350 34 42 ];
+        %tmp.61 = ne %tmp.59 %tmp.60;
+        bf %tmp.61 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_19_354_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_19_354_12_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_44_354_12_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 351 16 ]
+        %tmp.62 = lgetv %out.1;
+        symbol [ out %tmp.62 351 16 19 ];
+        symbol [ add %tmp.63 351 20 23 ];
+        %tmp.63 = getv function %tmp.62 :add;
+        %tmp.64 = newa 2;
+        %tmp.65 = lgetv %cur.3;
+        symbol [ cur %tmp.65 351 26 29 ];
+        %tmp.66 = dup %tmp.64;
+        %tmp.67 = aputv %tmp.66 0 %tmp.65;
+        %tmp.68 = lgetv %curIsNum.4;
+        symbol [ curIsNum %tmp.68 351 31 39 ];
+        %tmp.69 = dup %tmp.67;
+        %tmp.70 = aputv %tmp.69 1 %tmp.68;
+        invoke %tmp.62 %tmp.63(%tmp.70);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 352 16 ]
+        %tmp.71 = "";
+        lputv %cur.3 %tmp.71;
+        symbol [ cur %cur.3 352 16 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 353 16 ]
+        %tmp.72 = lgetv %thisNum.9;
+        symbol [ thisNum %tmp.72 353 27 34 ];
+        lputv %curIsNum.4 %tmp.72;
+        symbol [ curIsNum %curIsNum.4 353 16 24 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_44_354_12_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_19_354_12_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_350_19_354_12_if_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_347_12_354_12_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 355 12 ]
+        %tmp.73 = lgetv %cur.3;
+        symbol [ cur %tmp.73 355 12 15 ];
+        %tmp.74 = lgetv %c.7;
+        symbol [ c %tmp.74 355 19 20 ];
+        symbol [ toString %tmp.75 355 21 29 ];
+        %tmp.75 = getv function %tmp.74 :toString;
+        %tmp.76 = invoke %tmp.74 %tmp.75();
+        %tmp.77 = add %tmp.73 %tmp.76;
+        lputv %cur.3 %tmp.77;
+        symbol [ cur %cur.3 355 12 15 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_47_356_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 342 ]
+        %tmp.80 = lgetv %i.6;
+        symbol [ i %tmp.80 342 42 43 ];
+        %tmp.81 = add %tmp.80 1;
+        lputv %i.6 %tmp.81;
+        symbol [ i %i.6 342 42 43 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_342_8_356_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 357 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_8_359_8_if_stmt:
+        %tmp.82 = lgetv %cur.3;
+        symbol [ cur %tmp.82 357 12 15 ];
+        symbol [ length %tmp.83 357 16 22 ];
+        %tmp.83 = getv function %tmp.82 :length;
+        %tmp.84 = invoke %tmp.82 %tmp.83();
+        %tmp.85 = 0;
+        %tmp.86 = gt %tmp.84 %tmp.85;
+        bf %tmp.86 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_8_359_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_8_359_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_30_359_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 358 12 ]
+        %tmp.87 = lgetv %out.1;
+        symbol [ out %tmp.87 358 12 15 ];
+        symbol [ add %tmp.88 358 16 19 ];
+        %tmp.88 = getv function %tmp.87 :add;
+        %tmp.89 = newa 2;
+        %tmp.90 = lgetv %cur.3;
+        symbol [ cur %tmp.90 358 22 25 ];
+        %tmp.91 = dup %tmp.89;
+        %tmp.92 = aputv %tmp.91 0 %tmp.90;
+        %tmp.93 = lgetv %curIsNum.4;
+        symbol [ curIsNum %tmp.93 358 27 35 ];
+        %tmp.94 = dup %tmp.92;
+        %tmp.95 = aputv %tmp.94 1 %tmp.93;
+        invoke %tmp.87 %tmp.88(%tmp.95);
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_30_359_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_8_359_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_357_8_359_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 360 8 ]
+        %tmp.96 = lgetv %out.1;
+        symbol [ out %tmp.96 360 15 18 ];
+        ret %tmp.96;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_326_59_361_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 363; @symbol_functiondef = [fontForSeg,363,20,30]; @symbol_param<0> = [segIsNum,363,31,39]; @symbol_param<1> = [isOpt,363,41,46]; @symbol_param<2> = [lvl,363,48,51]; ]
+    protected
+    function fontForSeg(segIsNum, isOpt, lvl) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_363_53_371_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 364 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_8_366_8_if_stmt:
+        %tmp.1 = lgetv %isOpt;
+        symbol [ isOpt %tmp.1 364 12 17 ];
+        %tmp.2 = true;
+        %tmp.3 = eq %tmp.1 %tmp.2;
+        bf %tmp.3 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_8_366_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_8_366_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_27_366_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 365 12 ]
+        symbol [ mOptFonts %tmp.5 365 19 28 ];
+        %tmp.5 = getv ? :mOptFonts;
+        %tmp.6 = lgetv %lvl;
+        symbol [ lvl %tmp.6 365 29 32 ];
+        %tmp.7 = agetv %tmp.5 %tmp.6;
+        ret %tmp.7;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_27_366_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_8_366_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_364_8_366_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 367 8 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_8_369_8_if_stmt:
+        %tmp.8 = lgetv %segIsNum;
+        symbol [ segIsNum %tmp.8 367 12 20 ];
+        %tmp.9 = true;
+        %tmp.10 = eq %tmp.8 %tmp.9;
+        bf %tmp.10 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_8_369_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_8_369_8_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_30_369_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 368 12 ]
+        symbol [ mNumFonts %tmp.12 368 19 28 ];
+        %tmp.12 = getv ? :mNumFonts;
+        %tmp.13 = lgetv %lvl;
+        symbol [ lvl %tmp.13 368 29 32 ];
+        %tmp.14 = agetv %tmp.12 %tmp.13;
+        ret %tmp.14;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_30_369_8_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_8_369_8_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_367_8_369_8_if_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 370 8 ]
+        symbol [ mTxtFonts %tmp.16 370 15 24 ];
+        %tmp.16 = getv ? :mTxtFonts;
+        %tmp.17 = lgetv %lvl;
+        symbol [ lvl %tmp.17 370 25 28 ];
+        %tmp.18 = agetv %tmp.16 %tmp.17;
+        ret %tmp.18;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_363_53_371_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 373; @symbol_functiondef = [lineWidth,373,20,29]; @symbol_param<0> = [dc,373,30,32]; @symbol_param<0>_type<0> = [Dc,373,36,38]; @symbol_param<1> = [line,373,40,44]; @symbol_param<1>_type<0> = [String,373,48,54]; @symbol_param<2> = [isNum,373,56,61]; @symbol_param<3> = [isOpt,373,63,68]; @symbol_param<4> = [lvl,373,70,73]; ]
+    protected
+    function lineWidth(dc as Dc, line as String, isNum, isOpt, lvl) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_373_75_381_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 374 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_373_75_381_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_373_75_381_4_stop" ]
+        %segs.1 = local;
+        symbol [ segs %segs.1 374 12 16 ];
+        %tmp.1 = self;
+        symbol [ segments %tmp.2 374 19 27 ];
+        %tmp.2 = getv function %tmp.1 :segments;
+        %tmp.3 = lgetv %line;
+        symbol [ line %tmp.3 374 28 32 ];
+        %tmp.4 = lgetv %isNum;
+        symbol [ isNum %tmp.4 374 34 39 ];
+        %tmp.5 = lgetv %isOpt;
+        symbol [ isOpt %tmp.5 374 41 46 ];
+        %tmp.6 = invoke %tmp.1 %tmp.2(%tmp.3, %tmp.4, %tmp.5);
+        lputv %segs.1 %tmp.6;
+        symbol [ segs %segs.1 374 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 375 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_373_75_381_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_373_75_381_4_stop" ]
+        %wsum.2 = local;
+        symbol [ wsum %wsum.2 375 12 16 ];
+        %tmp.7 = 0;
+        lputv %wsum.2 %tmp.7;
+        symbol [ wsum %wsum.2 375 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 376 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_end" ]
+        %i.3 = local;
+        symbol [ i %i.3 376 17 18 ];
+        %tmp.8 = 0;
+        lputv %i.3 %tmp.8;
+        symbol [ i %i.3 376 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_test:
+        %tmp.9 = lgetv %i.3;
+        symbol [ i %tmp.9 376 24 25 ];
+        %tmp.10 = lgetv %segs.1;
+        symbol [ segs %tmp.10 376 28 32 ];
+        symbol [ size %tmp.11 376 33 37 ];
+        %tmp.11 = getv function %tmp.10 :size;
+        %tmp.12 = invoke %tmp.10 %tmp.11();
+        %tmp.13 = lt %tmp.9 %tmp.12;
+        bf %tmp.13 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_46_379_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 377 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_46_379_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_46_379_8_stop" ]
+        %seg.4 = local;
+        symbol [ seg %seg.4 377 16 19 ];
+        %tmp.14 = lgetv %segs.1;
+        symbol [ segs %tmp.14 377 22 26 ];
+        %tmp.15 = lgetv %i.3;
+        symbol [ i %tmp.15 377 27 28 ];
+        %tmp.16 = agetv %tmp.14 %tmp.15;
+        lputv %seg.4 %tmp.16;
+        symbol [ seg %seg.4 377 16 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 378 12 ]
+        %tmp.17 = lgetv %wsum.2;
+        symbol [ wsum %tmp.17 378 19 23 ];
+        %tmp.18 = self;
+        symbol [ segWidth %tmp.19 378 26 34 ];
+        %tmp.19 = getv function %tmp.18 :segWidth;
+        %tmp.20 = lgetv %dc;
+        symbol [ dc %tmp.20 378 35 37 ];
+        %tmp.21 = lgetv %seg.4;
+        symbol [ seg %tmp.21 378 39 42 ];
+        %tmp.22 = 0;
+        %tmp.23 = agetv %tmp.21 %tmp.22;
+        %tmp.24 = as %tmp.23 String;
+        symbol [ String %tmp.24 378 49 55 ];
+        %tmp.25 = self;
+        symbol [ fontForSeg %tmp.26 378 57 67 ];
+        %tmp.26 = getv function %tmp.25 :fontForSeg;
+        %tmp.27 = lgetv %seg.4;
+        symbol [ seg %tmp.27 378 68 71 ];
+        %tmp.28 = 1;
+        %tmp.29 = agetv %tmp.27 %tmp.28;
+        %tmp.30 = lgetv %isOpt;
+        symbol [ isOpt %tmp.30 378 76 81 ];
+        %tmp.31 = lgetv %lvl;
+        symbol [ lvl %tmp.31 378 83 86 ];
+        %tmp.32 = invoke %tmp.25 %tmp.26(%tmp.29, %tmp.30, %tmp.31);
+        %tmp.33 = invoke %tmp.18 %tmp.19(%tmp.20, %tmp.24, %tmp.32);
+        %tmp.34 = add %tmp.17 %tmp.33;
+        lputv %wsum.2 %tmp.34;
+        symbol [ wsum %wsum.2 378 12 16 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_46_379_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 376 ]
+        %tmp.37 = lgetv %i.3;
+        symbol [ i %tmp.37 376 41 42 ];
+        %tmp.38 = add %tmp.37 1;
+        lputv %i.3 %tmp.38;
+        symbol [ i %i.3 376 41 42 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_376_8_379_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 380 8 ]
+        %tmp.39 = lgetv %wsum.2;
+        symbol [ wsum %tmp.39 380 15 19 ];
+        ret %tmp.39;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_373_75_381_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 383; @symbol_functiondef = [lineHeight,383,20,30]; @symbol_param<0> = [dc,383,31,33]; @symbol_param<0>_type<0> = [Dc,383,37,39]; @symbol_param<1> = [line,383,41,45]; @symbol_param<1>_type<0> = [String,383,49,55]; @symbol_param<2> = [isNum,383,57,62]; @symbol_param<3> = [isOpt,383,64,69]; @symbol_param<4> = [lvl,383,71,74]; ]
+    protected
+    function lineHeight(dc as Dc, line as String, isNum, isOpt, lvl) {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_383_76_392_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 384 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_383_76_392_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_383_76_392_4_stop" ]
+        %segs.1 = local;
+        symbol [ segs %segs.1 384 12 16 ];
+        %tmp.1 = self;
+        symbol [ segments %tmp.2 384 19 27 ];
+        %tmp.2 = getv function %tmp.1 :segments;
+        %tmp.3 = lgetv %line;
+        symbol [ line %tmp.3 384 28 32 ];
+        %tmp.4 = lgetv %isNum;
+        symbol [ isNum %tmp.4 384 34 39 ];
+        %tmp.5 = lgetv %isOpt;
+        symbol [ isOpt %tmp.5 384 41 46 ];
+        %tmp.6 = invoke %tmp.1 %tmp.2(%tmp.3, %tmp.4, %tmp.5);
+        lputv %segs.1 %tmp.6;
+        symbol [ segs %segs.1 384 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 385 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_383_76_392_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_383_76_392_4_stop" ]
+        %hmax.2 = local;
+        symbol [ hmax %hmax.2 385 12 16 ];
+        %tmp.7 = 0;
+        lputv %hmax.2 %tmp.7;
+        symbol [ hmax %hmax.2 385 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 386 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_end" ]
+        %i.3 = local;
+        symbol [ i %i.3 386 17 18 ];
+        %tmp.8 = 0;
+        lputv %i.3 %tmp.8;
+        symbol [ i %i.3 386 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_test:
+        %tmp.9 = lgetv %i.3;
+        symbol [ i %tmp.9 386 24 25 ];
+        %tmp.10 = lgetv %segs.1;
+        symbol [ segs %tmp.10 386 28 32 ];
+        symbol [ size %tmp.11 386 33 37 ];
+        %tmp.11 = getv function %tmp.10 :size;
+        %tmp.12 = invoke %tmp.10 %tmp.11();
+        %tmp.13 = lt %tmp.9 %tmp.12;
+        bf %tmp.13 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_46_390_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 387 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_46_390_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_46_390_8_stop" ]
+        %seg.4 = local;
+        symbol [ seg %seg.4 387 16 19 ];
+        %tmp.14 = lgetv %segs.1;
+        symbol [ segs %tmp.14 387 22 26 ];
+        %tmp.15 = lgetv %i.3;
+        symbol [ i %tmp.15 387 27 28 ];
+        %tmp.16 = agetv %tmp.14 %tmp.15;
+        lputv %seg.4 %tmp.16;
+        symbol [ seg %seg.4 387 16 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 388 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_46_390_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_46_390_8_stop" ]
+        %fh.5 = local;
+        symbol [ fh %fh.5 388 16 18 ];
+        %tmp.17 = lgetv %dc;
+        symbol [ dc %tmp.17 388 22 24 ];
+        symbol [ getFontHeight %tmp.18 388 25 38 ];
+        %tmp.18 = getv function %tmp.17 :getFontHeight;
+        %tmp.19 = self;
+        symbol [ fontForSeg %tmp.20 388 39 49 ];
+        %tmp.20 = getv function %tmp.19 :fontForSeg;
+        %tmp.21 = lgetv %seg.4;
+        symbol [ seg %tmp.21 388 50 53 ];
+        %tmp.22 = 1;
+        %tmp.23 = agetv %tmp.21 %tmp.22;
+        %tmp.24 = lgetv %isOpt;
+        symbol [ isOpt %tmp.24 388 58 63 ];
+        %tmp.25 = lgetv %lvl;
+        symbol [ lvl %tmp.25 388 65 68 ];
+        %tmp.26 = invoke %tmp.19 %tmp.20(%tmp.23, %tmp.24, %tmp.25);
+        %tmp.27 = invoke %tmp.17 %tmp.18(%tmp.26);
+        lputv %fh.5 %tmp.27;
+        symbol [ fh %fh.5 388 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 389 12 ]
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_12_389_40_if_stmt:
+        %tmp.28 = lgetv %fh.5;
+        symbol [ fh %tmp.28 389 16 18 ];
+        %tmp.29 = lgetv %hmax.2;
+        symbol [ hmax %tmp.29 389 21 25 ];
+        %tmp.30 = gt %tmp.28 %tmp.29;
+        bf %tmp.30 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_12_389_40_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_12_389_40_if_true:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_27_389_40_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 389 29 ]
+        %tmp.31 = lgetv %fh.5;
+        symbol [ fh %tmp.31 389 36 38 ];
+        lputv %hmax.2 %tmp.31;
+        symbol [ hmax %hmax.2 389 29 33 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_27_389_40_stop:
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_12_389_40_if_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_389_12_389_40_if_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_46_390_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 386 ]
+        %tmp.34 = lgetv %i.3;
+        symbol [ i %tmp.34 386 41 42 ];
+        %tmp.35 = add %tmp.34 1;
+        lputv %i.3 %tmp.35;
+        symbol [ i %i.3 386 41 42 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_386_8_390_8_for_end:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 391 8 ]
+        %tmp.36 = lgetv %hmax.2;
+        symbol [ hmax %tmp.36 391 15 19 ];
+        ret %tmp.36;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_383_76_392_4_stop:
+    }
+    [ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 398; @symbol_functiondef = [drawMixed,398,20,29]; @symbol_param<0> = [dc,398,30,32]; @symbol_param<0>_type<0> = [Dc,398,36,38]; @symbol_param<1> = [cx,398,40,42]; @symbol_param<2> = [y,398,44,45]; @symbol_param<3> = [line,398,47,51]; @symbol_param<3>_type<0> = [String,398,55,61]; @symbol_param<4> = [isNum,398,63,68]; @symbol_param<5> = [isOpt,398,70,75]; @symbol_param<6> = [lvl,398,77,80]; @symbol_param<7> = [lh,398,82,84]; ]
+    protected
+    function drawMixed(dc as Dc, cx, y, line as String, isNum, isOpt, lvl, lh) as Void {
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 399 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_stop" ]
+        %segs.1 = local;
+        symbol [ segs %segs.1 399 12 16 ];
+        %tmp.1 = self;
+        symbol [ segments %tmp.2 399 19 27 ];
+        %tmp.2 = getv function %tmp.1 :segments;
+        %tmp.3 = lgetv %line;
+        symbol [ line %tmp.3 399 28 32 ];
+        %tmp.4 = lgetv %isNum;
+        symbol [ isNum %tmp.4 399 34 39 ];
+        %tmp.5 = lgetv %isOpt;
+        symbol [ isOpt %tmp.5 399 41 46 ];
+        %tmp.6 = invoke %tmp.1 %tmp.2(%tmp.3, %tmp.4, %tmp.5);
+        lputv %segs.1 %tmp.6;
+        symbol [ segs %segs.1 399 12 16 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 400 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_stop" ]
+        %total.2 = local;
+        symbol [ total %total.2 400 12 17 ];
+        %tmp.7 = self;
+        symbol [ lineWidth %tmp.8 400 20 29 ];
+        %tmp.8 = getv function %tmp.7 :lineWidth;
+        %tmp.9 = lgetv %dc;
+        symbol [ dc %tmp.9 400 30 32 ];
+        %tmp.10 = lgetv %line;
+        symbol [ line %tmp.10 400 34 38 ];
+        %tmp.11 = lgetv %isNum;
+        symbol [ isNum %tmp.11 400 40 45 ];
+        %tmp.12 = lgetv %isOpt;
+        symbol [ isOpt %tmp.12 400 47 52 ];
+        %tmp.13 = lgetv %lvl;
+        symbol [ lvl %tmp.13 400 54 57 ];
+        %tmp.14 = invoke %tmp.7 %tmp.8(%tmp.9, %tmp.10, %tmp.11, %tmp.12, %tmp.13);
+        lputv %total.2 %tmp.14;
+        symbol [ total %total.2 400 12 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 401 8 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_stop" ]
+        %x.3 = local;
+        symbol [ x %x.3 401 12 13 ];
+        %tmp.15 = lgetv %cx;
+        symbol [ cx %tmp.15 401 16 18 ];
+        %tmp.16 = lgetv %total.2;
+        symbol [ total %tmp.16 401 21 26 ];
+        %tmp.17 = 2;
+        %tmp.18 = div %tmp.16 %tmp.17;
+        %tmp.19 = sub %tmp.15 %tmp.18;
+        lputv %x.3 %tmp.19;
+        symbol [ x %x.3 401 12 13 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 402 8 ]
+        for @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_test @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_incr @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_init:
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_begin" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_end" ]
+        %i.4 = local;
+        symbol [ i %i.4 402 17 18 ];
+        %tmp.20 = 0;
+        lputv %i.4 %tmp.20;
+        symbol [ i %i.4 402 17 18 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_test:
+        %tmp.21 = lgetv %i.4;
+        symbol [ i %tmp.21 402 24 25 ];
+        %tmp.22 = lgetv %segs.1;
+        symbol [ segs %tmp.22 402 28 32 ];
+        symbol [ size %tmp.23 402 33 37 ];
+        %tmp.23 = getv function %tmp.22 :size;
+        %tmp.24 = invoke %tmp.22 %tmp.23();
+        %tmp.25 = lt %tmp.21 %tmp.24;
+        bf %tmp.25 @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_end;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_begin:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_start:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 403 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_stop" ]
+        %seg.5 = local;
+        symbol [ seg %seg.5 403 16 19 ];
+        %tmp.26 = lgetv %segs.1;
+        symbol [ segs %tmp.26 403 22 26 ];
+        %tmp.27 = lgetv %i.4;
+        symbol [ i %tmp.27 403 27 28 ];
+        %tmp.28 = agetv %tmp.26 %tmp.27;
+        lputv %seg.5 %tmp.28;
+        symbol [ seg %seg.5 403 16 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 404 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_stop" ]
+        %f.6 = local;
+        symbol [ f %f.6 404 16 17 ];
+        %tmp.29 = self;
+        symbol [ fontForSeg %tmp.30 404 22 32 ];
+        %tmp.30 = getv function %tmp.29 :fontForSeg;
+        %tmp.31 = lgetv %seg.5;
+        symbol [ seg %tmp.31 404 33 36 ];
+        %tmp.32 = 1;
+        %tmp.33 = agetv %tmp.31 %tmp.32;
+        %tmp.34 = lgetv %isOpt;
+        symbol [ isOpt %tmp.34 404 41 46 ];
+        %tmp.35 = lgetv %lvl;
+        symbol [ lvl %tmp.35 404 48 51 ];
+        %tmp.36 = invoke %tmp.29 %tmp.30(%tmp.33, %tmp.34, %tmp.35);
+        lputv %f.6 %tmp.36;
+        symbol [ f %f.6 404 16 17 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 405 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_stop" ]
+        %txt.7 = local;
+        symbol [ txt %txt.7 405 16 19 ];
+        %tmp.37 = lgetv %seg.5;
+        symbol [ seg %tmp.37 405 22 25 ];
+        %tmp.38 = 0;
+        %tmp.39 = agetv %tmp.37 %tmp.38;
+        %tmp.40 = as %tmp.39 String;
+        symbol [ String %tmp.40 405 32 38 ];
+        lputv %txt.7 %tmp.40;
+        symbol [ txt %txt.7 405 16 19 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 406 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_stop" ]
+        %dy.8 = local;
+        symbol [ dy %dy.8 406 16 18 ];
+        %tmp.41 = lgetv %lh;
+        symbol [ lh %tmp.41 406 23 25 ];
+        %tmp.42 = lgetv %dc;
+        symbol [ dc %tmp.42 406 28 30 ];
+        symbol [ getFontHeight %tmp.43 406 31 44 ];
+        %tmp.43 = getv function %tmp.42 :getFontHeight;
+        %tmp.44 = lgetv %f.6;
+        symbol [ f %tmp.44 406 45 46 ];
+        %tmp.45 = invoke %tmp.42 %tmp.43(%tmp.44);
+        %tmp.46 = sub %tmp.41 %tmp.45;
+        %tmp.47 = 2;
+        %tmp.48 = div %tmp.46 %tmp.47;
+        lputv %dy.8 %tmp.48;
+        symbol [ dy %dy.8 406 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 410 12 ]
+        [ "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_start" "C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_stop" ]
+        %lg.9 = local;
+        symbol [ lg %lg.9 410 16 18 ];
+        %tmp.49 = self;
+        symbol [ leadSpaces %tmp.50 410 22 32 ];
+        %tmp.50 = getv function %tmp.49 :leadSpaces;
+        %tmp.51 = lgetv %txt.7;
+        symbol [ txt %tmp.51 410 33 36 ];
+        %tmp.52 = invoke %tmp.49 %tmp.50(%tmp.51);
+        %tmp.53 = self;
+        symbol [ gapUnit %tmp.54 410 40 47 ];
+        %tmp.54 = getv function %tmp.53 :gapUnit;
+        %tmp.55 = lgetv %dc;
+        symbol [ dc %tmp.55 410 48 50 ];
+        %tmp.56 = lgetv %f.6;
+        symbol [ f %tmp.56 410 52 53 ];
+        %tmp.57 = invoke %tmp.53 %tmp.54(%tmp.55, %tmp.56);
+        %tmp.58 = mul %tmp.52 %tmp.57;
+        lputv %lg.9 %tmp.58;
+        symbol [ lg %lg.9 410 16 18 ];
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 411 12 ]
+        %tmp.59 = lgetv %dc;
+        symbol [ dc %tmp.59 411 12 14 ];
+        symbol [ drawText %tmp.60 411 15 23 ];
+        %tmp.60 = getv function %tmp.59 :drawText;
+        %tmp.61 = lgetv %x.3;
+        symbol [ x %tmp.61 411 24 25 ];
+        %tmp.62 = lgetv %lg.9;
+        symbol [ lg %tmp.62 411 28 30 ];
+        %tmp.63 = add %tmp.61 %tmp.62;
+        %tmp.64 = lgetv %y;
+        symbol [ y %tmp.64 411 32 33 ];
+        %tmp.65 = lgetv %dy.8;
+        symbol [ dy %tmp.65 411 36 38 ];
+        %tmp.66 = add %tmp.64 %tmp.65;
+        %tmp.67 = lgetv %f.6;
+        symbol [ f %tmp.67 411 40 41 ];
+        %tmp.68 = lgetv %txt.7;
+        symbol [ txt %tmp.68 411 43 46 ];
+        symbol [ Graphics %tmp.69 411 48 56 ];
+        %tmp.69 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_LEFT %tmp.70 411 57 74 ];
+        %tmp.70 = getv %tmp.69 :TEXT_JUSTIFY_LEFT;
+        invoke %tmp.59 %tmp.60(%tmp.63, %tmp.66, %tmp.67, %tmp.68, %tmp.70);
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 412 12 ]
+        %tmp.71 = lgetv %x.3;
+        symbol [ x %tmp.71 412 16 17 ];
+        %tmp.72 = self;
+        symbol [ segWidth %tmp.73 412 20 28 ];
+        %tmp.73 = getv function %tmp.72 :segWidth;
+        %tmp.74 = lgetv %dc;
+        symbol [ dc %tmp.74 412 29 31 ];
+        %tmp.75 = lgetv %txt.7;
+        symbol [ txt %tmp.75 412 33 36 ];
+        %tmp.76 = lgetv %f.6;
+        symbol [ f %tmp.76 412 38 39 ];
+        %tmp.77 = invoke %tmp.72 %tmp.73(%tmp.74, %tmp.75, %tmp.76);
+        %tmp.78 = add %tmp.71 %tmp.77;
+        lputv %x.3 %tmp.78;
+        symbol [ x %x.3 412 12 13 ];
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_46_413_8_stop:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_incr:
+[ "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc" 402 ]
+        %tmp.81 = lgetv %i.4;
+        symbol [ i %tmp.81 402 41 42 ];
+        %tmp.82 = add %tmp.81 1;
+        lputv %i.4 %tmp.82;
+        symbol [ i %i.4 402 41 42 ];
+        goto @C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_test;
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_402_8_413_8_for_end:
+C__Users_User_Desktop_Livetracking_Garmin_LivetrackingCIQ_source_LivetrackingCIQView_mc_398_94_414_4_stop:
+    }
+}
+[ @file = "C:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\source\LivetrackingCIQView.mc"; @line = 44; ]
+<init> {
+}

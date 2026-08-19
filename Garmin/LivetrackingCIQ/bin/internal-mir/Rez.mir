@@ -1,0 +1,1478 @@
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 1; @symbol_importdef<0> = [Toybox,1,7,13]; @symbol_importdef<1> = [Lang,1,14,18]; ]
+import Toybox.Lang;
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 2; @symbol_usingdef<0> = [Toybox,2,6,12]; @symbol_usingdef<1> = [WatchUi,2,13,20]; ]
+using Toybox.WatchUi;
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 3; @symbol_usingdef<0> = [Toybox,3,6,12]; @symbol_usingdef<1> = [WatchUi,3,13,20]; @symbol_usingAlias = [Ui,3,24,26]; ]
+using Toybox.WatchUi as :Ui;
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 4; @symbol_usingdef<0> = [Toybox,4,6,12]; @symbol_usingdef<1> = [Graphics,4,13,21]; ]
+using Toybox.Graphics;
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 5; @symbol_usingdef<0> = [Toybox,5,6,12]; @symbol_usingdef<1> = [Graphics,5,13,21]; @symbol_usingAlias = [Gfx,5,25,28]; ]
+using Toybox.Graphics as :Gfx;
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 7; @symbol_moduledef = [Rez,7,7,10]; ]
+module Rez {
+    [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 7; ]
+    <init> {
+    }
+    [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 8; @symbol_moduledef = [Drawables,8,11,20]; ]
+    module Drawables {
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 8; ]
+        <init> {
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 9; @position = 27; initialized = true; @symbol_vardef = [LauncherIcon,9,27,39]; @symbol_type<0> = [ResourceId,9,43,53]; ]
+        var LauncherIcon as ResourceId;
+    }
+    [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 12; @symbol_moduledef = [Strings,12,11,18]; ]
+    module Strings {
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 12; ]
+        <init> {
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 13; @position = 27; initialized = true; @symbol_vardef = [SettingTrackerIdLabel,13,27,48]; @symbol_type<0> = [ResourceId,13,52,62]; ]
+        var SettingTrackerIdLabel as ResourceId;
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 14; @position = 27; initialized = true; @symbol_vardef = [SettingTrackerIdPrompt,14,27,49]; @symbol_type<0> = [ResourceId,14,53,63]; ]
+        var SettingTrackerIdPrompt as ResourceId;
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 15; @position = 27; initialized = true; @symbol_vardef = [AppName,15,27,34]; @symbol_type<0> = [ResourceId,15,38,48]; ]
+        var AppName as ResourceId;
+    }
+    [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 18; @symbol_moduledef = [Styles,18,11,17]; ]
+    module Styles {
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 18; ]
+        <init> {
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 19; @symbol_moduledef = [prompt_font_enhanced_readability__body_with_title,19,15,64]; ]
+        module prompt_font_enhanced_readability__body_with_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 19; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 20; @position = 18; @symbol_constdef = [exclude,20,18,25]; @symbol_type<0> = [Boolean,20,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 23; @symbol_moduledef = [system_size__menu_header,23,15,39]; ]
+        module system_size__menu_header {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 23; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 24; @position = 18; @symbol_constdef = [height,24,18,24]; @symbol_type<0> = [Number,24,28,34]; ]
+            const height as Number = 0;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 27; @symbol_moduledef = [system_loc__hint_button_left_bottom,27,15,50]; ]
+        module system_loc__hint_button_left_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 27; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 28; @position = 18; @symbol_constdef = [exclude,28,18,25]; @symbol_type<0> = [Boolean,28,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 31; @symbol_moduledef = [prompt_font_enhanced_readability__body_no_title,31,15,62]; ]
+        module prompt_font_enhanced_readability__body_no_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 31; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 32; @position = 18; @symbol_constdef = [exclude,32,18,25]; @symbol_type<0> = [Boolean,32,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 35; @symbol_moduledef = [prompt_loc__body_no_title,35,15,40]; ]
+        module prompt_loc__body_no_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 35; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 36; @position = 18; @symbol_constdef = [x,36,18,19]; @symbol_type<0> = [Number,36,23,29]; ]
+            const x as Number = 8;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 37; @position = 18; @symbol_constdef = [y,37,18,19]; @symbol_type<0> = [Number,37,23,29]; ]
+            const y as Number = 14;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 40; @symbol_moduledef = [system_icon_dark__about,40,15,38]; ]
+        module system_icon_dark__about {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 40; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 41; @position = 18; @symbol_constdef = [filename,41,18,26]; @symbol_type<0> = [String,41,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__about.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 42; @position = 18; @symbol_constdef = [disableTransparency,42,18,37]; @symbol_type<0> = [Boolean,42,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 43; @position = 18; @symbol_constdef = [dithering,43,18,27]; @symbol_type<0> = [String,43,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 44; @position = 18; @symbol_constdef = [automaticPalette,44,18,34]; @symbol_type<0> = [Boolean,44,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 47; @symbol_moduledef = [system_icon_light__question,47,15,42]; ]
+        module system_icon_light__question {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 47; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 48; @position = 18; @symbol_constdef = [filename,48,18,26]; @symbol_type<0> = [String,48,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__question.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 49; @position = 18; @symbol_constdef = [disableTransparency,49,18,37]; @symbol_type<0> = [Boolean,49,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 50; @position = 18; @symbol_constdef = [dithering,50,18,27]; @symbol_type<0> = [String,50,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 51; @position = 18; @symbol_constdef = [automaticPalette,51,18,34]; @symbol_type<0> = [Boolean,51,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 54; @symbol_moduledef = [system_loc__hint_button_left_top,54,15,47]; ]
+        module system_loc__hint_button_left_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 54; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 55; @position = 18; @symbol_constdef = [exclude,55,18,25]; @symbol_type<0> = [Boolean,55,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 58; @symbol_moduledef = [prompt_font__title,58,15,33]; ]
+        module prompt_font__title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 58; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 59; @position = 18; @symbol_constdef = [exclude,59,18,25]; @symbol_type<0> = [Boolean,59,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 62; @symbol_moduledef = [system_icon_dark__discard,62,15,40]; ]
+        module system_icon_dark__discard {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 62; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 63; @position = 18; @symbol_constdef = [filename,63,18,26]; @symbol_type<0> = [String,63,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__discard.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 64; @position = 18; @symbol_constdef = [disableTransparency,64,18,37]; @symbol_type<0> = [Boolean,64,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 65; @position = 18; @symbol_constdef = [dithering,65,18,27]; @symbol_type<0> = [String,65,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 66; @position = 18; @symbol_constdef = [automaticPalette,66,18,34]; @symbol_type<0> = [Boolean,66,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 69; @symbol_moduledef = [system_size__menu_item,69,15,37]; ]
+        module system_size__menu_item {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 69; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 70; @position = 18; @symbol_constdef = [width,70,18,23]; @symbol_type<0> = [Number,70,27,33]; ]
+            const width as Number = 246;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 71; @position = 18; @symbol_constdef = [height,71,18,24]; @symbol_type<0> = [Number,71,28,34]; ]
+            const height as Number = 70;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 74; @symbol_moduledef = [system_color_dark__text,74,15,38]; ]
+        module system_color_dark__text {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 74; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 76 18 ]
+                symbol [ Graphics %tmp.1 76 31 39 ];
+                %tmp.1 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.2 76 40 57 ];
+                %tmp.2 = getv %tmp.1 :COLOR_TRANSPARENT;
+                putv self :background %tmp.2;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 75; @position = 18; @symbol_constdef = [color,75,18,23]; @symbol_type<0> = [Number,75,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 76; @position = 18; @symbol_constdef = [background,76,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 79; @symbol_moduledef = [system_icon_destructive__discard,79,15,47]; ]
+        module system_icon_destructive__discard {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 79; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 80; @position = 18; @symbol_constdef = [filename,80,18,26]; @symbol_type<0> = [String,80,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_destructive__discard.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 81; @position = 18; @symbol_constdef = [disableTransparency,81,18,37]; @symbol_type<0> = [Boolean,81,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 82; @position = 18; @symbol_constdef = [dithering,82,18,27]; @symbol_type<0> = [String,82,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 83; @position = 18; @symbol_constdef = [automaticPalette,83,18,34]; @symbol_type<0> = [Boolean,83,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 86; @symbol_moduledef = [system_icon_dark__hint_action_menu,86,15,49]; ]
+        module system_icon_dark__hint_action_menu {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 86; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 87; @position = 18; @symbol_constdef = [exclude,87,18,25]; @symbol_type<0> = [Boolean,87,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 90; @symbol_moduledef = [prompt_size__title,90,15,33]; ]
+        module prompt_size__title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 90; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 91; @position = 18; @symbol_constdef = [exclude,91,18,25]; @symbol_type<0> = [Boolean,91,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 94; @symbol_moduledef = [confirmation_font__body,94,15,38]; ]
+        module confirmation_font__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 94; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 95 18 ]
+                symbol [ Graphics %tmp.3 95 34 42 ];
+                %tmp.3 = getm $.Toybox.Graphics;
+                symbol [ TEXT_JUSTIFY_CENTER %tmp.4 95 43 62 ];
+                %tmp.4 = getv %tmp.3 :TEXT_JUSTIFY_CENTER;
+                symbol [ Graphics %tmp.5 95 63 71 ];
+                %tmp.5 = getm $.Toybox.Graphics;
+                symbol [ TEXT_JUSTIFY_VCENTER %tmp.6 95 72 92 ];
+                %tmp.6 = getv %tmp.5 :TEXT_JUSTIFY_VCENTER;
+                %tmp.7 = bitor %tmp.4 %tmp.6;
+                putv self :justification %tmp.7;
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 96 18 ]
+                symbol [ Graphics %tmp.8 96 25 33 ];
+                %tmp.8 = getm $.Toybox.Graphics;
+                symbol [ FONT_MEDIUM %tmp.9 96 34 45 ];
+                %tmp.9 = getv %tmp.8 :FONT_MEDIUM;
+                putv self :font %tmp.9;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 95; @position = 18; @symbol_constdef = [justification,95,18,31]; ]
+            const justification;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 96; @position = 18; @symbol_constdef = [font,96,18,22]; ]
+            const font;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 99; @symbol_moduledef = [system_color_dark__background,99,15,44]; ]
+        module system_color_dark__background {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 99; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 100; @position = 18; @symbol_constdef = [color,100,18,23]; @symbol_type<0> = [Number,100,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 101; @position = 18; @symbol_constdef = [background,101,18,28]; @symbol_type<0> = [Number,101,32,38]; ]
+            const background as Number = 0x000000;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 104; @symbol_moduledef = [system_icon_destructive__hint_button_left_top,104,15,60]; ]
+        module system_icon_destructive__hint_button_left_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 104; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 105; @position = 18; @symbol_constdef = [exclude,105,18,25]; @symbol_type<0> = [Boolean,105,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 108; @symbol_moduledef = [system_size__launch_icon,108,15,39]; ]
+        module system_size__launch_icon {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 108; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 109; @position = 18; @symbol_constdef = [scaleX,109,18,24]; @symbol_type<0> = [Number,109,28,34]; ]
+            const scaleX as Number = 35;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 110; @position = 18; @symbol_constdef = [scaleY,110,18,24]; @symbol_type<0> = [Number,110,28,34]; ]
+            const scaleY as Number = 35;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 111; @position = 18; @symbol_constdef = [scaleRelativeTo,111,18,33]; @symbol_type<0> = [String,111,37,43]; ]
+            const scaleRelativeTo as String = "screen";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 114; @symbol_moduledef = [confirmation_input__confirm,114,15,42]; ]
+        module confirmation_input__confirm {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 114; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 115 18 ]
+                symbol [ WatchUi %tmp.10 115 27 34 ];
+                %tmp.10 = getm $.Toybox.WatchUi;
+                symbol [ KEY_ENTER %tmp.11 115 35 44 ];
+                %tmp.11 = getv %tmp.10 :KEY_ENTER;
+                putv self :button %tmp.11;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 115; @position = 18; @symbol_constdef = [button,115,18,24]; ]
+            const button;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 118; @symbol_moduledef = [prompt_font__body_with_title,118,15,43]; ]
+        module prompt_font__body_with_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 118; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 119 18 ]
+                symbol [ Graphics %tmp.12 119 34 42 ];
+                %tmp.12 = getm $.Toybox.Graphics;
+                symbol [ TEXT_JUSTIFY_CENTER %tmp.13 119 43 62 ];
+                %tmp.13 = getv %tmp.12 :TEXT_JUSTIFY_CENTER;
+                symbol [ Graphics %tmp.14 119 63 71 ];
+                %tmp.14 = getm $.Toybox.Graphics;
+                symbol [ TEXT_JUSTIFY_VCENTER %tmp.15 119 72 92 ];
+                %tmp.15 = getv %tmp.14 :TEXT_JUSTIFY_VCENTER;
+                %tmp.16 = bitor %tmp.13 %tmp.15;
+                putv self :justification %tmp.16;
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 120 18 ]
+                symbol [ Graphics %tmp.17 120 25 33 ];
+                %tmp.17 = getm $.Toybox.Graphics;
+                symbol [ FONT_MEDIUM %tmp.18 120 34 45 ];
+                %tmp.18 = getv %tmp.17 :FONT_MEDIUM;
+                putv self :font %tmp.18;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 119; @position = 18; @symbol_constdef = [justification,119,18,31]; ]
+            const justification;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 120; @position = 18; @symbol_constdef = [font,120,18,22]; ]
+            const font;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 123; @symbol_moduledef = [confirmation_loc__body,123,15,37]; ]
+        module confirmation_loc__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 123; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 124; @position = 18; @symbol_constdef = [x,124,18,19]; @symbol_type<0> = [Number,124,23,29]; ]
+            const x as Number = 1;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 125; @position = 18; @symbol_constdef = [y,125,18,19]; @symbol_type<0> = [Number,125,23,29]; ]
+            const y as Number = 23;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 128; @symbol_moduledef = [system_icon_destructive__hint_button_left_bottom,128,15,63]; ]
+        module system_icon_destructive__hint_button_left_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 128; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 129; @position = 18; @symbol_constdef = [exclude,129,18,25]; @symbol_type<0> = [Boolean,129,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 132; @symbol_moduledef = [prompt_color_dark__background,132,15,44]; ]
+        module prompt_color_dark__background {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 132; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 133; @position = 18; @symbol_constdef = [color,133,18,23]; @symbol_type<0> = [Number,133,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 134; @position = 18; @symbol_constdef = [background,134,18,28]; @symbol_type<0> = [Number,134,32,38]; ]
+            const background as Number = 0x000000;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 137; @symbol_moduledef = [system_icon_destructive__hint_action_menu,137,15,56]; ]
+        module system_icon_destructive__hint_action_menu {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 137; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 138; @position = 18; @symbol_constdef = [exclude,138,18,25]; @symbol_type<0> = [Boolean,138,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 141; @symbol_moduledef = [system_loc__hint_action_menu,141,15,43]; ]
+        module system_loc__hint_action_menu {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 141; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 142; @position = 18; @symbol_constdef = [exclude,142,18,25]; @symbol_type<0> = [Boolean,142,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 145; @symbol_moduledef = [confirmation_icon__hint_confirm,145,15,46]; ]
+        module confirmation_icon__hint_confirm {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 145; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 146; @position = 18; @symbol_constdef = [filename,146,18,26]; @symbol_type<0> = [String,146,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_completion.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 147; @position = 18; @symbol_constdef = [disableTransparency,147,18,37]; @symbol_type<0> = [Boolean,147,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 148; @position = 18; @symbol_constdef = [dithering,148,18,27]; @symbol_type<0> = [String,148,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 149; @position = 18; @symbol_constdef = [automaticPalette,149,18,34]; @symbol_type<0> = [Boolean,149,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 152; @symbol_moduledef = [system_loc__hint_button_left_middle,152,15,50]; ]
+        module system_loc__hint_button_left_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 152; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 153; @position = 18; @symbol_constdef = [exclude,153,18,25]; @symbol_type<0> = [Boolean,153,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 156; @symbol_moduledef = [prompt_size__body_no_title,156,15,41]; ]
+        module prompt_size__body_no_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 156; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 157; @position = 18; @symbol_constdef = [width,157,18,23]; @symbol_type<0> = [Number,157,27,33]; ]
+            const width as Number = 230;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 158; @position = 18; @symbol_constdef = [height,158,18,24]; @symbol_type<0> = [Number,158,28,34]; ]
+            const height as Number = 225;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 161; @symbol_moduledef = [system_icon_light__hint_button_left_top,161,15,54]; ]
+        module system_icon_light__hint_button_left_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 161; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 162; @position = 18; @symbol_constdef = [exclude,162,18,25]; @symbol_type<0> = [Boolean,162,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 165; @symbol_moduledef = [prompt_color_light__background,165,15,45]; ]
+        module prompt_color_light__background {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 165; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 166; @position = 18; @symbol_constdef = [color,166,18,23]; @symbol_type<0> = [Number,166,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 167; @position = 18; @symbol_constdef = [background,167,18,28]; @symbol_type<0> = [Number,167,32,38]; ]
+            const background as Number = 0xFFFFFF;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 170; @symbol_moduledef = [confirmation_input__delete,170,15,41]; ]
+        module confirmation_input__delete {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 170; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 171 18 ]
+                symbol [ WatchUi %tmp.19 171 27 34 ];
+                %tmp.19 = getm $.Toybox.WatchUi;
+                symbol [ KEY_ESC %tmp.20 171 35 42 ];
+                %tmp.20 = getv %tmp.19 :KEY_ESC;
+                putv self :button %tmp.20;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 171; @position = 18; @symbol_constdef = [button,171,18,24]; ]
+            const button;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 174; @symbol_moduledef = [system_icon_dark__hint_button_left_top,174,15,53]; ]
+        module system_icon_dark__hint_button_left_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 174; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 175; @position = 18; @symbol_constdef = [exclude,175,18,25]; @symbol_type<0> = [Boolean,175,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 178; @symbol_moduledef = [system_input__action_menu,178,15,40]; ]
+        module system_input__action_menu {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 178; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 179 18 ]
+                symbol [ WatchUi %tmp.21 179 27 34 ];
+                %tmp.21 = getm $.Toybox.WatchUi;
+                symbol [ KEY_MENU %tmp.22 179 35 43 ];
+                %tmp.22 = getv %tmp.21 :KEY_MENU;
+                putv self :button %tmp.22;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 179; @position = 18; @symbol_constdef = [button,179,18,24]; ]
+            const button;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 182; @symbol_moduledef = [system_icon_light__save,182,15,38]; ]
+        module system_icon_light__save {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 182; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 183; @position = 18; @symbol_constdef = [filename,183,18,26]; @symbol_type<0> = [String,183,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__save.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 184; @position = 18; @symbol_constdef = [disableTransparency,184,18,37]; @symbol_type<0> = [Boolean,184,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 185; @position = 18; @symbol_constdef = [dithering,185,18,27]; @symbol_type<0> = [String,185,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 186; @position = 18; @symbol_constdef = [automaticPalette,186,18,34]; @symbol_type<0> = [Boolean,186,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 189; @symbol_moduledef = [prompt_color_light__body,189,15,39]; ]
+        module prompt_color_light__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 189; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 191 18 ]
+                symbol [ Graphics %tmp.23 191 31 39 ];
+                %tmp.23 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.24 191 40 57 ];
+                %tmp.24 = getv %tmp.23 :COLOR_TRANSPARENT;
+                putv self :background %tmp.24;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 190; @position = 18; @symbol_constdef = [color,190,18,23]; @symbol_type<0> = [Number,190,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 191; @position = 18; @symbol_constdef = [background,191,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 194; @symbol_moduledef = [system_loc__subwindow,194,15,36]; ]
+        module system_loc__subwindow {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 194; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 195; @position = 18; @symbol_constdef = [exclude,195,18,25]; @symbol_type<0> = [Boolean,195,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 198; @symbol_moduledef = [system_icon_light__warning,198,15,41]; ]
+        module system_icon_light__warning {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 198; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 199; @position = 18; @symbol_constdef = [filename,199,18,26]; @symbol_type<0> = [String,199,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__warning.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 200; @position = 18; @symbol_constdef = [disableTransparency,200,18,37]; @symbol_type<0> = [Boolean,200,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 201; @position = 18; @symbol_constdef = [dithering,201,18,27]; @symbol_type<0> = [String,201,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 202; @position = 18; @symbol_constdef = [automaticPalette,202,18,34]; @symbol_type<0> = [Boolean,202,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 205; @symbol_moduledef = [confirmation_color_light__body,205,15,45]; ]
+        module confirmation_color_light__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 205; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 207 18 ]
+                symbol [ Graphics %tmp.25 207 31 39 ];
+                %tmp.25 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.26 207 40 57 ];
+                %tmp.26 = getv %tmp.25 :COLOR_TRANSPARENT;
+                putv self :background %tmp.26;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 206; @position = 18; @symbol_constdef = [color,206,18,23]; @symbol_type<0> = [Number,206,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 207; @position = 18; @symbol_constdef = [background,207,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 210; @symbol_moduledef = [confirmation_icon_light__hint_keep,210,15,49]; ]
+        module confirmation_icon_light__hint_keep {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 210; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 211; @position = 18; @symbol_constdef = [filename,211,18,26]; @symbol_type<0> = [String,211,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_completion.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 212; @position = 18; @symbol_constdef = [disableTransparency,212,18,37]; @symbol_type<0> = [Boolean,212,41,48]; ]
+            const disableTransparency as Boolean = false;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 213; @position = 18; @symbol_constdef = [dithering,213,18,27]; @symbol_type<0> = [String,213,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 214; @position = 18; @symbol_constdef = [automaticPalette,214,18,34]; @symbol_type<0> = [Boolean,214,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 217; @symbol_moduledef = [activity_color_light__background,217,15,47]; ]
+        module activity_color_light__background {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 217; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 218; @position = 18; @symbol_constdef = [color,218,18,23]; @symbol_type<0> = [Number,218,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 219; @position = 18; @symbol_constdef = [background,219,18,28]; @symbol_type<0> = [Number,219,32,38]; ]
+            const background as Number = 0xFFFFFF;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 222; @symbol_moduledef = [system_icon_positive__hint_button_right_top,222,15,58]; ]
+        module system_icon_positive__hint_button_right_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 222; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 223; @position = 18; @symbol_constdef = [exclude,223,18,25]; @symbol_type<0> = [Boolean,223,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 226; @symbol_moduledef = [system_size__screen,226,15,34]; ]
+        module system_size__screen {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 226; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 227; @position = 18; @symbol_constdef = [width,227,18,23]; @symbol_type<0> = [Number,227,27,33]; ]
+            const width as Number = 246;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 228; @position = 18; @symbol_constdef = [height,228,18,24]; @symbol_type<0> = [Number,228,28,34]; ]
+            const height as Number = 322;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 231; @symbol_moduledef = [system_icon_destructive__hint_button_right_bottom,231,15,64]; ]
+        module system_icon_destructive__hint_button_right_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 231; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 232; @position = 18; @symbol_constdef = [exclude,232,18,25]; @symbol_type<0> = [Boolean,232,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 235; @symbol_moduledef = [system_color_light__background,235,15,45]; ]
+        module system_color_light__background {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 235; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 236; @position = 18; @symbol_constdef = [color,236,18,23]; @symbol_type<0> = [Number,236,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 237; @position = 18; @symbol_constdef = [background,237,18,28]; @symbol_type<0> = [Number,237,32,38]; ]
+            const background as Number = 0xFFFFFF;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 240; @symbol_moduledef = [system_icon_destructive__hint_button_right_top,240,15,61]; ]
+        module system_icon_destructive__hint_button_right_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 240; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 241; @position = 18; @symbol_constdef = [exclude,241,18,25]; @symbol_type<0> = [Boolean,241,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 244; @symbol_moduledef = [confirmation_loc__hint_confirm,244,15,45]; ]
+        module confirmation_loc__hint_confirm {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 244; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 245; @position = 18; @symbol_constdef = [x,245,18,19]; @symbol_type<0> = [Number,245,23,29]; ]
+            const x as Number = 195;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 246; @position = 18; @symbol_constdef = [y,246,18,19]; @symbol_type<0> = [Number,246,23,29]; ]
+            const y as Number = 30;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 247; @position = 18; @symbol_constdef = [horizontalJustification,247,18,41]; @symbol_type<0> = [String,247,45,51]; ]
+            const horizontalJustification as String = "center";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 248; @position = 18; @symbol_constdef = [verticalJustification,248,18,39]; @symbol_type<0> = [String,248,43,49]; ]
+            const verticalJustification as String = "center";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 251; @symbol_moduledef = [activity_color_dark__text,251,15,40]; ]
+        module activity_color_dark__text {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 251; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 253 18 ]
+                symbol [ Graphics %tmp.27 253 31 39 ];
+                %tmp.27 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.28 253 40 57 ];
+                %tmp.28 = getv %tmp.27 :COLOR_TRANSPARENT;
+                putv self :background %tmp.28;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 252; @position = 18; @symbol_constdef = [color,252,18,23]; @symbol_type<0> = [Number,252,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 253; @position = 18; @symbol_constdef = [background,253,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 256; @symbol_moduledef = [confirmation_input__keep,256,15,39]; ]
+        module confirmation_input__keep {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 256; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 257 18 ]
+                symbol [ WatchUi %tmp.29 257 27 34 ];
+                %tmp.29 = getm $.Toybox.WatchUi;
+                symbol [ KEY_ENTER %tmp.30 257 35 44 ];
+                %tmp.30 = getv %tmp.29 :KEY_ENTER;
+                putv self :button %tmp.30;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 257; @position = 18; @symbol_constdef = [button,257,18,24]; ]
+            const button;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 260; @symbol_moduledef = [prompt_loc__body_with_title,260,15,42]; ]
+        module prompt_loc__body_with_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 260; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 261; @position = 18; @symbol_constdef = [x,261,18,19]; @symbol_type<0> = [Number,261,23,29]; ]
+            const x as Number = 8;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 262; @position = 18; @symbol_constdef = [y,262,18,19]; @symbol_type<0> = [Number,262,23,29]; ]
+            const y as Number = 93;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 265; @symbol_moduledef = [system_icon_dark__search,265,15,39]; ]
+        module system_icon_dark__search {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 265; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 266; @position = 18; @symbol_constdef = [filename,266,18,26]; @symbol_type<0> = [String,266,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__search.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 267; @position = 18; @symbol_constdef = [disableTransparency,267,18,37]; @symbol_type<0> = [Boolean,267,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 268; @position = 18; @symbol_constdef = [dithering,268,18,27]; @symbol_type<0> = [String,268,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 269; @position = 18; @symbol_constdef = [automaticPalette,269,18,34]; @symbol_type<0> = [Boolean,269,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 272; @symbol_moduledef = [activity_color_light__text,272,15,41]; ]
+        module activity_color_light__text {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 272; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 274 18 ]
+                symbol [ Graphics %tmp.31 274 31 39 ];
+                %tmp.31 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.32 274 40 57 ];
+                %tmp.32 = getv %tmp.31 :COLOR_TRANSPARENT;
+                putv self :background %tmp.32;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 273; @position = 18; @symbol_constdef = [color,273,18,23]; @symbol_type<0> = [Number,273,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 274; @position = 18; @symbol_constdef = [background,274,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 277; @symbol_moduledef = [confirmation_icon__hint_keep,277,15,43]; ]
+        module confirmation_icon__hint_keep {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 277; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 278; @position = 18; @symbol_constdef = [filename,278,18,26]; @symbol_type<0> = [String,278,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_completion.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 279; @position = 18; @symbol_constdef = [disableTransparency,279,18,37]; @symbol_type<0> = [Boolean,279,41,48]; ]
+            const disableTransparency as Boolean = false;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 280; @position = 18; @symbol_constdef = [dithering,280,18,27]; @symbol_type<0> = [String,280,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 281; @position = 18; @symbol_constdef = [automaticPalette,281,18,34]; @symbol_type<0> = [Boolean,281,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 284; @symbol_moduledef = [system_icon_dark__save,284,15,37]; ]
+        module system_icon_dark__save {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 284; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 285; @position = 18; @symbol_constdef = [filename,285,18,26]; @symbol_type<0> = [String,285,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__save.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 286; @position = 18; @symbol_constdef = [disableTransparency,286,18,37]; @symbol_type<0> = [Boolean,286,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 287; @position = 18; @symbol_constdef = [dithering,287,18,27]; @symbol_type<0> = [String,287,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 288; @position = 18; @symbol_constdef = [automaticPalette,288,18,34]; @symbol_type<0> = [Boolean,288,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 291; @symbol_moduledef = [system_icon_destructive__hint_button_left_middle,291,15,63]; ]
+        module system_icon_destructive__hint_button_left_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 291; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 292; @position = 18; @symbol_constdef = [exclude,292,18,25]; @symbol_type<0> = [Boolean,292,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 295; @symbol_moduledef = [system_icon_light__search,295,15,40]; ]
+        module system_icon_light__search {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 295; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 296; @position = 18; @symbol_constdef = [filename,296,18,26]; @symbol_type<0> = [String,296,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__search.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 297; @position = 18; @symbol_constdef = [disableTransparency,297,18,37]; @symbol_type<0> = [Boolean,297,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 298; @position = 18; @symbol_constdef = [dithering,298,18,27]; @symbol_type<0> = [String,298,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 299; @position = 18; @symbol_constdef = [automaticPalette,299,18,34]; @symbol_type<0> = [Boolean,299,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 302; @symbol_moduledef = [system_icon_dark__hint_button_left_bottom,302,15,56]; ]
+        module system_icon_dark__hint_button_left_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 302; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 303; @position = 18; @symbol_constdef = [exclude,303,18,25]; @symbol_type<0> = [Boolean,303,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 306; @symbol_moduledef = [system_icon_positive__hint_button_left_top,306,15,57]; ]
+        module system_icon_positive__hint_button_left_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 306; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 307; @position = 18; @symbol_constdef = [exclude,307,18,25]; @symbol_type<0> = [Boolean,307,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 310; @symbol_moduledef = [system_loc__hint_button_right_bottom,310,15,51]; ]
+        module system_loc__hint_button_right_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 310; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 311; @position = 18; @symbol_constdef = [exclude,311,18,25]; @symbol_type<0> = [Boolean,311,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 314; @symbol_moduledef = [confirmation_icon_dark__hint_reject,314,15,50]; ]
+        module confirmation_icon_dark__hint_reject {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 314; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 315; @position = 18; @symbol_constdef = [filename,315,18,26]; @symbol_type<0> = [String,315,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_x.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 316; @position = 18; @symbol_constdef = [disableTransparency,316,18,37]; @symbol_type<0> = [Boolean,316,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 317; @position = 18; @symbol_constdef = [dithering,317,18,27]; @symbol_type<0> = [String,317,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 318; @position = 18; @symbol_constdef = [automaticPalette,318,18,34]; @symbol_type<0> = [Boolean,318,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 321; @symbol_moduledef = [confirmation_color_dark__body,321,15,44]; ]
+        module confirmation_color_dark__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 321; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 323 18 ]
+                symbol [ Graphics %tmp.33 323 31 39 ];
+                %tmp.33 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.34 323 40 57 ];
+                %tmp.34 = getv %tmp.33 :COLOR_TRANSPARENT;
+                putv self :background %tmp.34;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 322; @position = 18; @symbol_constdef = [color,322,18,23]; @symbol_type<0> = [Number,322,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 323; @position = 18; @symbol_constdef = [background,323,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 326; @symbol_moduledef = [confirmation_icon_light__hint_confirm,326,15,52]; ]
+        module confirmation_icon_light__hint_confirm {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 326; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 327; @position = 18; @symbol_constdef = [filename,327,18,26]; @symbol_type<0> = [String,327,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_completion.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 328; @position = 18; @symbol_constdef = [disableTransparency,328,18,37]; @symbol_type<0> = [Boolean,328,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 329; @position = 18; @symbol_constdef = [dithering,329,18,27]; @symbol_type<0> = [String,329,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 330; @position = 18; @symbol_constdef = [automaticPalette,330,18,34]; @symbol_type<0> = [Boolean,330,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 333; @symbol_moduledef = [prompt_color_dark__title,333,15,39]; ]
+        module prompt_color_dark__title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 333; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 335 18 ]
+                symbol [ Graphics %tmp.35 335 31 39 ];
+                %tmp.35 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.36 335 40 57 ];
+                %tmp.36 = getv %tmp.35 :COLOR_TRANSPARENT;
+                putv self :background %tmp.36;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 334; @position = 18; @symbol_constdef = [color,334,18,23]; @symbol_type<0> = [Number,334,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 335; @position = 18; @symbol_constdef = [background,335,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 338; @symbol_moduledef = [system_icon_destructive__cancel,338,15,46]; ]
+        module system_icon_destructive__cancel {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 338; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 339; @position = 18; @symbol_constdef = [filename,339,18,26]; @symbol_type<0> = [String,339,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_destructive__cancel.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 340; @position = 18; @symbol_constdef = [disableTransparency,340,18,37]; @symbol_type<0> = [Boolean,340,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 341; @position = 18; @symbol_constdef = [dithering,341,18,27]; @symbol_type<0> = [String,341,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 342; @position = 18; @symbol_constdef = [automaticPalette,342,18,34]; @symbol_type<0> = [Boolean,342,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 345; @symbol_moduledef = [system_icon_light__hint_button_right_bottom,345,15,58]; ]
+        module system_icon_light__hint_button_right_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 345; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 346; @position = 18; @symbol_constdef = [exclude,346,18,25]; @symbol_type<0> = [Boolean,346,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 349; @symbol_moduledef = [prompt_loc__title,349,15,32]; ]
+        module prompt_loc__title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 349; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 350; @position = 18; @symbol_constdef = [exclude,350,18,25]; @symbol_type<0> = [Boolean,350,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 353; @symbol_moduledef = [confirmation_font_enhanced_readability__body,353,15,59]; ]
+        module confirmation_font_enhanced_readability__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 353; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 354; @position = 18; @symbol_constdef = [exclude,354,18,25]; @symbol_type<0> = [Boolean,354,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 357; @symbol_moduledef = [prompt_color_light__title,357,15,40]; ]
+        module prompt_color_light__title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 357; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 359 18 ]
+                symbol [ Graphics %tmp.37 359 31 39 ];
+                %tmp.37 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.38 359 40 57 ];
+                %tmp.38 = getv %tmp.37 :COLOR_TRANSPARENT;
+                putv self :background %tmp.38;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 358; @position = 18; @symbol_constdef = [color,358,18,23]; @symbol_type<0> = [Number,358,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 359; @position = 18; @symbol_constdef = [background,359,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 362; @symbol_moduledef = [system_icon_dark__hint_button_right_top,362,15,54]; ]
+        module system_icon_dark__hint_button_right_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 362; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 363; @position = 18; @symbol_constdef = [exclude,363,18,25]; @symbol_type<0> = [Boolean,363,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 366; @symbol_moduledef = [system_icon_dark__hint_button_left_middle,366,15,56]; ]
+        module system_icon_dark__hint_button_left_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 366; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 367; @position = 18; @symbol_constdef = [exclude,367,18,25]; @symbol_type<0> = [Boolean,367,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 370; @symbol_moduledef = [confirmation_icon_dark__hint_keep,370,15,48]; ]
+        module confirmation_icon_dark__hint_keep {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 370; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 371; @position = 18; @symbol_constdef = [filename,371,18,26]; @symbol_type<0> = [String,371,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_completion.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 372; @position = 18; @symbol_constdef = [disableTransparency,372,18,37]; @symbol_type<0> = [Boolean,372,41,48]; ]
+            const disableTransparency as Boolean = false;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 373; @position = 18; @symbol_constdef = [dithering,373,18,27]; @symbol_type<0> = [String,373,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 374; @position = 18; @symbol_constdef = [automaticPalette,374,18,34]; @symbol_type<0> = [Boolean,374,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 377; @symbol_moduledef = [system_icon_light__cancel,377,15,40]; ]
+        module system_icon_light__cancel {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 377; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 378; @position = 18; @symbol_constdef = [filename,378,18,26]; @symbol_type<0> = [String,378,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__cancel.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 379; @position = 18; @symbol_constdef = [disableTransparency,379,18,37]; @symbol_type<0> = [Boolean,379,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 380; @position = 18; @symbol_constdef = [dithering,380,18,27]; @symbol_type<0> = [String,380,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 381; @position = 18; @symbol_constdef = [automaticPalette,381,18,34]; @symbol_type<0> = [Boolean,381,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 384; @symbol_moduledef = [confirmation_icon_light__hint_reject,384,15,51]; ]
+        module confirmation_icon_light__hint_reject {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 384; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 385; @position = 18; @symbol_constdef = [filename,385,18,26]; @symbol_type<0> = [String,385,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_x.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 386; @position = 18; @symbol_constdef = [disableTransparency,386,18,37]; @symbol_type<0> = [Boolean,386,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 387; @position = 18; @symbol_constdef = [dithering,387,18,27]; @symbol_type<0> = [String,387,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 388; @position = 18; @symbol_constdef = [automaticPalette,388,18,34]; @symbol_type<0> = [Boolean,388,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 391; @symbol_moduledef = [system_icon_light__about,391,15,39]; ]
+        module system_icon_light__about {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 391; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 392; @position = 18; @symbol_constdef = [filename,392,18,26]; @symbol_type<0> = [String,392,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__about.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 393; @position = 18; @symbol_constdef = [disableTransparency,393,18,37]; @symbol_type<0> = [Boolean,393,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 394; @position = 18; @symbol_constdef = [dithering,394,18,27]; @symbol_type<0> = [String,394,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 395; @position = 18; @symbol_constdef = [automaticPalette,395,18,34]; @symbol_type<0> = [Boolean,395,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 398; @symbol_moduledef = [system_size__toast_icon,398,15,38]; ]
+        module system_size__toast_icon {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 398; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 399; @position = 18; @symbol_constdef = [scaleX,399,18,24]; @symbol_type<0> = [Number,399,28,34]; ]
+            const scaleX as Number = 32;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 400; @position = 18; @symbol_constdef = [scaleY,400,18,24]; @symbol_type<0> = [Number,400,28,34]; ]
+            const scaleY as Number = 32;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 401; @position = 18; @symbol_constdef = [scaleRelativeTo,401,18,33]; @symbol_type<0> = [String,401,37,43]; ]
+            const scaleRelativeTo as String = "screen";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 404; @symbol_moduledef = [system_icon_dark__hint_button_right_middle,404,15,57]; ]
+        module system_icon_dark__hint_button_right_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 404; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 405; @position = 18; @symbol_constdef = [exclude,405,18,25]; @symbol_type<0> = [Boolean,405,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 408; @symbol_moduledef = [confirmation_icon__hint_reject,408,15,45]; ]
+        module confirmation_icon__hint_reject {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 408; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 409; @position = 18; @symbol_constdef = [filename,409,18,26]; @symbol_type<0> = [String,409,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_x.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 410; @position = 18; @symbol_constdef = [disableTransparency,410,18,37]; @symbol_type<0> = [Boolean,410,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 411; @position = 18; @symbol_constdef = [dithering,411,18,27]; @symbol_type<0> = [String,411,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 412; @position = 18; @symbol_constdef = [automaticPalette,412,18,34]; @symbol_type<0> = [Boolean,412,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 415; @symbol_moduledef = [system_icon_light__hint_action_menu,415,15,50]; ]
+        module system_icon_light__hint_action_menu {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 415; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 416; @position = 18; @symbol_constdef = [exclude,416,18,25]; @symbol_type<0> = [Boolean,416,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 419; @symbol_moduledef = [system_icon_light__hint_button_right_middle,419,15,58]; ]
+        module system_icon_light__hint_button_right_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 419; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 420; @position = 18; @symbol_constdef = [exclude,420,18,25]; @symbol_type<0> = [Boolean,420,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 423; @symbol_moduledef = [system_icon_destructive__hint_button_right_middle,423,15,64]; ]
+        module system_icon_destructive__hint_button_right_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 423; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 424; @position = 18; @symbol_constdef = [exclude,424,18,25]; @symbol_type<0> = [Boolean,424,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 427; @symbol_moduledef = [confirmation_loc__hint_reject,427,15,44]; ]
+        module confirmation_loc__hint_reject {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 427; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 428; @position = 18; @symbol_constdef = [x,428,18,19]; @symbol_type<0> = [Number,428,23,29]; ]
+            const x as Number = 214;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 429; @position = 18; @symbol_constdef = [y,429,18,19]; @symbol_type<0> = [Number,429,23,29]; ]
+            const y as Number = 249;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 430; @position = 18; @symbol_constdef = [horizontalJustification,430,18,41]; @symbol_type<0> = [String,430,45,51]; ]
+            const horizontalJustification as String = "center";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 431; @position = 18; @symbol_constdef = [verticalJustification,431,18,39]; @symbol_type<0> = [String,431,43,49]; ]
+            const verticalJustification as String = "center";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 434; @symbol_moduledef = [confirmation_icon_dark__hint_delete,434,15,50]; ]
+        module confirmation_icon_dark__hint_delete {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 434; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 435; @position = 18; @symbol_constdef = [filename,435,18,26]; @symbol_type<0> = [String,435,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_back.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 436; @position = 18; @symbol_constdef = [disableTransparency,436,18,37]; @symbol_type<0> = [Boolean,436,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 437; @position = 18; @symbol_constdef = [dithering,437,18,27]; @symbol_type<0> = [String,437,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 438; @position = 18; @symbol_constdef = [automaticPalette,438,18,34]; @symbol_type<0> = [Boolean,438,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 441; @symbol_moduledef = [activity_color_dark__background,441,15,46]; ]
+        module activity_color_dark__background {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 441; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 442; @position = 18; @symbol_constdef = [color,442,18,23]; @symbol_type<0> = [Number,442,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 443; @position = 18; @symbol_constdef = [background,443,18,28]; @symbol_type<0> = [Number,443,32,38]; ]
+            const background as Number = 0x000000;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 446; @symbol_moduledef = [system_icon_light__hint_button_left_bottom,446,15,57]; ]
+        module system_icon_light__hint_button_left_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 446; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 447; @position = 18; @symbol_constdef = [exclude,447,18,25]; @symbol_type<0> = [Boolean,447,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 450; @symbol_moduledef = [system_icon_positive__hint_button_left_middle,450,15,60]; ]
+        module system_icon_positive__hint_button_left_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 450; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 451; @position = 18; @symbol_constdef = [exclude,451,18,25]; @symbol_type<0> = [Boolean,451,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 454; @symbol_moduledef = [system_size__menu_icon,454,15,37]; ]
+        module system_size__menu_icon {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 454; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 455; @position = 18; @symbol_constdef = [scaleX,455,18,24]; @symbol_type<0> = [Number,455,28,34]; ]
+            const scaleX as Number = 40;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 456; @position = 18; @symbol_constdef = [scaleY,456,18,24]; @symbol_type<0> = [Number,456,28,34]; ]
+            const scaleY as Number = 40;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 457; @position = 18; @symbol_constdef = [scaleRelativeTo,457,18,33]; @symbol_type<0> = [String,457,37,43]; ]
+            const scaleRelativeTo as String = "screen";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 460; @symbol_moduledef = [system_icon_destructive__warning,460,15,47]; ]
+        module system_icon_destructive__warning {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 460; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 461; @position = 18; @symbol_constdef = [filename,461,18,26]; @symbol_type<0> = [String,461,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_destructive__warning.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 462; @position = 18; @symbol_constdef = [disableTransparency,462,18,37]; @symbol_type<0> = [Boolean,462,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 463; @position = 18; @symbol_constdef = [dithering,463,18,27]; @symbol_type<0> = [String,463,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 464; @position = 18; @symbol_constdef = [automaticPalette,464,18,34]; @symbol_type<0> = [Boolean,464,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 467; @symbol_moduledef = [system_loc__hint_button_right_middle,467,15,51]; ]
+        module system_loc__hint_button_right_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 467; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 468; @position = 18; @symbol_constdef = [exclude,468,18,25]; @symbol_type<0> = [Boolean,468,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 471; @symbol_moduledef = [system_icon_dark__cancel,471,15,39]; ]
+        module system_icon_dark__cancel {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 471; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 472; @position = 18; @symbol_constdef = [filename,472,18,26]; @symbol_type<0> = [String,472,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__cancel.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 473; @position = 18; @symbol_constdef = [disableTransparency,473,18,37]; @symbol_type<0> = [Boolean,473,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 474; @position = 18; @symbol_constdef = [dithering,474,18,27]; @symbol_type<0> = [String,474,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 475; @position = 18; @symbol_constdef = [automaticPalette,475,18,34]; @symbol_type<0> = [Boolean,475,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 478; @symbol_moduledef = [prompt_size__body_with_title,478,15,43]; ]
+        module prompt_size__body_with_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 478; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 479; @position = 18; @symbol_constdef = [width,479,18,23]; @symbol_type<0> = [Number,479,27,33]; ]
+            const width as Number = 230;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 480; @position = 18; @symbol_constdef = [height,480,18,24]; @symbol_type<0> = [Number,480,28,34]; ]
+            const height as Number = 135;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 483; @symbol_moduledef = [system_loc__hint_button_right_top,483,15,48]; ]
+        module system_loc__hint_button_right_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 483; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 484; @position = 18; @symbol_constdef = [exclude,484,18,25]; @symbol_type<0> = [Boolean,484,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 487; @symbol_moduledef = [system_color_light__text,487,15,39]; ]
+        module system_color_light__text {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 487; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 489 18 ]
+                symbol [ Graphics %tmp.39 489 31 39 ];
+                %tmp.39 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.40 489 40 57 ];
+                %tmp.40 = getv %tmp.39 :COLOR_TRANSPARENT;
+                putv self :background %tmp.40;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 488; @position = 18; @symbol_constdef = [color,488,18,23]; @symbol_type<0> = [Number,488,27,33]; ]
+            const color as Number = 0x000000;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 489; @position = 18; @symbol_constdef = [background,489,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 492; @symbol_moduledef = [system_icon_light__check,492,15,39]; ]
+        module system_icon_light__check {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 492; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 493; @position = 18; @symbol_constdef = [filename,493,18,26]; @symbol_type<0> = [String,493,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__check.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 494; @position = 18; @symbol_constdef = [disableTransparency,494,18,37]; @symbol_type<0> = [Boolean,494,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 495; @position = 18; @symbol_constdef = [dithering,495,18,27]; @symbol_type<0> = [String,495,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 496; @position = 18; @symbol_constdef = [automaticPalette,496,18,34]; @symbol_type<0> = [Boolean,496,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 499; @symbol_moduledef = [confirmation_input__reject,499,15,41]; ]
+        module confirmation_input__reject {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 499; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 500 18 ]
+                symbol [ WatchUi %tmp.41 500 27 34 ];
+                %tmp.41 = getm $.Toybox.WatchUi;
+                symbol [ KEY_ESC %tmp.42 500 35 42 ];
+                %tmp.42 = getv %tmp.41 :KEY_ESC;
+                putv self :button %tmp.42;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 500; @position = 18; @symbol_constdef = [button,500,18,24]; ]
+            const button;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 503; @symbol_moduledef = [system_icon_light__revert,503,15,40]; ]
+        module system_icon_light__revert {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 503; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 504; @position = 18; @symbol_constdef = [filename,504,18,26]; @symbol_type<0> = [String,504,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__revert.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 505; @position = 18; @symbol_constdef = [disableTransparency,505,18,37]; @symbol_type<0> = [Boolean,505,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 506; @position = 18; @symbol_constdef = [dithering,506,18,27]; @symbol_type<0> = [String,506,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 507; @position = 18; @symbol_constdef = [automaticPalette,507,18,34]; @symbol_type<0> = [Boolean,507,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 510; @symbol_moduledef = [system_size__subwindow,510,15,37]; ]
+        module system_size__subwindow {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 510; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 511; @position = 18; @symbol_constdef = [exclude,511,18,25]; @symbol_type<0> = [Boolean,511,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 514; @symbol_moduledef = [system_icon_positive__hint_button_left_bottom,514,15,60]; ]
+        module system_icon_positive__hint_button_left_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 514; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 515; @position = 18; @symbol_constdef = [exclude,515,18,25]; @symbol_type<0> = [Boolean,515,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 518; @symbol_moduledef = [system_icon_dark__check,518,15,38]; ]
+        module system_icon_dark__check {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 518; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 519; @position = 18; @symbol_constdef = [filename,519,18,26]; @symbol_type<0> = [String,519,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__check.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 520; @position = 18; @symbol_constdef = [disableTransparency,520,18,37]; @symbol_type<0> = [Boolean,520,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 521; @position = 18; @symbol_constdef = [dithering,521,18,27]; @symbol_type<0> = [String,521,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 522; @position = 18; @symbol_constdef = [automaticPalette,522,18,34]; @symbol_type<0> = [Boolean,522,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 525; @symbol_moduledef = [confirmation_loc__hint_keep,525,15,42]; ]
+        module confirmation_loc__hint_keep {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 525; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 526; @position = 18; @symbol_constdef = [x,526,18,19]; @symbol_type<0> = [Number,526,23,29]; ]
+            const x as Number = 195;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 527; @position = 18; @symbol_constdef = [y,527,18,19]; @symbol_type<0> = [Number,527,23,29]; ]
+            const y as Number = 30;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 528; @position = 18; @symbol_constdef = [horizontalJustification,528,18,41]; @symbol_type<0> = [String,528,45,51]; ]
+            const horizontalJustification as String = "center";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 529; @position = 18; @symbol_constdef = [verticalJustification,529,18,39]; @symbol_type<0> = [String,529,43,49]; ]
+            const verticalJustification as String = "center";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 532; @symbol_moduledef = [confirmation_loc__hint_delete,532,15,44]; ]
+        module confirmation_loc__hint_delete {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 532; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 533; @position = 18; @symbol_constdef = [x,533,18,19]; @symbol_type<0> = [Number,533,23,29]; ]
+            const x as Number = 195;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 534; @position = 18; @symbol_constdef = [y,534,18,19]; @symbol_type<0> = [Number,534,23,29]; ]
+            const y as Number = 249;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 535; @position = 18; @symbol_constdef = [horizontalJustification,535,18,41]; @symbol_type<0> = [String,535,45,51]; ]
+            const horizontalJustification as String = "center";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 536; @position = 18; @symbol_constdef = [verticalJustification,536,18,39]; @symbol_type<0> = [String,536,43,49]; ]
+            const verticalJustification as String = "center";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 539; @symbol_moduledef = [system_icon_positive__hint_action_menu,539,15,53]; ]
+        module system_icon_positive__hint_action_menu {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 539; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 540; @position = 18; @symbol_constdef = [exclude,540,18,25]; @symbol_type<0> = [Boolean,540,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 543; @symbol_moduledef = [system_icon_positive__hint_button_right_middle,543,15,61]; ]
+        module system_icon_positive__hint_button_right_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 543; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 544; @position = 18; @symbol_constdef = [exclude,544,18,25]; @symbol_type<0> = [Boolean,544,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 547; @symbol_moduledef = [system_icon_light__hint_button_left_middle,547,15,57]; ]
+        module system_icon_light__hint_button_left_middle {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 547; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 548; @position = 18; @symbol_constdef = [exclude,548,18,25]; @symbol_type<0> = [Boolean,548,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 551; @symbol_moduledef = [system_icon_dark__hint_button_right_bottom,551,15,57]; ]
+        module system_icon_dark__hint_button_right_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 551; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 552; @position = 18; @symbol_constdef = [exclude,552,18,25]; @symbol_type<0> = [Boolean,552,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 555; @symbol_moduledef = [system_icon_positive__hint_button_right_bottom,555,15,61]; ]
+        module system_icon_positive__hint_button_right_bottom {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 555; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 556; @position = 18; @symbol_constdef = [exclude,556,18,25]; @symbol_type<0> = [Boolean,556,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 559; @symbol_moduledef = [system_icon_dark__revert,559,15,39]; ]
+        module system_icon_dark__revert {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 559; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 560; @position = 18; @symbol_constdef = [filename,560,18,26]; @symbol_type<0> = [String,560,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__revert.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 561; @position = 18; @symbol_constdef = [disableTransparency,561,18,37]; @symbol_type<0> = [Boolean,561,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 562; @position = 18; @symbol_constdef = [dithering,562,18,27]; @symbol_type<0> = [String,562,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 563; @position = 18; @symbol_constdef = [automaticPalette,563,18,34]; @symbol_type<0> = [Boolean,563,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 566; @symbol_moduledef = [confirmation_icon_light__hint_delete,566,15,51]; ]
+        module confirmation_icon_light__hint_delete {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 566; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 567; @position = 18; @symbol_constdef = [filename,567,18,26]; @symbol_type<0> = [String,567,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_back.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 568; @position = 18; @symbol_constdef = [disableTransparency,568,18,37]; @symbol_type<0> = [Boolean,568,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 569; @position = 18; @symbol_constdef = [dithering,569,18,27]; @symbol_type<0> = [String,569,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 570; @position = 18; @symbol_constdef = [automaticPalette,570,18,34]; @symbol_type<0> = [Boolean,570,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 573; @symbol_moduledef = [system_icon_dark__question,573,15,41]; ]
+        module system_icon_dark__question {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 573; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 574; @position = 18; @symbol_constdef = [filename,574,18,26]; @symbol_type<0> = [String,574,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__question.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 575; @position = 18; @symbol_constdef = [disableTransparency,575,18,37]; @symbol_type<0> = [Boolean,575,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 576; @position = 18; @symbol_constdef = [dithering,576,18,27]; @symbol_type<0> = [String,576,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 577; @position = 18; @symbol_constdef = [automaticPalette,577,18,34]; @symbol_type<0> = [Boolean,577,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 580; @symbol_moduledef = [system_icon_light__discard,580,15,41]; ]
+        module system_icon_light__discard {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 580; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 581; @position = 18; @symbol_constdef = [filename,581,18,26]; @symbol_type<0> = [String,581,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_light__discard.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 582; @position = 18; @symbol_constdef = [disableTransparency,582,18,37]; @symbol_type<0> = [Boolean,582,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 583; @position = 18; @symbol_constdef = [dithering,583,18,27]; @symbol_type<0> = [String,583,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 584; @position = 18; @symbol_constdef = [automaticPalette,584,18,34]; @symbol_type<0> = [Boolean,584,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 587; @symbol_moduledef = [device_info,587,15,26]; ]
+        module device_info {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 587; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 589 18 ]
+                symbol [ Toybox %tmp.44 589 32 38 ];
+                %tmp.44 = getv ? :Toybox;
+                symbol [ System %tmp.45 589 39 45 ];
+                %tmp.45 = getv %tmp.44 :System;
+                symbol [ SCREEN_SHAPE_RECTANGLE %tmp.46 589 46 68 ];
+                %tmp.46 = getv %tmp.45 :SCREEN_SHAPE_RECTANGLE;
+                putv self :screenShape %tmp.46;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 588; @position = 18; @symbol_constdef = [screenWidth,588,18,29]; @symbol_type<0> = [Number,588,33,39]; ]
+            const screenWidth as Number = 246;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 589; @position = 18; @symbol_constdef = [screenShape,589,18,29]; ]
+            const screenShape;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 590; @position = 18; @symbol_constdef = [hasNightMode,590,18,30]; @symbol_type<0> = [Boolean,590,34,41]; ]
+            const hasNightMode as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 591; @position = 18; @symbol_constdef = [hasGpu,591,18,24]; @symbol_type<0> = [Boolean,591,28,35]; ]
+            const hasGpu as Boolean = false;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 592; @position = 18; @symbol_constdef = [screenHeight,592,18,30]; @symbol_type<0> = [Number,592,34,40]; ]
+            const screenHeight as Number = 322;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 593; @position = 18; @symbol_constdef = [hasTouchScreen,593,18,32]; @symbol_type<0> = [Boolean,593,36,43]; ]
+            const hasTouchScreen as Boolean = false;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 594; @position = 18; @symbol_constdef = [hasEnhancedReadabilityMode,594,18,44]; @symbol_type<0> = [Boolean,594,48,55]; ]
+            const hasEnhancedReadabilityMode as Boolean = false;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 597; @symbol_moduledef = [confirmation_icon_dark__hint_confirm,597,15,51]; ]
+        module confirmation_icon_dark__hint_confirm {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 597; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 598; @position = 18; @symbol_constdef = [filename,598,18,26]; @symbol_type<0> = [String,598,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_completion.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 599; @position = 18; @symbol_constdef = [disableTransparency,599,18,37]; @symbol_type<0> = [Boolean,599,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 600; @position = 18; @symbol_constdef = [dithering,600,18,27]; @symbol_type<0> = [String,600,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 601; @position = 18; @symbol_constdef = [automaticPalette,601,18,34]; @symbol_type<0> = [Boolean,601,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 604; @symbol_moduledef = [prompt_font__body_no_title,604,15,41]; ]
+        module prompt_font__body_no_title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 604; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 605 18 ]
+                symbol [ Graphics %tmp.47 605 34 42 ];
+                %tmp.47 = getm $.Toybox.Graphics;
+                symbol [ TEXT_JUSTIFY_CENTER %tmp.48 605 43 62 ];
+                %tmp.48 = getv %tmp.47 :TEXT_JUSTIFY_CENTER;
+                symbol [ Graphics %tmp.49 605 63 71 ];
+                %tmp.49 = getm $.Toybox.Graphics;
+                symbol [ TEXT_JUSTIFY_VCENTER %tmp.50 605 72 92 ];
+                %tmp.50 = getv %tmp.49 :TEXT_JUSTIFY_VCENTER;
+                %tmp.51 = bitor %tmp.48 %tmp.50;
+                putv self :justification %tmp.51;
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 606 18 ]
+                symbol [ Graphics %tmp.52 606 25 33 ];
+                %tmp.52 = getm $.Toybox.Graphics;
+                symbol [ FONT_MEDIUM %tmp.53 606 34 45 ];
+                %tmp.53 = getv %tmp.52 :FONT_MEDIUM;
+                putv self :font %tmp.53;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 605; @position = 18; @symbol_constdef = [justification,605,18,31]; ]
+            const justification;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 606; @position = 18; @symbol_constdef = [font,606,18,22]; ]
+            const font;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 609; @symbol_moduledef = [prompt_size__title_icon,609,15,38]; ]
+        module prompt_size__title_icon {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 609; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 610; @position = 18; @symbol_constdef = [scaleX,610,18,24]; @symbol_type<0> = [Number,610,28,34]; ]
+            const scaleX as Number = 55;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 611; @position = 18; @symbol_constdef = [scaleY,611,18,24]; @symbol_type<0> = [Number,611,28,34]; ]
+            const scaleY as Number = 55;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 612; @position = 18; @symbol_constdef = [scaleRelativeTo,612,18,33]; @symbol_type<0> = [String,612,37,43]; ]
+            const scaleRelativeTo as String = "screen";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 615; @symbol_moduledef = [system_icon_dark__warning,615,15,40]; ]
+        module system_icon_dark__warning {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 615; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 616; @position = 18; @symbol_constdef = [filename,616,18,26]; @symbol_type<0> = [String,616,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_dark__warning.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 617; @position = 18; @symbol_constdef = [disableTransparency,617,18,37]; @symbol_type<0> = [Boolean,617,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 618; @position = 18; @symbol_constdef = [dithering,618,18,27]; @symbol_type<0> = [String,618,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 619; @position = 18; @symbol_constdef = [automaticPalette,619,18,34]; @symbol_type<0> = [Boolean,619,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 622; @symbol_moduledef = [prompt_loc__title_icon,622,15,37]; ]
+        module prompt_loc__title_icon {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 622; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 623; @position = 18; @symbol_constdef = [x,623,18,19]; @symbol_type<0> = [Number,623,23,29]; ]
+            const x as Number = 123;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 624; @position = 18; @symbol_constdef = [y,624,18,19]; @symbol_type<0> = [Number,624,23,29]; ]
+            const y as Number = 44;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 625; @position = 18; @symbol_constdef = [horizontalJustification,625,18,41]; @symbol_type<0> = [String,625,45,51]; ]
+            const horizontalJustification as String = "center";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 626; @position = 18; @symbol_constdef = [verticalJustification,626,18,39]; @symbol_type<0> = [String,626,43,49]; ]
+            const verticalJustification as String = "center";
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 629; @symbol_moduledef = [prompt_font_enhanced_readability__title,629,15,54]; ]
+        module prompt_font_enhanced_readability__title {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 629; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 630; @position = 18; @symbol_constdef = [exclude,630,18,25]; @symbol_type<0> = [Boolean,630,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 633; @symbol_moduledef = [prompt_color_dark__body,633,15,38]; ]
+        module prompt_color_dark__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 633; ]
+            <init> {
+[ "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen" 635 18 ]
+                symbol [ Graphics %tmp.54 635 31 39 ];
+                %tmp.54 = getm $.Toybox.Graphics;
+                symbol [ COLOR_TRANSPARENT %tmp.55 635 40 57 ];
+                %tmp.55 = getv %tmp.54 :COLOR_TRANSPARENT;
+                putv self :background %tmp.55;
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 634; @position = 18; @symbol_constdef = [color,634,18,23]; @symbol_type<0> = [Number,634,27,33]; ]
+            const color as Number = 0xFFFFFF;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 635; @position = 18; @symbol_constdef = [background,635,18,28]; ]
+            const background;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 638; @symbol_moduledef = [confirmation_icon__hint_delete,638,15,45]; ]
+        module confirmation_icon__hint_delete {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 638; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 639; @position = 18; @symbol_constdef = [filename,639,18,26]; @symbol_type<0> = [String,639,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\confirmation_icon__hint_back.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 640; @position = 18; @symbol_constdef = [disableTransparency,640,18,37]; @symbol_type<0> = [Boolean,640,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 641; @position = 18; @symbol_constdef = [dithering,641,18,27]; @symbol_type<0> = [String,641,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 642; @position = 18; @symbol_constdef = [automaticPalette,642,18,34]; @symbol_type<0> = [Boolean,642,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 645; @symbol_moduledef = [system_icon_light__hint_button_right_top,645,15,55]; ]
+        module system_icon_light__hint_button_right_top {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 645; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 646; @position = 18; @symbol_constdef = [exclude,646,18,25]; @symbol_type<0> = [Boolean,646,29,36]; ]
+            const exclude as Boolean = true;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 649; @symbol_moduledef = [confirmation_size__body,649,15,38]; ]
+        module confirmation_size__body {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 649; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 650; @position = 18; @symbol_constdef = [width,650,18,23]; @symbol_type<0> = [Number,650,27,33]; ]
+            const width as Number = 246;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 651; @position = 18; @symbol_constdef = [height,651,18,24]; @symbol_type<0> = [Number,651,28,34]; ]
+            const height as Number = 236;
+        }
+        [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 654; @symbol_moduledef = [system_icon_positive__check,654,15,42]; ]
+        module system_icon_positive__check {
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 654; ]
+            <init> {
+            }
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 655; @position = 18; @symbol_constdef = [filename,655,18,26]; @symbol_type<0> = [String,655,30,36]; ]
+            const filename as String = "C:\\Users\\User\\AppData\\Roaming\\Garmin\\ConnectIQ\\Devices\\edge540\\system_icon_positive__check.svg";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 656; @position = 18; @symbol_constdef = [disableTransparency,656,18,37]; @symbol_type<0> = [Boolean,656,41,48]; ]
+            const disableTransparency as Boolean = true;
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 657; @position = 18; @symbol_constdef = [dithering,657,18,27]; @symbol_type<0> = [String,657,31,37]; ]
+            const dithering as String = "none";
+            [ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 658; @position = 18; @symbol_constdef = [automaticPalette,658,18,34]; @symbol_type<0> = [Boolean,658,38,45]; ]
+            const automaticPalette as Boolean = true;
+        }
+    }
+}
+[ @file = "c:\Users\User\Desktop\Livetracking\Garmin\LivetrackingCIQ\bin\gen\006-B4061-00\source\Rez.mcgen"; @line = 1; ]
+<init> {
+}

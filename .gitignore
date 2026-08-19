@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+*.apk
+android/
+ios/
+.env
+
+/App/
+Garmin/*/bin/

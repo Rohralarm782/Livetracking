@@ -1,0 +1,26 @@
+{
+  "settings" : [ {
+    "key" : "trackerId",
+    "valueType" : "string",
+    "defaultValue" : "",
+    "configTitle" : "SettingTrackerIdLabel",
+    "configPrompt" : "SettingTrackerIdPrompt",
+    "configType" : "alphaNumeric",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : 8
+  } ],
+  "supportsLiveValidation" : false,
+  "languages" : {
+    "valyrian" : {
+      "SettingTrackerIdLabel" : "Tracker-ID",
+      "SettingTrackerIdPrompt" : "Leer lassen = Tracker automatisch binden. Eintrag wie t1, t2 erzwingt einen bestimmten Tracker.",
+      "AppName" : "TeamCast"
+    }
+  }
+}
