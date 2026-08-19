@@ -1,15 +1,39 @@
-// LT Tracker v1.1.0
-// Stufe 2: Foreground Service + Location Task + Versand an das Backend.
-// Positionen gehen per POST /positions mit x-tracker-key an den Server.
+// LT Tracker v1.2.0
+// Stufe 3: Die App zeigt die Website und sendet nebenher die Position.
+// Zwei unabhaengige Wege zum Server - der native Sender mit Tracker-Key,
+// das WebView mit normaler Anmeldung. Faellt einer aus, laeuft der andere.
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, Pressable, ScrollView, StyleSheet, StatusBar, Platform,
-  TextInput, PermissionsAndroid,
+  TextInput, PermissionsAndroid, BackHandler, ActivityIndicator,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Wird nach dem Laden der Seite ausgefuehrt. Blendet das Teamauto-
+// Haekchen aus: es startet im Browser watchPosition und schreibt ueber
+// /team-position auf denselben Marker wie der native Sender. Zwei
+// Quellen auf einem Marker waeren nur verwirrend.
+// Bewusst per CSS statt durch Aendern des Webcodes - im Browser am
+// Rechner bleibt damit alles, wie es ist.
+const INJECT = `
+(function () {
+  try {
+    var st = document.createElement('style');
+    st.textContent = '#teamCarToggle{display:none !important;}';
+    (document.head || document.documentElement).appendChild(st);
+    var cb = document.getElementById('teamCarCheckbox');
+    if (cb && cb.checked) {
+      cb.checked = false;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  } catch (e) {}
+})();
+true;
+`;
 
 const TASK_NAME = 'LT_BG_LOCATION';
 const STAT_KEY = 'lt_stat_v2';
@@ -273,6 +297,22 @@ export default function App() {
   const [cfg, setCfg] = useState(DEFAULT_CFG);
   const [showCfg, setShowCfg] = useState(false);
   const [cfgSaved, setCfgSaved] = useState(true);
+  const [webReady, setWebReady] = useState(false);
+  const [webError, setWebError] = useState(null);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const webRef = useRef(null);
+
+  // Zurueck-Taste blaettert in der Website statt die App zu schliessen.
+  useEffect(() => {
+    const onBack = () => {
+      if (showCfg) { setShowCfg(false); return true; }
+      if (canGoBack && webRef.current) { webRef.current.goBack(); return true; }
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, [canGoBack, showCfg]);
 
   const refresh = useCallback(async () => {
     const isOn = await Location.hasStartedLocationUpdatesAsync(TASK_NAME).catch(() => false);
@@ -431,8 +471,92 @@ export default function App() {
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="#101317" />
-      <ScrollView contentContainerStyle={s.pad}>
-        <Text style={s.h1}>Livetracking</Text>
+
+      {/* Schmale Leiste: Zustand des Senders, immer sichtbar. */}
+      <View style={s.bar}>
+        <View style={[s.dot, running ? s.dotOn : s.dotOff]} />
+        <View style={s.barTextWrap}>
+          <Text style={s.barTitle} numberOfLines={1}>
+            {running ? (cfg.trackerId || 'TEAMAUTO') : 'Sender aus'}
+          </Text>
+          {running && stats && (
+            <Text style={s.barSub} numberOfLines={1}>
+              {stats.tally.ok} gesendet
+              {stats.tally.err > 0 ? ` · ${stats.tally.err} Fehler` : ''}
+            </Text>
+          )}
+        </View>
+        <Pressable
+          style={[s.barBtn, running ? s.barBtnStop : s.barBtnGo]}
+          onPress={running ? stop : start}
+        >
+          <Text style={s.barBtnText}>{running ? 'Stopp' : 'Start'}</Text>
+        </Pressable>
+        <Pressable style={s.barIcon} onPress={() => setShowCfg((v) => !v)}>
+          <Text style={s.barIconText}>{showCfg ? '\u2715' : '\u2699'}</Text>
+        </Pressable>
+      </View>
+
+      {/* Die Website. Bleibt dauerhaft geladen, damit die Anmeldung und
+          die Kartenposition beim Wechsel in die Einstellungen erhalten
+          bleiben. */}
+      <View style={s.webWrap}>
+        <WebView
+          key={reloadKey}
+          ref={webRef}
+          source={{ uri: (cfg.serverUrl || '').replace(/\/+$/, '') || DEFAULT_CFG.serverUrl }}
+          style={s.web}
+          javaScriptEnabled
+          domStorageEnabled
+          // Der native Sender macht die Ortung. Der Website den Zugriff
+          // zu verweigern verhindert, dass zwei Quellen gleichzeitig
+          // senden.
+          geolocationEnabled={false}
+          allowFileAccess
+          originWhitelist={['*']}
+          pullToRefreshEnabled
+          injectedJavaScript={INJECT}
+          applicationNameForUserAgent="LivetrackingApp/1.2"
+          onLoadEnd={() => setWebReady(true)}
+          onNavigationStateChange={(n) => setCanGoBack(n.canGoBack)}
+          onError={(e) => setWebError(e.nativeEvent.description || 'Ladefehler')}
+          onHttpError={(e) => {
+            const c = e.nativeEvent.statusCode;
+            if (c >= 500) setWebError('Server antwortet mit ' + c);
+          }}
+        />
+
+        {!webReady && !webError && (
+          <View style={s.webOverlay}>
+            <ActivityIndicator size="large" color="#4aa3ff" />
+            <Text style={s.webNote}>Lade Livetracking …</Text>
+            <Text style={s.webHint}>
+              Nach laengerer Pause faehrt der Server erst hoch. Das kann
+              bis zu einer Minute dauern.
+            </Text>
+          </View>
+        )}
+
+        {webError && (
+          <View style={s.webOverlay}>
+            <Text style={s.webErr}>Website nicht erreichbar</Text>
+            <Text style={s.webHint}>{webError}</Text>
+            <Text style={s.webHint}>
+              Die Positionsuebertragung laeuft davon unabhaengig weiter.
+            </Text>
+            <Pressable
+              style={[s.btn, s.btnAlt, s.webRetry]}
+              onPress={() => { setWebError(null); setWebReady(false); setReloadKey((k) => k + 1); }}
+            >
+              <Text style={s.btnText}>Erneut versuchen</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      {showCfg && (
+      <ScrollView style={s.panel} contentContainerStyle={s.pad}>
+        <Text style={s.h1}>Sender</Text>
 
         <View style={[s.badge, running ? s.badgeOn : s.badgeOff]}>
           <Text style={s.badgeText}>
@@ -459,14 +583,13 @@ export default function App() {
           </Pressable>
         </View>
 
-        <Pressable style={[s.btn, s.btnGhost]} onPress={() => setShowCfg((v) => !v)}>
+        <Pressable style={[s.btn, s.btnGhost]} onPress={() => setShowCfg(false)}>
           <Text style={s.btnText}>
-            {showCfg ? 'Einstellungen zuklappen' : 'Einstellungen'}
-            {cfgSaved ? '' : '  •'}
+            Zurueck zur Karte{cfgSaved ? '' : '  •'}
           </Text>
         </Pressable>
 
-        {showCfg && (
+        {true && (
           <View style={s.card}>
             <Text style={s.h2}>Verbindung</Text>
 
@@ -614,6 +737,7 @@ export default function App() {
           Intervall {INTERVAL_MS / 1000}s · Task {TASK_NAME} · {Platform.OS}
         </Text>
       </ScrollView>
+      )}
     </View>
   );
 }
@@ -631,6 +755,46 @@ const MONO = Platform.select({ android: 'monospace', ios: 'Menlo', default: 'mon
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#101317' },
+
+  // Statusleiste
+  bar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingTop: 44, paddingBottom: 10, paddingHorizontal: 14,
+    backgroundColor: '#101317',
+    borderBottomWidth: 1, borderBottomColor: '#232a33',
+  },
+  dot: { width: 12, height: 12, borderRadius: 6 },
+  dotOn: { backgroundColor: '#4ade80' },
+  dotOff: { backgroundColor: '#6b7280' },
+  barTextWrap: { flex: 1 },
+  barTitle: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  barSub: { color: '#8fa3b8', fontSize: 12, fontFamily: MONO, marginTop: 1 },
+  barBtn: { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 6 },
+  barBtnGo: { backgroundColor: '#1d5f9e' },
+  barBtnStop: { backgroundColor: '#5a2020' },
+  barBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  barIcon: { paddingHorizontal: 8, paddingVertical: 8 },
+  barIconText: { color: '#8fa3b8', fontSize: 20 },
+
+  // WebView
+  webWrap: { flex: 1, backgroundColor: '#fff' },
+  web: { flex: 1 },
+  webOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#101317', alignItems: 'center', justifyContent: 'center',
+    padding: 32,
+  },
+  webNote: { color: '#c8d4e0', fontSize: 17, marginTop: 18 },
+  webErr: { color: '#ff8f6b', fontSize: 19, fontWeight: '700', marginBottom: 12 },
+  webHint: { color: '#6d7d8d', fontSize: 14, textAlign: 'center', marginTop: 10, lineHeight: 20 },
+  webRetry: { marginTop: 24, alignSelf: 'stretch' },
+
+  // Einstellungen als Ueberlagerung ueber der Website
+  panel: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#101317',
+  },
+
   pad: { padding: 20, paddingTop: 56, paddingBottom: 60 },
   h1: { color: '#fff', fontSize: 30, fontWeight: '700', marginBottom: 16 },
   h2: { color: '#8fa3b8', fontSize: 13, fontWeight: '700', letterSpacing: 1, marginBottom: 10, textTransform: 'uppercase' },
