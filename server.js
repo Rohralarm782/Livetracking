@@ -82,6 +82,69 @@ function sweepPositions(maxAgeMs, reason) {
 
 setInterval(() => sweepPositions(POSITION_MAX_AGE_MS, 'Kehrbesen'), 30 * 60 * 1000);
 
+// =======================
+// STRECKENPUNKTE (Persistenz)
+// =======================
+// positions{} haelt je Tracker nur den letzten Punkt - der Vorgaenger
+// wird ersatzlos ueberschrieben. Die gefahrene Strecke existierte damit
+// ausschliesslich als Polyline im gerade offenen Browser. Hier laeuft
+// eine Kopie jedes Punktes in die Datenbank.
+//
+// Gepuffert, damit der POST-Handler nie auf die DB wartet: ein haengender
+// Neon-Connect darf den Positionsempfang im Rennen nicht ausbremsen.
+const TRACK_FLUSH_MS    = 10 * 1000;             // Sammelintervall
+const TRACK_PRUNE_MS    = 15 * 60 * 1000;        // Aufraeum-Takt
+const TRACK_IDLE_SECS   = 2 * 60 * 60;           // Spur weg nach 2h Funkstille
+const TRACK_BUFFER_MAX  = 5000;                  // Notbremse bei DB-Ausfall
+
+let trackBuffer     = [];
+let trackFlushBusy  = false;
+let trackDropped    = 0;
+
+function bufferTrackPoint(id, entry) {
+  if (!db.enabled) return;
+  if (trackBuffer.length >= TRACK_BUFFER_MAX) { trackDropped++; return; }
+  trackBuffer.push({
+    trackerId: id,
+    raceId:    activeRaceId || null,
+    ts:        entry.timestamp,
+    lat:       entry.lat,
+    lon:       entry.lon,
+    acc:       entry.acc == null ? null : entry.acc,
+    spd:       entry.spd == null ? null : entry.spd
+  });
+}
+
+// Bei Fehler wird der Batch verworfen, nicht zurueckgelegt. Sonst
+// waechst der Puffer bei dauerhaftem DB-Problem bis zum Speicherende -
+// und ein Loch in der Spur ist harmloser als ein abgestuerzter Server.
+async function flushTrackPoints() {
+  if (!db.enabled || trackFlushBusy || trackBuffer.length === 0) return;
+  trackFlushBusy = true;
+  const batch = trackBuffer;
+  trackBuffer = [];
+  try {
+    await db.insertTrackPoints(batch);
+  } catch (e) {
+    console.error(`\u{274C} DB insertTrackPoints (${batch.length} Punkte verworfen):`, e.message);
+  } finally {
+    trackFlushBusy = false;
+  }
+  if (trackDropped > 0) {
+    console.warn(`\u{26A0}\u{FE0F} ${trackDropped} Streckenpunkt(e) wegen vollem Puffer verworfen`);
+    trackDropped = 0;
+  }
+}
+
+setInterval(flushTrackPoints, TRACK_FLUSH_MS);
+
+setInterval(() => {
+  if (!db.enabled) return;
+  db.pruneTrackPoints(TRACK_IDLE_SECS)
+    .then(n => { if (n > 0) console.log(`\u{1F9F9} ${n} Streckenpunkt(e) verworfen (2h ohne Signal)`); })
+    .catch(e => console.error('\u{274C} DB pruneTrackPoints:', e.message));
+}, TRACK_PRUNE_MS);
+
 // Aktuell auf den Garmin-Displays stehende Texte, je Tracker-ID.
 // Quelle der Wahrheit ist der Broker (retained) - wir lesen sie beim
 // Verbinden zurueck und ueberleben damit auch einen Cold Start.
@@ -688,6 +751,7 @@ app.post('/positions', (req, res) => {
   if (typeof acc === 'number' && acc >= 0)               entry.acc = Math.round(acc);
   if (typeof spd === 'number' && spd >= 0)               entry.spd = Math.round(spd * 10) / 10;
   positions[key] = entry;
+  bufferTrackPoint(key, entry);
   delete pending[key];
   res.json({ ok: true });
 });

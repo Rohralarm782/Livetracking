@@ -10,6 +10,9 @@
 //   races       Rennen innerhalb einer Veranstaltung. Traegt Startliste
 //               (riders_json) und den aktuellen Taktik-Stand (groups_json).
 //   gap_history Ereignis-basiert: jede Gruppen-Aenderung eine Zeile.
+//   track_points Rohe GPS-Punkte je Tracker. Ohne die existiert die
+//               gefahrene Strecke nur als Leaflet-Polyline im jeweils
+//               offenen Browser und ist nach Reload/Cold-Start weg.
 //   settings    Key/Value fuer Globales (aktives Rennen, GPX).
 
 const { Pool } = require('pg');
@@ -78,6 +81,22 @@ async function init() {
     snapshot JSONB NOT NULL
   )`);
   await q(`CREATE INDEX IF NOT EXISTS gap_history_race_ts ON gap_history (race_id, ts)`);
+
+  // race_id ist bewusst NULLABLE: Punkte kommen auch an, wenn kein
+  // Rennen aktiv ist (Test, Training). Die Spalte wird heute aus dem
+  // einen globalen activeRaceId gefuellt; sobald es eine echte
+  // Tracker->Rennen-Zuordnung gibt, kommt sie von dort - ohne Migration.
+  await q(`CREATE TABLE IF NOT EXISTS track_points (
+    id         BIGSERIAL PRIMARY KEY,
+    tracker_id TEXT NOT NULL,
+    race_id    TEXT REFERENCES races(id) ON DELETE CASCADE,
+    ts         TIMESTAMPTZ NOT NULL,
+    lat        DOUBLE PRECISION NOT NULL,
+    lon        DOUBLE PRECISION NOT NULL,
+    acc        REAL,
+    spd        REAL
+  )`);
+  await q(`CREATE INDEX IF NOT EXISTS track_points_tracker_ts ON track_points (tracker_id, ts)`);
 
   await q(`CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
@@ -225,11 +244,56 @@ async function listGapHistory(raceId) {
   return r.rows;
 }
 
+// =======================
+// STRECKENPUNKTE
+// =======================
+// Gesammelt geschrieben, nicht pro Punkt: bei 5s-Intervall mal mehreren
+// Trackern waeren Einzel-INSERTs zu viele Round-Trips fuer Neon Free.
+// Der Aufrufer puffert und ruft das hier alle paar Sekunden.
+const TP_CHUNK = 500;   // Parameter pro Statement begrenzen (7 je Zeile)
+
+async function insertTrackPoints(rows) {
+  if (!enabled || !Array.isArray(rows) || rows.length === 0) return 0;
+  let written = 0;
+  for (let i = 0; i < rows.length; i += TP_CHUNK) {
+    const chunk  = rows.slice(i, i + TP_CHUNK);
+    const params = [];
+    const values = [];
+    for (const r of chunk) {
+      const b = params.length;
+      // ts kommt als Epoch-Millisekunden herein
+      values.push(`($${b+1}, $${b+2}, to_timestamp($${b+3}::double precision / 1000.0), $${b+4}, $${b+5}, $${b+6}, $${b+7})`);
+      params.push(r.trackerId, r.raceId == null ? null : r.raceId, r.ts,
+                  r.lat, r.lon,
+                  r.acc == null ? null : r.acc,
+                  r.spd == null ? null : r.spd);
+    }
+    await q(`INSERT INTO track_points (tracker_id, race_id, ts, lat, lon, acc, spd)
+             VALUES ${values.join(', ')}`, params);
+    written += chunk.length;
+  }
+  return written;
+}
+
+// Aufraeumen je Tracker, nicht global nach Alter: solange ein Tracker
+// sendet, bleibt seine komplette Spur stehen - auch bei langem Rennen.
+// Erst wenn er idleSeconds nichts mehr geliefert hat, faellt sie weg.
+async function pruneTrackPoints(idleSeconds) {
+  if (!enabled) return 0;
+  const r = await q(`DELETE FROM track_points WHERE tracker_id IN (
+                       SELECT tracker_id FROM track_points
+                       GROUP BY tracker_id
+                       HAVING max(ts) < now() - make_interval(secs => $1)
+                     )`, [idleSeconds]);
+  return r.rowCount || 0;
+}
+
 module.exports = {
   enabled, init,
   getSetting, setSetting,
   listEvents, upsertEvent, getEvent, deleteEvent,
   listRaces, upsertRace, updateRaceRiders, setRaceStatus, clearActiveStatus,
   updateRaceGroups, updateRaceGpx, deleteRace,
-  addGapSnapshot, listGapHistory
+  addGapSnapshot, listGapHistory,
+  insertTrackPoints, pruneTrackPoints
 };
