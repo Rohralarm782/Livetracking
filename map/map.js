@@ -72,6 +72,8 @@ const STALE_MS   = 3 * 60 * 1000;
 // Schwelle fuer die Statuszeile. Muss ueber dem Stehend-Intervall von
 // 30 s liegen, sonst meldet ein wartendes Feld dauernd "Offline".
 const OFFLINE_MS = 75 * 1000;
+// Punkte je Spur. Bei 2-s-Takt entspricht das etwa der letzten Stunde.
+const TRAIL_MAX_POINTS = 1800;
 // Tracker, die online sind, aber noch keinen GPS-Fix haben.
 // [{ id, displayName, sats, since, timestamp }]
 let pendingTrackers = [];
@@ -241,6 +243,19 @@ function tooltipContent(id, bat, age) {
 // =======================
 // CONTEXT MENU
 // =======================
+async function deleteTracker(markerId) {
+  try {
+    const res = await fetch(`${SERVER}/positions/${encodeURIComponent(markerId)}`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (!res.ok) { checkAuth(res); showToast('\u26A0\uFE0F Entfernen fehlgeschlagen'); return; }
+    if (markers[markerId]) { map.removeLayer(markers[markerId]); delete markers[markerId]; }
+    if (trails[markerId])  { map.removeLayer(trails[markerId]);  delete trails[markerId];  }
+    delete lastPositions[markerId];
+    showToast('\u{1F5D1} Marker entfernt');
+  } catch (err) { showToast('\u26A0\uFE0F ' + err.message); }
+}
+
 function showMarkerMenu(e, markerId) {
   if (authLevel !== 'spolei') return;
   if (currentMarkerMenu) currentMarkerMenu.remove();
@@ -278,8 +293,23 @@ function showMarkerMenu(e, markerId) {
     } catch (err) { alert('\u274C Fehler: ' + err.message); }
   });
 
+  // Karteileiche einzeln entfernen. Bisher half nur "Karte leeren" -
+  // das nimmt aber auch alle laufenden Tracker mit. Das Alter steht
+  // dabei, damit man sieht, ob der Marker wirklich tot ist.
+  const p   = lastPosData[markerId];
+  const age = (p && p.timestamp) ? Date.now() - p.timestamp : null;
+  const delBtn = document.createElement('button');
+  delBtn.className   = 'markerDel';
+  delBtn.textContent = '\u{1F5D1} Entfernen'
+    + (age !== null && age > STALE_MS ? ` (still seit ${ageLabel(age)})` : '');
+  delBtn.addEventListener('click', () => {
+    container.remove();
+    if (confirm(`Marker \u201E${markerId}\u201C von der Karte nehmen?`)) deleteTracker(markerId);
+  });
+
   container.appendChild(input);
   container.appendChild(renameBtn);
+  container.appendChild(delBtn);
   document.body.appendChild(container);
   currentMarkerMenu = container;
   input.focus(); input.select();
@@ -304,7 +334,24 @@ async function loadPositions() {
     const data = await res.json();
     lastPosData = data;
     const ids  = Object.keys(data);
-    if (ids.length === 0) return;
+
+    // Marker wurden angelegt und aktualisiert, aber nie entfernt - und
+    // bei einer leeren Antwort brach die Funktion vorher sofort ab.
+    // Leerte ein zweites Geraet die Karte oder verwarf der Server alte
+    // Positionen beim Rennenwechsel, blieb hier alles stehen, bis
+    // jemand die Seite neu laedt. Das Teamauto ist ausgenommen: dessen
+    // Marker gehoert dem eigenen Browser, nicht dem Server.
+    const bekannt = new Set(ids);
+    Object.keys(markers).forEach(id => {
+      if (bekannt.has(id)) return;
+      if (id === 'TEAMAUTO' && teamCarMarker !== null) return;
+      map.removeLayer(markers[id]);
+      delete markers[id];
+      if (trails[id]) { map.removeLayer(trails[id]); delete trails[id]; }
+      delete lastPositions[id];
+    });
+
+    if (ids.length === 0) { updateStatus(); return; }
 
     // Nicht der Zeitpunkt der Antwort zaehlt, sondern die juengste
     // Position darin. Vorher galt jede Antwort als Lebenszeichen -
@@ -370,7 +417,17 @@ async function loadPositions() {
 
         const prev  = lastPositions[id];
         const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
-        if (moved && !isBetreuer) trails[id].addLatLng(latlng);
+        if (moved && !isBetreuer) {
+          trails[id].addLatLng(latlng);
+          // Im Renn-Modus meldet ein fahrender Tracker alle 2 s. Ueber
+          // drei Stunden waeren das gut 5000 Punkte je Spur, die Leaflet
+          // bei jedem Verschieben neu zeichnet. TRAIL_MAX_POINTS deckt
+          // rund die letzte Stunde ab, das reicht zum Nachvollziehen.
+          const pts = trails[id].getLatLngs();
+          if (pts.length > TRAIL_MAX_POINTS) {
+            trails[id].setLatLngs(pts.slice(pts.length - TRAIL_MAX_POINTS));
+          }
+        }
         lastPositions[id] = latlng;
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
@@ -378,7 +435,11 @@ async function loadPositions() {
         lastPositions[id].betreuer    = isBetreuer;
 
         if (!isBetreuer) markers[id].setOpacity(stale ? 0.45 : 1);
-        if (!isBetreuer && id !== 'TEAMAUTO') {
+        // Die frueher hier stehende Ausnahme fuer TEAMAUTO hat dessen
+        // Tooltip nach dem Anlegen nie wieder angefasst: Alter und
+        // Akkustand froren auf dem Stand der ersten Meldung ein, nur
+        // die Deckkraft ging leise auf 0.45.
+        if (!isBetreuer) {
           markers[id].setTooltipContent(tooltipContent(displayName, bat, age));
         }
       }
@@ -404,6 +465,33 @@ async function loadPositions() {
     }
 
   } catch (err) { console.error("Fetch Error:", err); }
+}
+
+// =======================
+// AKTIVES RENNEN BEOBACHTEN
+// =======================
+// Die Strecke wurde nur beim Seitenstart geholt. Wechselte der SpoLei
+// das Rennen, blieb auf allen anderen Geraeten die alte Linie liegen.
+// /active ist bewusst winzig - kein Streckenpunkt, keine Startliste -
+// und laesst sich deshalb guenstig pollen.
+let activeInfo    = { raceId: null };
+let lastActiveKey = null;
+
+async function loadActiveInfo() {
+  try {
+    const res  = await fetch(`${SERVER}/active`);
+    const data = await res.json();
+    activeInfo = data || { raceId: null };
+    // Auch die Strecke selbst kann sich aendern, ohne dass das Rennen
+    // wechselt - deshalb gehoert der Streckenname mit in den Schluessel.
+    const key = `${activeInfo.raceId || ''}|${activeInfo.gpxName || ''}|${activeInfo.gpxPoints || 0}`;
+    if (key !== lastActiveKey) {
+      const erster = lastActiveKey === null;
+      lastActiveKey = key;
+      await fetchGpxTrack();
+      if (!erster) showToast('\u{1F5FA} Strecke aktualisiert');
+    }
+  } catch (err) { console.error('Active:', err); }
 }
 
 // =======================
@@ -445,9 +533,17 @@ async function clearMap() {
   // Die Rueckfrage laeuft ueber #confirmClearModal (eigener Dialog, mittig).
   // Ein zusaetzlicher System-Dialog waere eine Bestaetigung zu viel.
   try {
-    await fetch(`${SERVER}/positions`, {
+    const res = await fetch(`${SERVER}/positions`, {
       method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
     });
+    // Ohne diese Pruefung sah ein Leeren mit abgelaufener Sitzung
+    // erfolgreich aus: die Marker verschwanden lokal und kamen beim
+    // naechsten Poll alle zurueck.
+    if (!res.ok) {
+      checkAuth(res);
+      showToast('\u26A0\uFE0F Karte konnte nicht geleert werden');
+      return;
+    }
     Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
     Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
     Object.keys(lastPositions).forEach(id => delete lastPositions[id]);

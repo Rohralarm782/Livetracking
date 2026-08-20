@@ -5,7 +5,10 @@ loadPositions();
 setInterval(loadPositions, 1000);
 loadPending();
 setInterval(loadPending, 3000);
-fetchGpxTrack();
+// Holt beim ersten Lauf auch die Strecke. Ein zusaetzliches
+// fetchGpxTrack() hier waere ein doppelter Request.
+loadActiveInfo();
+setInterval(loadActiveInfo, 20000);
 loadMode();
 pollGroups();
 setInterval(pollGroups, 5000);

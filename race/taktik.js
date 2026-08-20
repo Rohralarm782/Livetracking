@@ -129,14 +129,32 @@ async function saveGroups() {
     main:    g.main === true,
     riders:  (g.riders || []).map(r => typeof r === 'object' ? r.nr : r)
   }));
-  await fetch(`${SERVER}/groups`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-    body:    JSON.stringify({ groups: payload })
-  }).catch(e => console.error('saveGroups:', e));
+  // Der Status wurde bisher nicht geprueft. Lief das Speichern in ein
+  // 403, blieb die Aenderung nur lokal stehen und pollGroups() hat sie
+  // fuenf Sekunden spaeter stillschweigend ueberschrieben - mitten im
+  // Rennen und ohne jeden Hinweis.
+  let ok = false;
+  try {
+    const res = await fetch(`${SERVER}/groups`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body:    JSON.stringify({ groups: payload })
+    });
+    ok = res.ok;
+    if (!res.ok) checkAuth(res);
+  } catch (e) { console.error('saveGroups:', e); }
+
+  if (!ok) {
+    // Sperre sofort aufheben, damit der naechste Poll den echten
+    // Serverstand zurueckholt statt den nicht gespeicherten zu halten.
+    groupsWriteLock = 0;
+    showToast('\u26A0\uFE0F Taktik nicht gespeichert');
+    return false;
+  }
   // Kurze Nachlaufzeit: der naechste Poll soll erst laufen, wenn der
   // Server den neuen Stand sicher ausliefert.
   groupsWriteLock = Date.now() + 800;
+  return true;
 }
 
 // Index der Hauptfeld-Gruppe. Gleiche Regel wie im Server:
@@ -196,7 +214,9 @@ async function loadGapSeries(force) {
   if (!activeRaceId) { gapSeries = Object.create(null); return; }
   if (!force && Date.now() - gapLoadedAt < GAP_RELOAD_MS) return;
   gapLoadedAt = Date.now();
-  const snaps = await loadRaceGaps(activeRaceId);
+  // Zeitfenster gleich mitgeben, damit der Server nur liefert, was hier
+  // ausgewertet wird. Eine Minute Zugabe gegen Uhrenversatz.
+  const snaps = await loadRaceGaps(activeRaceId, Math.ceil(GAP_WINDOW_MS / 60000) + 1);
   const out   = Object.create(null);
   const cut   = Date.now() - GAP_WINDOW_MS;
   snaps.forEach(s => {

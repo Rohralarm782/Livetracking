@@ -33,8 +33,9 @@ function hideAdminElements() {
 }
 
 function saveToken(token, level) {
-  authToken = token;
-  authLevel = level;
+  authToken   = token;
+  authLevel   = level;
+  authWarned  = false;
   localStorage.setItem('authToken', token);
   localStorage.setItem('authLevel', level);
   document.getElementById('loginModal').classList.add('hidden');
@@ -67,6 +68,35 @@ function logout() {
   document.getElementById('loginModal').classList.add('hidden');
   hideAdminElements();
   console.log("\u{1F6AA} Abgemeldet");
+}
+
+// =======================
+// ABGELAUFENE SITZUNG
+// =======================
+// Bisher hat keine einzige Stelle im Frontend auf 401/403 reagiert.
+// Nach einem Cold Start von Render waren alle Tokens weg, das Handy
+// hielt seinen aber weiter - man sah sich als eingeloggt, und jedes
+// Speichern lief still ins Leere. checkAuth() wird jetzt von allen
+// schreibenden Aufrufen durchgereicht.
+//
+// Rueckgabe: true = Antwort ist brauchbar, false = Sitzung ist hin.
+let authWarned = false;
+
+function checkAuth(res) {
+  if (!res || (res.status !== 401 && res.status !== 403)) return true;
+  // Nicht angemeldet zu sein ist kein Sitzungsabbruch.
+  if (!authToken) return false;
+  authToken = null;
+  authLevel = null;
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('authLevel');
+  hideAdminElements();
+  if (!authWarned) {
+    authWarned = true;
+    showLoginModal('\u26A0\uFE0F Sitzung abgelaufen \u2013 bitte neu anmelden');
+    setTimeout(() => { authWarned = false; }, 3000);
+  }
+  return false;
 }
 
 function showLoginModal(reason) {

@@ -49,7 +49,11 @@ async function apiSend(path, method, body) {
   const res = await fetch(`${SERVER}${path}`, opt);
   let data = null;
   try { data = await res.json(); } catch (e) { /* leere Antwort ist ok */ }
-  if (!res.ok) throw new Error((data && data.error) || `Serverfehler ${res.status}`);
+  if (!res.ok) {
+    // Bei 401/403 raeumt checkAuth() den Token weg und oeffnet den Login.
+    if (!checkAuth(res)) throw new Error('Sitzung abgelaufen \u2013 bitte neu anmelden');
+    throw new Error((data && data.error) || `Serverfehler ${res.status}`);
+  }
   return data;
 }
 
@@ -159,9 +163,17 @@ async function duplicateRace(id, name) {
 }
 
 // Abstandsverlauf des Rennens (aus gap_history).
-async function loadRaceGaps(id) {
+// Der Endpoint verlangt jetzt eine Anmeldung - die Antwort enthaelt
+// Gruppenzusammensetzung und Startnummern. minutes begrenzt das Fenster
+// schon serverseitig; frueher kam die komplette Historie und wurde hier
+// bis auf die letzten Minuten weggeworfen.
+async function loadRaceGaps(id, minutes) {
+  if (!authToken) return [];
   try {
-    const res  = await fetch(`${SERVER}/races/${id}/gaps`);
+    const res = await fetch(`${SERVER}/races/${id}/gaps?minutes=${minutes || 10}`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (!res.ok) { checkAuth(res); return []; }
     const data = await res.json();
     return Array.isArray(data.snapshots) ? data.snapshots : [];
   } catch (e) { console.error('Gaps:', e); return []; }

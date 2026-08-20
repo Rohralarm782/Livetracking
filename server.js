@@ -7,11 +7,26 @@ const db      = require('./db');
 
 const app = express();
 
+// Render (und jedes andere PaaS) haengt hinter einem Reverse Proxy.
+// Ohne das sehen wir bei req.ip immer die Adresse des Proxys - die
+// Login-Drossel weiter unten wuerde dann alle Nutzer als einen zaehlen.
+app.set('trust proxy', true);
+
 // =======================
 // MIDDLEWARE
 // =======================
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+
+// Der Routen-Parser auf /api/claude mit 20 MB kam nie zum Zug: dieser
+// globale Parser laeuft zuerst und wirft bei >2 MB bereits
+// 413 entity.too.large, die Route wurde gar nicht erreicht. Ein PDF-Import
+// ab etwa 1,5 MB Datei scheiterte deshalb weiterhin. Ausnahme statt
+// pauschal 20 MB, damit alle anderen Endpoints eng begrenzt bleiben.
+const jsonSmall = express.json({ limit: '2mb' });
+app.use((req, res, next) => {
+  if (req.path === '/api/claude') return next();
+  jsonSmall(req, res, next);
+});
 
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.url}`);
@@ -81,69 +96,6 @@ function sweepPositions(maxAgeMs, reason) {
 }
 
 setInterval(() => sweepPositions(POSITION_MAX_AGE_MS, 'Kehrbesen'), 30 * 60 * 1000);
-
-// =======================
-// STRECKENPUNKTE (Persistenz)
-// =======================
-// positions{} haelt je Tracker nur den letzten Punkt - der Vorgaenger
-// wird ersatzlos ueberschrieben. Die gefahrene Strecke existierte damit
-// ausschliesslich als Polyline im gerade offenen Browser. Hier laeuft
-// eine Kopie jedes Punktes in die Datenbank.
-//
-// Gepuffert, damit der POST-Handler nie auf die DB wartet: ein haengender
-// Neon-Connect darf den Positionsempfang im Rennen nicht ausbremsen.
-const TRACK_FLUSH_MS    = 10 * 1000;             // Sammelintervall
-const TRACK_PRUNE_MS    = 15 * 60 * 1000;        // Aufraeum-Takt
-const TRACK_IDLE_SECS   = 2 * 60 * 60;           // Spur weg nach 2h Funkstille
-const TRACK_BUFFER_MAX  = 5000;                  // Notbremse bei DB-Ausfall
-
-let trackBuffer     = [];
-let trackFlushBusy  = false;
-let trackDropped    = 0;
-
-function bufferTrackPoint(id, entry) {
-  if (!db.enabled) return;
-  if (trackBuffer.length >= TRACK_BUFFER_MAX) { trackDropped++; return; }
-  trackBuffer.push({
-    trackerId: id,
-    raceId:    activeRaceId || null,
-    ts:        entry.timestamp,
-    lat:       entry.lat,
-    lon:       entry.lon,
-    acc:       entry.acc == null ? null : entry.acc,
-    spd:       entry.spd == null ? null : entry.spd
-  });
-}
-
-// Bei Fehler wird der Batch verworfen, nicht zurueckgelegt. Sonst
-// waechst der Puffer bei dauerhaftem DB-Problem bis zum Speicherende -
-// und ein Loch in der Spur ist harmloser als ein abgestuerzter Server.
-async function flushTrackPoints() {
-  if (!db.enabled || trackFlushBusy || trackBuffer.length === 0) return;
-  trackFlushBusy = true;
-  const batch = trackBuffer;
-  trackBuffer = [];
-  try {
-    await db.insertTrackPoints(batch);
-  } catch (e) {
-    console.error(`\u{274C} DB insertTrackPoints (${batch.length} Punkte verworfen):`, e.message);
-  } finally {
-    trackFlushBusy = false;
-  }
-  if (trackDropped > 0) {
-    console.warn(`\u{26A0}\u{FE0F} ${trackDropped} Streckenpunkt(e) wegen vollem Puffer verworfen`);
-    trackDropped = 0;
-  }
-}
-
-setInterval(flushTrackPoints, TRACK_FLUSH_MS);
-
-setInterval(() => {
-  if (!db.enabled) return;
-  db.pruneTrackPoints(TRACK_IDLE_SECS)
-    .then(n => { if (n > 0) console.log(`\u{1F9F9} ${n} Streckenpunkt(e) verworfen (2h ohne Signal)`); })
-    .catch(e => console.error('\u{274C} DB pruneTrackPoints:', e.message));
-}, TRACK_PRUNE_MS);
 
 // Aktuell auf den Garmin-Displays stehende Texte, je Tracker-ID.
 // Quelle der Wahrheit ist der Broker (retained) - wir lesen sie beim
@@ -548,6 +500,19 @@ async function loadStateFromDb() {
   const ds = await db.getSetting('displaySettings');
   if (ds && typeof ds === 'object') displaySettings = sanitizeSettings(ds);
 
+  // Tokens zurueckholen, sonst ist nach jedem Cold Start jeder
+  // angemeldete Nutzer stillschweigend abgemeldet.
+  const tk = await db.getSetting('tokens');
+  if (Array.isArray(tk)) {
+    for (const e of tk) {
+      if (e && typeof e.t === 'string' && (e.l === 'spolei' || e.l === 'betreuer')) {
+        tokens.set(e.t, { level: e.l, created: typeof e.c === 'number' ? e.c : Date.now() });
+      }
+    }
+    const weg = pruneTokens();
+    console.log(`\u{1F511} ${tokens.size} Sitzung(en) wiederhergestellt${weg ? `, ${weg} abgelaufen` : ''}`);
+  }
+
   // Ebenfalls bewusst ganz oben, aus demselben Grund wie displaySettings.
   const rt = await db.getSetting('runtime');
   if (rt && typeof rt === 'object') {
@@ -642,15 +607,54 @@ async function loadStateFromDb() {
 const ADMIN_PASSWORD    = process.env.ADMIN_PASSWORD    || 'admin123';
 const BETREUER_PASSWORD = process.env.BETREUER_PASSWORD || 'betreuer123';
 
-// Map<token, { level: 'spolei' | 'betreuer' }>
+// Map<token, { level: 'spolei' | 'betreuer', created: ms }>
+//
+// Lag bisher nur im RAM. Render Free schlaeft nach 15 Minuten ohne
+// Anfrage ein - beim Aufwachen war die Map leer, das Handy hielt seinen
+// Token aber weiter im localStorage. Ergebnis: man sah sich als
+// eingeloggt, jedes Schreiben lief still in ein 403. Genau das Muster
+// "Tracker geloescht, ist wieder da". Deshalb liegen die Tokens jetzt in
+// der settings-Tabelle.
 const tokens = new Map();
+
+// Ohne Ablauf blieb ein einmal vergebener Token ewig gueltig. Ein
+// Rennwochenende ist nach sieben Tagen sicher vorbei.
+const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function pruneTokens() {
+  const now = Date.now();
+  let n = 0;
+  for (const [t, e] of tokens) {
+    if (!e || typeof e.created !== 'number' || now - e.created > TOKEN_TTL_MS) {
+      tokens.delete(t); n++;
+    }
+  }
+  return n;
+}
+
+function persistTokens() {
+  if (!db.enabled) return;
+  pruneTokens();
+  const out = [];
+  for (const [t, e] of tokens) out.push({ t, l: e.level, c: e.created });
+  db.setSetting('tokens', out).catch(dbFail('setSetting tokens'));
+}
+
+// Gemeinsame Pruefung fuer beide Waechter, damit Ablauf und Aufraeumen
+// nur an einer Stelle stehen.
+function tokenOf(req) {
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) return null;
+  const token = auth.slice(7);
+  const entry = tokens.get(token);
+  if (!entry) return null;
+  if (Date.now() - entry.created > TOKEN_TTL_MS) { tokens.delete(token); return null; }
+  return entry;
+}
 
 // Jeder eingeloggte Nutzer
 function requireAuth(req, res, next) {
-  const auth = req.headers['authorization'];
-  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
-  const token = auth.slice(7);
-  const entry = tokens.get(token);
+  const entry = tokenOf(req);
   if (!entry) return res.status(401).json({ error: 'Invalid token' });
   req.userLevel = entry.level;
   next();
@@ -658,15 +662,33 @@ function requireAuth(req, res, next) {
 
 // Nur SpoLei
 function requireSpolei(req, res, next) {
-  const auth = req.headers['authorization'];
-  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
-  const token = auth.slice(7);
-  const entry = tokens.get(token);
-  if (!entry || entry.level !== 'spolei') {
+  const entry = tokenOf(req);
+  if (!entry) return res.status(401).json({ error: 'Invalid token' });
+  if (entry.level !== 'spolei') {
     return res.status(403).json({ error: 'Forbidden: SpoLei access required' });
   }
   req.userLevel = 'spolei';
   next();
+}
+
+// Einfache Drossel gegen Durchprobieren. Bewusst im RAM: nach einem
+// Neustart wieder offen zu sein ist unkritisch, ein Angreifer gewinnt
+// dadurch nichts Nennenswertes.
+const loginTries  = Object.create(null);   // ip -> { n, until }
+const LOGIN_MAX   = 10;
+const LOGIN_BLOCK = 5 * 60 * 1000;
+
+function loginBlocked(ip) {
+  const e = loginTries[ip];
+  if (!e) return false;
+  if (Date.now() > e.until) { delete loginTries[ip]; return false; }
+  return e.n >= LOGIN_MAX;
+}
+
+function noteLoginFail(ip) {
+  const e = loginTries[ip];
+  if (!e || Date.now() > e.until) loginTries[ip] = { n: 1, until: Date.now() + LOGIN_BLOCK };
+  else                            e.n++;
 }
 
 // =======================
@@ -680,13 +702,29 @@ app.get('/health', (req, res) => {
 // AUTH ENDPOINTS
 // =======================
 app.post('/login', (req, res) => {
+  const ip = req.ip || 'unbekannt';
   const { password } = req.body;
   let level = null;
   if (password === ADMIN_PASSWORD)    level = 'spolei';
   if (password === BETREUER_PASSWORD) level = 'betreuer';
-  if (!level) return res.status(401).json({ error: 'Wrong password' });
+
+  // Das richtige Passwort kommt bewusst IMMER durch, auch wenn die
+  // Drossel greift. Am Rennen haengen alle Betreuer im selben Mobilfunk-
+  // netz und koennen sich eine Adresse teilen - ein Vertipper des einen
+  // darf den anderen nicht die Anmeldung nehmen. Gegen Durchprobieren
+  // hilft die Drossel trotzdem: wer das Passwort nicht hat, kommt nicht
+  // durch, egal wie oft er es versucht.
+  if (!level) {
+    if (loginBlocked(ip)) {
+      return res.status(429).json({ error: 'Zu viele Versuche - in 5 Minuten nochmal' });
+    }
+    noteLoginFail(ip);
+    return res.status(401).json({ error: 'Wrong password' });
+  }
+  delete loginTries[ip];
   const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  tokens.set(token, { level });
+  tokens.set(token, { level, created: Date.now() });
+  persistTokens();
   console.log(`🔓 Login: ${level}`);
   res.json({ token, level });
 });
@@ -694,6 +732,7 @@ app.post('/login', (req, res) => {
 app.post('/logout', requireAuth, (req, res) => {
   const token = req.headers['authorization'].slice(7);
   tokens.delete(token);
+  persistTokens();
   console.log(`🚪 Logout: ${req.userLevel}`);
   res.json({ ok: true });
 });
@@ -751,7 +790,6 @@ app.post('/positions', (req, res) => {
   if (typeof acc === 'number' && acc >= 0)               entry.acc = Math.round(acc);
   if (typeof spd === 'number' && spd >= 0)               entry.spd = Math.round(spd * 10) / 10;
   positions[key] = entry;
-  bufferTrackPoint(key, entry);
   delete pending[key];
   res.json({ ok: true });
 });
@@ -801,20 +839,43 @@ app.delete('/positions', requireSpolei, (req, res) => {
   res.json({ ok: true });
 });
 
+// Einzelnen Marker entfernen. Bisher gab es nur alles-oder-nichts: um
+// eine Karteileiche aus einem frueheren Rennen loszuwerden, musste man
+// die komplette Karte leeren und damit auch alle laufenden Tracker.
+// Der Anzeigename bleibt bewusst stehen - meldet sich dieselbe Hardware
+// wieder, soll sie nicht namenlos zurueckkommen.
+app.delete('/positions/:id', requireSpolei, (req, res) => {
+  const id = String(req.params.id);
+  const gab = (positions[id] !== undefined) || (pending[id] !== undefined);
+  delete positions[id];
+  delete pending[id];
+  if (!gab) return res.status(404).json({ error: 'Kein Eintrag zu dieser ID' });
+  console.log(`\u{1F5D1} Marker entfernt: ${id}`);
+  res.json({ ok: true, id });
+});
+
 // =======================
 // BETREUER-POSITION (NEU)
 // Jeder eingeloggte Nutzer kann seinen Standort einmalig als Betreuer-Marker setzen.
 // =======================
+// Die ID wurde bisher aus dem Namen gebildet. Wer sich vertippt hatte
+// und noch einmal teilte ("Heinz - VP 45" statt "Heinz VP45"), stand
+// danach zweimal auf der Karte - der alte Marker blieb bis zum
+// Kehrbesen stehen. Die ID haengt jetzt an der Sitzung: derselbe
+// Betreuer bekommt immer denselben Marker, egal wie er ihn beschriftet.
+function betreuerId(token) {
+  let h = 0;
+  for (let i = 0; i < token.length; i++) h = (h * 31 + token.charCodeAt(i)) | 0;
+  return 'betreuer-' + Math.abs(h).toString(36);
+}
+
 app.post('/betreuer-position', requireAuth, (req, res) => {
   const { lat, lon, name } = req.body;
   if (typeof lat !== 'number' || typeof lon !== 'number' || !name) {
     return res.status(400).json({ error: 'lat, lon, name required' });
   }
   const safeName = String(name).trim().slice(0, 40);
-  const id = 'betreuer-' + safeName
-    .toLowerCase()
-    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30);
+  const id = betreuerId(req.headers['authorization'].slice(7));
   positions[id] = { lat, lon, timestamp: Date.now(), type: 'betreuer', name: safeName };
   console.log(`👤 Betreuer gesetzt: "${safeName}" → ${id}`);
   res.json({ ok: true, id });
@@ -886,6 +947,30 @@ app.post('/api/claude', requireSpolei, express.json({ limit: '20mb' }), async (r
 app.get('/gpx', (req, res) => {
   const r = activeRaceId ? races[activeRaceId] : null;
   res.json((r && r.gpx) || null);
+});
+
+// Winziger Steckbrief des aktiven Rennens, ohne Startliste und ohne
+// Streckenpunkte. Zwei Probleme auf einmal:
+//   - Die Strecke wurde nur beim Seitenstart geholt. Wechselte der
+//     SpoLei das Rennen, sahen alle anderen Geraete weiter die alte.
+//     Jetzt laesst sich guenstig pollen und nur bei Wechsel nachladen.
+//   - Nicht angemeldete Zuschauer kannten activeRaceId ueberhaupt
+//     nicht, weil /events erst nach dem Login geladen wurde.
+app.get('/active', (req, res) => {
+  const r = activeRaceId ? races[activeRaceId] : null;
+  if (!r) return res.json({ raceId: null });
+  const ev = events[r.eventId] || null;
+  res.json({
+    raceId:     r.id,
+    name:       r.name,
+    eventName:  ev ? ev.name : null,
+    category:   r.category,
+    startTime:  r.startTime,
+    riderCount: r.riders.length,
+    hasGpx:     !!r.gpx,
+    gpxName:    r.gpx ? r.gpx.name : null,
+    gpxPoints:  r.gpx ? r.gpx.coords.length : 0
+  });
 });
 
 app.put('/races/:id/gpx', requireSpolei, (req, res) => {
@@ -1274,11 +1359,17 @@ app.post('/races/:id/duplicate', requireSpolei, (req, res) => {
 
 // Abstandsverlauf des Rennens. Die Tabelle wurde bisher zwar
 // geschrieben, aber nie gelesen.
-app.get('/races/:id/gaps', async (req, res) => {
+// requireAuth: die Antwort enthaelt Gruppenzusammensetzung und
+// Startnummern, das gehoert nicht ohne Anmeldung heraus.
+// minutes begrenzt schon in der Datenbank - vorher kam die komplette
+// Historie des Rennens und das Frontend warf alles ausser den letzten
+// sechs Minuten wieder weg, alle 30 Sekunden neu.
+app.get('/races/:id/gaps', requireAuth, async (req, res) => {
   if (!races[req.params.id]) return res.status(404).json({ error: 'Nicht gefunden' });
   if (!db.enabled) return res.json({ snapshots: [] });
+  const minutes = Math.min(Math.max(parseInt(req.query.minutes) || 10, 1), 720);
   try {
-    const rows = await db.listGapHistory(req.params.id);
+    const rows = await db.listGapHistory(req.params.id, minutes);
     res.json({
       snapshots: rows.map(r => ({ ts: new Date(r.ts).getTime(), groups: r.snapshot }))
     });
