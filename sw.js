@@ -1,9 +1,29 @@
 // Service Worker – Live Tracking PWA
 // Network-first: immer live Daten, kein aggressives Caching
 
-// Version bei jeder Frontend-Aenderung hochzaehlen, sonst haelt das
-// Handy die alten Dateien fest.
-const CACHE = 'livetracking-v2';
+// Der Cache-Name kommt aus version.json. Vorher stand hier eine Zahl,
+// die bei jedem Frontend-Update von Hand hochzuzaehlen war - genau
+// einmal vergessen, und das Handy haelt die alten Dateien fest.
+//
+// Der Rueckfall greift, wenn /version nicht erreichbar ist (offline
+// beim Installieren). Dann wird derselbe Cache weiterbenutzt statt
+// gar keiner.
+const CACHE_PREFIX   = 'livetracking-';
+const CACHE_RUECKFALL = CACHE_PREFIX + 'unbekannt';
+
+let cacheNamePromise = null;
+
+function cacheName() {
+  if (!cacheNamePromise) {
+    cacheNamePromise = fetch('/version', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && typeof d.version === 'string')
+        ? CACHE_PREFIX + d.version
+        : CACHE_RUECKFALL)
+      .catch(() => CACHE_RUECKFALL);
+  }
+  return cacheNamePromise;
+}
 
 // Nur das Geruest wird abgelegt. Alles unter diesen Pfaden ist statisch;
 // Positionen, Gruppen und Rennen laufen ueber andere Pfade und duerfen
@@ -13,9 +33,16 @@ const SHELL = /\.(?:html|css|js|svg|png|webmanifest)$|^\/$|\/manifest\.json$/;
 self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', e => e.waitUntil((async () => {
-  // Alte Versionen wegraeumen, sonst waechst der Speicher mit jedem Deploy.
-  const keys = await caches.keys();
-  await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+  const name = await cacheName();
+  // Alte Versionen wegraeumen, sonst waechst der Speicher mit jedem
+  // Deploy. Steht die Version nicht fest, wird NICHT aufgeraeumt -
+  // sonst loescht ein misslungener Abruf den einzigen Offline-Bestand.
+  if (name !== CACHE_RUECKFALL) {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== name)
+          .map(k => caches.delete(k)));
+  }
   await self.clients.claim();
 })()));
 
@@ -35,7 +62,10 @@ self.addEventListener('fetch', e => {
       const res = await fetch(e.request);
       if (shell && res && res.ok) {
         const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+        cacheName()
+          .then(n => caches.open(n))
+          .then(c => c.put(e.request, copy))
+          .catch(() => {});
       }
       return res;
     } catch (err) {

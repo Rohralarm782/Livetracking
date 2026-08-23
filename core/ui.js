@@ -102,6 +102,49 @@ document.getElementById('modeSwitch').addEventListener('click', async () => {
 });
 
 // =======================
+// VERSION
+// =======================
+// Die geladene Version. Weicht sie spaeter von der ab, die der Server
+// meldet, laeuft hier ein veralteter Stand - typisch fuer ein Tablet,
+// das seit dem Vortag offen ist.
+let APP_VERSION = null;
+let versionGemeldet = false;
+
+async function loadVersion() {
+  try {
+    const res = await fetch(`${SERVER}/version`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const d = await res.json();
+    if (!d || typeof d.version !== 'string') return;
+    APP_VERSION = d.version;
+    const el = document.getElementById('versionInfo');
+    if (el) {
+      el.textContent = `Version ${d.version}`
+        + (d.date ? ' \u00B7 ' + datumKurz(d.date) : '');
+      if (d.title) el.title = d.title;
+    }
+  } catch (e) { /* ohne Netz bleibt die Anzeige leer */ }
+}
+
+function datumKurz(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso);
+}
+
+// Wird aus loadActiveInfo() gerufen, das ohnehin alle 20 Sekunden laeuft.
+function pruefeVersion(serverVersion) {
+  if (!serverVersion || !APP_VERSION) return;
+  if (serverVersion === APP_VERSION || versionGemeldet) return;
+  versionGemeldet = true;
+  showToast(`\u{1F504} Neue Version ${serverVersion} \u2013 bitte neu laden`, 10000);
+  const el = document.getElementById('versionInfo');
+  if (el) {
+    el.textContent = `Version ${APP_VERSION} \u2013 veraltet, ${serverVersion} verf\u00FCgbar`;
+    el.classList.add('veraltet');
+  }
+}
+
+// =======================
 // OPTIONS MENU
 // =======================
 const optionsBtn  = document.getElementById('optionsBtn');

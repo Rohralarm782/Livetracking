@@ -151,6 +151,16 @@
       font-size: 13px;
     }
     #streckenBar.hidden { display: none; }
+
+    /* Versionsanzeige im Fuss der erweiterten Einstellungen: klein und
+       grau, bis sie veraltet ist. */
+    #versionInfo {
+      display: block; margin-bottom: 9px; text-align: center;
+      font-size: 12px; color: #999;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    #versionInfo.veraltet { color: #c62828; font-weight: 500; }
     #streckenBar .sbTitel { font-weight: 600; color: #1565c0; }
     #streckenBar .sbHint  { color: #777; flex: 1; }
     #streckenBar input {

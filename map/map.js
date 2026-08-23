@@ -487,6 +487,7 @@ async function loadActiveInfo() {
     const res  = await fetch(`${SERVER}/active`);
     const data = await res.json();
     activeInfo = data || { raceId: null };
+    pruefeVersion(activeInfo.version);
     // Auch die Strecke selbst kann sich aendern, ohne dass das Rennen
     // wechselt - deshalb gehoert der Streckenname mit in den Schluessel.
     // startOffset gehoert in den Schluessel: verschiebt ein zweites

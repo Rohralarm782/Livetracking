@@ -39,6 +39,29 @@ app.use((req, res, next) => {
 // Nur ausliefern, was zum Frontend gehoert. express.static(__dirname)
 // hat auch server.js, db.js, package.json und - ohne Datenbank -
 // races.json mit allen Startlisten oeffentlich zugaenglich gemacht.
+// =======================
+// VERSION
+// =======================
+// Eine einzige Quelle im Repo: version.json. Server, Oberflaeche und
+// Service Worker beziehen sich alle darauf, damit die Nummer nicht an
+// drei Stellen auseinanderlaufen kann.
+//
+// Zaehlweise: major.minor.patch. Die Minor-Stelle ist die
+// Update-Nummer (Update 10 -> 1.10.0), die Patch-Stelle sind
+// Nachbesserungen an einem ausgelieferten Update.
+const VERSION = (() => {
+  const rueckfall = { version: '0.0.0', date: null, title: null };
+  try {
+    const roh = fs.readFileSync(path.join(__dirname, 'version.json'), 'utf8');
+    const v   = JSON.parse(roh);
+    if (!v || typeof v.version !== 'string') return rueckfall;
+    return { version: v.version, date: v.date || null, title: v.title || null };
+  } catch (e) {
+    console.warn('\u26A0\uFE0F version.json nicht lesbar:', e.message);
+    return rueckfall;
+  }
+})();
+
 const PRIVATE_FILES = new Set([
   '/server.js', '/db.js', '/package.json', '/package-lock.json',
   '/races.json', '/startlists.json'
@@ -718,7 +741,15 @@ function noteLoginFail(ip) {
 // HEALTH CHECK
 // =======================
 app.get('/health', (req, res) => {
-  res.send('🚀 Tracking Server läuft');
+  res.send(`\u{1F680} Tracking Server l\u00E4uft \u2013 v${VERSION.version}`);
+});
+
+// Winzig und ohne Anmeldung: der Service Worker fragt sie beim
+// Installieren ab, und nach einem Deploy sieht man mit einem Blick, ob
+// Render wirklich den neuen Stand faehrt.
+app.get('/version', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(VERSION);
 });
 
 // =======================
@@ -1241,9 +1272,13 @@ app.get('/gpx', (req, res) => {
 //     nicht, weil /events erst nach dem Login geladen wurde.
 app.get('/active', (req, res) => {
   const r = activeRaceId ? races[activeRaceId] : null;
-  if (!r) return res.json({ raceId: null });
+  // Die Version reist hier mit, weil /active ohnehin alle 20 Sekunden
+  // abgefragt wird. Ein Tablet, das seit gestern offen ist, merkt so
+  // von selbst, dass ein neuer Stand ausgeliefert wird.
+  if (!r) return res.json({ raceId: null, version: VERSION.version });
   const ev = events[r.eventId] || null;
   res.json({
+    version:    VERSION.version,
     raceId:     r.id,
     name:       r.name,
     eventName:  ev ? ev.name : null,
@@ -2134,6 +2169,9 @@ const PORT = process.env.PORT || 3000;
     console.error('❌ DB-Start fehlgeschlagen, laufe ohne Persistenz:', e.message);
   }
   app.listen(PORT, '0.0.0.0', () => {
+    console.log(`📦 Livetracking v${VERSION.version}`
+      + (VERSION.date  ? ` – ${VERSION.date}`  : '')
+      + (VERSION.title ? ` – ${VERSION.title}` : ''));
     console.log(`🚀 Server läuft auf Port ${PORT}`);
   });
 })();
