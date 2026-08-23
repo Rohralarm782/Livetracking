@@ -148,9 +148,12 @@ function undoLabel(alt, neu) {
   if (neu.length < alt.length) return 'Gruppe entfernt';
   const zahl = gs => gs.reduce((n, g) => n + g.riders.length, 0);
   if (zahl(neu) !== zahl(alt))                                   return 'Fahrer verschoben';
-  if (neu.some((g, i) => g.name  !== alt[i].name))               return 'Umbenannt';
-  if (neu.some((g, i) => g.gap   !== alt[i].gap))                return 'Abstand';
+  // Hauptfeld vor Umbenannt: das Umsetzen des Markers zieht seit der
+  // automatischen Benennung immer auch Namenswechsel nach sich. Stuende
+  // Umbenannt weiter oben, hiesse jeder HF-Wechsel im Undo 'Umbenannt'.
   if (neu.some((g, i) => g.main  !== alt[i].main))               return 'Hauptfeld';
+  if (neu.some((g, i) => g.gap   !== alt[i].gap))                return 'Abstand';
+  if (neu.some((g, i) => g.name  !== alt[i].name))               return 'Umbenannt';
   if (groupsSchluessel(neu) !== groupsSchluessel(alt))           return 'Fahrer verschoben';
   return 'Aenderung';
 }
@@ -169,8 +172,65 @@ async function undoLast() {
   renderTaktikBody(); renderStrip(taktikGroups);
 }
 
+// =======================
+// AUTOMATISCHE GRUPPENBENENNUNG
+// =======================
+// Der Name folgt der Fahrreihenfolge, nicht umgekehrt: Position im
+// Array im Verhaeltnis zum Hauptfeld bestimmt, wie eine Gruppe heisst.
+// Damit stimmt der Name nach jedem Aufteilen, Zusammenfuehren und
+// Umsetzen des HF-Markers von selbst.
+//
+// Ein eigenes Feld 'manuell benannt' waere der naheliegende Weg -
+// scheitert aber daran, dass sanitizeGroups() im Server nur
+// {id,name,color,gap,gapPrev,main,riders} durchlaesst und alles
+// weitere stillschweigend verwirft. Stattdessen wird die Herkunft aus
+// dem Namen selbst abgeleitet: was die Automatik je vergeben hat,
+// darf sie auch wieder ueberschreiben. Alles andere ist von Hand
+// gesetzt und bleibt unangetastet.
+const AUTO_NAME_RE  = /^(Hauptfeld|Spitzengruppe|Verfolger|Gruppetto|Gruppe) ?\d*$/;
+// Namen, die frueher automatisch vergeben wurden: der namePool aus
+// confirmSplit() und der Platzhalter aus addGroup(). Ohne sie blieben
+// laufende Rennen auf ihren alten Namen stehen.
+const AUTO_NAME_ALT = [
+  'Ausr\u00FC\u00DFer', 'Spitze 2', 'Vorne',
+  'Nachz\u00FCgler', 'Feld 2', 'Hinten', 'Neue Gruppe'
+];
+
+function istAutoName(name) {
+  const n = String(name === undefined || name === null ? '' : name).trim();
+  if (n === '') return true;
+  return AUTO_NAME_RE.test(n) || AUTO_NAME_ALT.indexOf(n) >= 0;
+}
+
+// Setzt die Namen neu und liefert zurueck, wie viele sich geaendert
+// haben. Die Ziffer kommt erst, wenn ein Abschnitt mehr als eine
+// Gruppe hat: bei genau einem Verfolger ist 'Verfolger 1' eine
+// Nummerierung ohne Reihe.
+function benenneGruppenNeu() {
+  const mi       = mainGroupIdx();
+  const vorZahl  = Math.max(0, mi - 1);                        // zwischen Spitze und HF
+  const nachZahl = Math.max(0, taktikGroups.length - 1 - mi);  // hinter dem HF
+  let vi = 0, gi = 0, geaendert = 0;
+  taktikGroups.forEach((g, i) => {
+    if (!g || typeof g !== 'object') return;
+    let soll;
+    if      (i === mi) soll = 'Hauptfeld';
+    else if (i >  mi)  { gi++; soll = nachZahl > 1 ? 'Gruppetto ' + gi : 'Gruppetto'; }
+    else if (i === 0)  soll = 'Spitzengruppe';
+    else               { vi++; soll = vorZahl  > 1 ? 'Verfolger ' + vi : 'Verfolger'; }
+    if (!istAutoName(g.name)) return;      // von Hand benannt: in Ruhe lassen
+    if (g.name !== soll) { g.name = soll; geaendert++; }
+  });
+  return geaendert;
+}
+
 async function saveGroups() {
   if (!authToken) return;
+  // Vor dem Undo-Schnappschuss, damit die neuen Namen zum gespeicherten
+  // Stand gehoeren und nicht als eigener Schritt danebenstehen.
+  // Beim Zurueckrollen ausgelassen: sonst wuerde die Automatik den
+  // gerade zurueckgeholten Stand sofort wieder ueberschreiben.
+  const umbenannt = undoRestoring ? 0 : benenneGruppenNeu();
   if (!undoRestoring) {
     const neu = groupsSchluessel(taktikGroups);
     if (lastSaved !== null && lastSaved !== neu) {
@@ -214,6 +274,9 @@ async function saveGroups() {
   // Server den neuen Stand sicher ausliefert.
   groupsWriteLock = Date.now() + 800;
   lastSaved = groupsSchluessel(taktikGroups);
+  // Nur melden, wenn wirklich ein Name gewechselt hat. Beim blossen
+  // Fahrerschieben aendert sich keiner, da waere der Hinweis Laerm.
+  if (umbenannt > 0) showToast('\u270E Gruppen neu benannt');
   return true;
 }
 
@@ -327,11 +390,14 @@ async function toggleFav(nr, on) {
 async function addGroup() {
   // Vor das Hauptfeld: neue Gruppen sind Ausreisser oder Verfolger,
   // hinter dem Feld wuerden sie den Text abschneiden.
+  // Der Name kommt nicht mehr aus einer festen Liste, sondern aus der
+  // Fahrreihenfolge: benenneGruppenNeu() ersetzt den Platzhalter noch
+  // im selben saveGroups(). Die alte Liste lag ab der dritten Gruppe
+  // ohnehin daneben ('Gruppe 3' mitten im Feld).
   const insertIdx  = Math.max(0, mainGroupIdx());
-  const names      = ['Spitzengruppe', 'Verfolger'];
   taktikGroups.splice(insertIdx, 0, {
     id:     Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
-    name:   names[insertIdx] || ('Gruppe ' + (insertIdx + 1)),
+    name:   'Gruppe',
     color:  GROUP_COLORS[insertIdx % GROUP_COLORS.length],
     gap:    null,
     riders: []
@@ -365,11 +431,9 @@ async function confirmSplit(gid, direction = 'before') {
   const splitRiders  = (g.riders||[]).filter(r =>  splitNrs.has(nr(r)));
   const remainRiders = (g.riders||[]).filter(r => !splitNrs.has(nr(r)));
   g.riders = remainRiders;
-  const used     = taktikGroups.map(g => g.name);
-  const namePool = direction === 'before'
-    ? ['Spitzengruppe','Ausr\u00FC\u00DFer','Spitze 2','Vorne']
-    : ['Verfolger','Nachz\u00FCgler','Feld 2','Hinten'];
-  const newName  = namePool.find(n => !used.includes(n)) || 'Neue Gruppe';
+  // Der namePool entfaellt: welche Gruppe wie heisst, entscheidet nach
+  // dem Aufteilen die Position, nicht die Reihenfolge der Klicks.
+  // Die Farbwahl bleibt wie sie war.
   const usedCols = taktikGroups.map(g => g.color);
   const newColor = GROUP_COLORS.find(c => !usedCols.includes(c)) || GROUP_COLORS[0];
   const insertIdx = taktikGroups.indexOf(g) + (direction === 'after' ? 1 : 0);
@@ -383,7 +447,7 @@ async function confirmSplit(gid, direction = 'before') {
   if (direction === 'before') { g.gapPrev = g.gap; g.gap = null; }
   taktikGroups.splice(insertIdx, 0, {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 4),
-    name: newName, color: newColor, gap: newGap, riders: splitRiders
+    name: 'Gruppe', color: newColor, gap: newGap, riders: splitRiders
   });
   splittingGid = null; splitNrs.clear();
   await saveGroups(); await loadGroups();

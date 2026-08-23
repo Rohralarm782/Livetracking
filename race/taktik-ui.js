@@ -55,8 +55,15 @@ tkBody.addEventListener('focusout', function (e) {
   const g = taktikGroups.find(g => g.id === gid);
   if (!g) return;
   if (e.target.classList.contains('name-inp')) {
+    // Ein leeres Feld hiess bisher 'nichts tun'. Es heisst jetzt
+    // 'wieder automatisch': der Platzhalter wird von
+    // benenneGruppenNeu() noch in saveGroups() durch den Namen aus der
+    // Fahrreihenfolge ersetzt - das ist der Rueckweg aus einem selbst
+    // vergebenen Namen. renderTaktikBody() muss mit, weil im Feld
+    // sonst der Platzhalter stehen bleibt.
     const v = e.target.value.trim();
-    if (v) { g.name = v; saveGroups(); renderStrip(taktikGroups); }
+    g.name = v || 'Gruppe';
+    saveGroups(); renderTaktikBody(); renderStrip(taktikGroups);
   }
   if (e.target.classList.contains('gap-inp')) {
     g.gapPrev = g.gap;
