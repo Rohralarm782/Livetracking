@@ -233,11 +233,16 @@ function ageLabel(ms) {
   return Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0') + ' h';
 }
 
-function tooltipContent(id, bat, age) {
+function tooltipContent(id, bat, age, avgKmh) {
   const old = (typeof age === 'number' && age > STALE_MS)
     ? ` <span style="color:#c62828;font-size:11px">\u23F8 ${ageLabel(age)}</span>`
     : '';
-  return id + batLabel(bat) + old;
+  // Schnitt nur, wenn der Server einen liefert - er braucht dafuer eine
+  // Startzeit und mindestens eine halbe Minute Rennen.
+  const avg = (typeof avgKmh === 'number')
+    ? ` <span style="color:#666;font-size:11px">\u00D8 ${avgKmh.toFixed(1).replace('.', ',')}</span>`
+    : '';
+  return id + batLabel(bat) + avg + old;
 }
 
 // =======================
@@ -390,7 +395,7 @@ async function loadPositions() {
                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                      });
 
-        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age);
+        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age, pos.avgKmh);
 
         const marker = L.marker(latlng, { icon }).addTo(map)
           .bindTooltip(label, { permanent: true, direction: 'top' });
@@ -440,7 +445,7 @@ async function loadPositions() {
         // Akkustand froren auf dem Stand der ersten Meldung ein, nur
         // die Deckkraft ging leise auf 0.45.
         if (!isBetreuer) {
-          markers[id].setTooltipContent(tooltipContent(displayName, bat, age));
+          markers[id].setTooltipContent(tooltipContent(displayName, bat, age, pos.avgKmh));
         }
       }
     });
@@ -492,6 +497,49 @@ async function loadActiveInfo() {
       if (!erster) showToast('\u{1F5FA} Strecke aktualisiert');
     }
   } catch (err) { console.error('Active:', err); }
+}
+
+// =======================
+// RENNUHR UND SCHNITT
+// =======================
+// Sekundengenau ohne Netzverkehr: der Takt laeuft lokal, die Grundlage
+// (Startzeit) kommt aus /active, der Schnitt aus /positions.
+function raceStartMsClient() {
+  if (!activeInfo || !activeInfo.raceId) return null;
+  if (activeInfo.actualStart) return { ms: activeInfo.actualStart, echt: true };
+  if (activeInfo.startTime) {
+    const t = new Date(activeInfo.startTime).getTime();
+    if (!isNaN(t) && t <= Date.now()) return { ms: t, echt: false };
+  }
+  return null;
+}
+
+// Schnitt ueber alle Fahrer-Tracker, die aktuell melden. Betreuer und
+// Teamauto bleiben draussen - die fahren andere Wege.
+function feldSchnitt() {
+  const w = Object.values(lastPosData || {})
+    .filter(p => p && typeof p.avgKmh === 'number' && p.type !== 'betreuer')
+    .map(p => p.avgKmh);
+  if (!w.length) return null;
+  return Math.round(w.reduce((a, b) => a + b, 0) / w.length * 10) / 10;
+}
+
+function updateRaceClock() {
+  const el = document.getElementById('raceClock');
+  if (!el) return;
+  const s = raceStartMsClient();
+  if (!s) { el.classList.add('hidden'); return; }
+  const sek = Math.max(0, Math.floor((Date.now() - s.ms) / 1000));
+  const zeit = `${Math.floor(sek / 3600)}:${String(Math.floor(sek / 60) % 60).padStart(2, '0')}`
+             + `:${String(sek % 60).padStart(2, '0')}`;
+  const avg = feldSchnitt();
+  el.innerHTML = `\u23F1 ${zeit}`
+    + (avg !== null ? `<span class="rcAvg">\u00D8 ${avg.toFixed(1).replace('.', ',')} km/h</span>` : '');
+  // Grau, solange der Startschuss nicht bestaetigt ist: dann laeuft die
+  // Uhr auf den geplanten Termin und stimmt vermutlich nicht.
+  el.classList.toggle('geplant', !s.echt);
+  el.title = s.echt ? 'Fahrtzeit seit Startschuss' : 'Nach geplantem Start \u2013 \u201EStart jetzt\u201C im Rennen-Panel';
+  el.classList.remove('hidden');
 }
 
 // =======================

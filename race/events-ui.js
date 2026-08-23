@@ -180,6 +180,15 @@ function renderEventsBody() {
           title="Strecke laden">\u{1F5FA}</button>
         <button class="btn" data-action="rc-copy" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px" title="Rennen kopieren (gleiche Startliste)">\u29C9</button>
+        <button class="btn" data-action="rc-csv" data-id="${r.id}"
+          style="flex:0;padding:4px 8px;font-size:12px"
+          title="Rennprotokoll als CSV">\u{1F4CA}</button>
+        ${r.isActive
+          ? `<button class="btn" data-action="rc-start" data-id="${r.id}"
+               style="flex:0;padding:4px 8px;font-size:11px${r.actualStart ? ';color:#2e7d32' : ''}"
+               title="${r.actualStart ? 'Startschuss zur\u00FCcknehmen' : 'Startschuss jetzt festhalten'}"
+             >\u{1F3C1}${r.actualStart ? ' l\u00E4uft' : ' Start'}</button>`
+          : ''}
         <button class="btn" data-action="rc-edit" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px">\u270E</button>
         ${r.isActive
@@ -331,6 +340,43 @@ evBody.addEventListener('click', function (e) {
         startTime: startTimeToIso(val('#rcEditStart'), day)
       };
       guard(async () => { await updateRace(id, payload); resetEventForms(); });
+      break;
+    }
+
+    case 'rc-csv': {
+      // Als Blob holen statt per Link: der Endpoint verlangt einen
+      // Token, den ein normales <a href> nicht mitschickt.
+      guard(async () => {
+        const res = await fetch(`${SERVER}/races/${id}/protocol.csv`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) {
+          checkAuth(res);
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || `Protokoll nicht abrufbar (${res.status})`);
+        }
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        const rr   = findRace(id);
+        a.href = url;
+        a.download = `Protokoll_${String(rr ? rr.name : id).replace(/[^\w\-]+/g, '_').slice(0, 40)}.csv`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      });
+      break;
+    }
+
+    case 'rc-start': {
+      const rr = findRace(id);
+      const an = !(rr && rr.actualStart);
+      if (!an && !confirm('Startschuss zur\u00FCcknehmen? Fahrtzeit und Schnitt beziehen sich danach wieder auf den geplanten Start.')) break;
+      guard(async () => {
+        await apiSend('POST', `/races/${id}/start`, { actual: an });
+        await loadEvents();
+        renderEventsBody();
+        showToast(an ? '\u{1F3C1} Start festgehalten' : '\u{1F3C1} Start zur\u00FCckgenommen');
+      });
       break;
     }
 

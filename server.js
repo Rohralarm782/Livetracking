@@ -356,6 +356,9 @@ function normalizeRace(r) {
     name:      r.name,
     category:  r.category  || null,
     startTime: r.startTime || null,
+    // Der echte Startschuss. startTime ist der geplante Termin und
+    // geht selten genau auf; Fahrtzeit und Schnitt haengen aber daran.
+    actualStart: (typeof r.actualStart === 'number' && r.actualStart > 0) ? r.actualStart : null,
     status:    r.status    || 'geplant',
     createdAt: r.createdAt || new Date().toISOString(),
     riders:    Array.isArray(r.riders) ? r.riders : [],
@@ -456,7 +459,10 @@ function persistRace(id) {
     category:  r.category,
     startTime: r.startTime,
     createdAt: r.createdAt,
-    status:    r.status,
+    // actualStart reist im status mit: die races-Tabelle hat dafuer
+    // keine eigene Spalte und ein Schema-Wechsel waere fuer ein
+    // einzelnes Feld unverhaeltnismaessig.
+    status:    r.actualStart ? `${r.status}|start:${r.actualStart}` : r.status,
     riders:    r.riders
   }).catch(dbFail('upsertRace'));
 }
@@ -572,7 +578,13 @@ async function loadStateFromDb() {
       name:      r.name,
       category:  r.category || null,
       startTime: r.start_time ? new Date(r.start_time).toISOString() : null,
-      status:    r.status || 'geplant',
+      // Gegenstueck zum Anhaengen in persistRace(): Zeitstempel
+      // abtrennen, damit im status wieder nur der Zustand steht.
+      status:    String(r.status || 'geplant').split('|start:')[0] || 'geplant',
+      actualStart: (() => {
+        const m = /\|start:(\d+)$/.exec(String(r.status || ''));
+        return m ? Number(m[1]) : null;
+      })(),
       createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
       riders:    Array.isArray(r.riders_json) ? r.riders_json : [],
       groups:    Array.isArray(r.groups_json) ? r.groups_json : [],
@@ -766,6 +778,69 @@ function resolveTimestamp(raw) {
   return raw;
 }
 
+// =======================
+// WEGSTRECKE JE TRACKER
+// =======================
+// Der Browser kann den Schnitt nicht rechnen: seine Spur ist seit
+// Update 5 auf die letzte Stunde begrenzt, und wer spaeter dazukommt,
+// hat gar keine. Der Server sieht dagegen jeden Punkt.
+//
+// trackerStats: id -> { dist (m), lastLat, lastLon, lastTs }
+const trackerStats = Object.create(null);
+
+// Segmente unter MIN_SEGMENT_M zaehlen nicht. GPS rauscht im Stand um
+// ein paar Meter; ueber eine Stunde summiert sich das sonst auf
+// mehrere Kilometer und der Schnitt waere fuer die Katz.
+const MIN_SEGMENT_M = 5;
+// Deckel gegen Sprunge: ein Fix-Wechsel kann den Punkt um Kilometer
+// versetzen. 500 m zwischen zwei Meldungen sind bei 2-s-Takt schon
+// 900 km/h - das ist kein Fahrer.
+const MAX_SEGMENT_M = 500;
+
+function haversineM(aLat, aLon, bLat, bLon) {
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (bLat - aLat) * rad, dLon = (bLon - aLon) * rad;
+  const s = Math.sin(dLat / 2) ** 2
+          + Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+function addDistance(id, lat, lon, ts) {
+  let st = trackerStats[id];
+  if (!st) { trackerStats[id] = { dist: 0, lastLat: lat, lastLon: lon, lastTs: ts }; return; }
+  const d = haversineM(st.lastLat, st.lastLon, lat, lon);
+  if (d >= MIN_SEGMENT_M && d <= MAX_SEGMENT_M) {
+    st.dist += d;
+    st.lastLat = lat; st.lastLon = lon; st.lastTs = ts;
+  } else if (d > MAX_SEGMENT_M) {
+    // Sprung nicht mitzaehlen, aber den Bezugspunkt nachfuehren -
+    // sonst waere jedes weitere Segment ebenfalls ein Sprung.
+    st.lastLat = lat; st.lastLon = lon; st.lastTs = ts;
+  }
+}
+
+// Bezugszeitpunkt fuer den Schnitt: die echte Startzeit, sonst die
+// geplante, sonst gar keiner (dann wird kein Schnitt ausgewiesen).
+function raceStartMs() {
+  const r = activeRaceId ? races[activeRaceId] : null;
+  if (!r) return null;
+  if (r.actualStart) return r.actualStart;
+  if (r.startTime) {
+    const t = new Date(r.startTime).getTime();
+    if (!isNaN(t) && t <= Date.now()) return t;
+  }
+  return null;
+}
+
+function avgKmhFor(id) {
+  const st = trackerStats[id];
+  const start = raceStartMs();
+  if (!st || !start) return null;
+  const h = (Date.now() - start) / 3600000;
+  if (h < 1 / 120) return null;             // unter 30 s ist der Wert Unfug
+  return Math.round((st.dist / 1000) / h * 10) / 10;
+}
+
 app.post('/positions', (req, res) => {
   if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -785,6 +860,7 @@ app.post('/positions', (req, res) => {
     return res.json({ ok: true, skipped: 'out-of-order' });
   }
 
+  addDistance(key, lat, lon, timestamp);
   const entry = { lat, lon, timestamp };
   if (typeof bat === 'number' && bat >= 0 && bat <= 100) entry.bat = Math.round(bat);
   if (typeof acc === 'number' && acc >= 0)               entry.acc = Math.round(acc);
@@ -800,7 +876,11 @@ app.get('/positions', (req, res) => {
     if (pos.type === 'betreuer') {
       enriched[id] = { ...pos };
     } else {
+      const st  = trackerStats[id];
+      const avg = avgKmhFor(id);
       enriched[id] = { ...pos, displayName: trackerDisplayNames[id] || id };
+      if (st)          enriched[id].distM  = Math.round(st.dist);
+      if (avg !== null) enriched[id].avgKmh = avg;
     }
   }
   res.json(enriched);
@@ -833,8 +913,9 @@ app.get('/pending', (req, res) => {
 });
 
 app.delete('/positions', requireSpolei, (req, res) => {
-  for (const key of Object.keys(positions)) delete positions[key];
-  for (const key of Object.keys(pending))   delete pending[key];
+  for (const key of Object.keys(positions))    delete positions[key];
+  for (const key of Object.keys(pending))      delete pending[key];
+  for (const key of Object.keys(trackerStats)) delete trackerStats[key];
   console.log("🧹 Positionen gelöscht");
   res.json({ ok: true });
 });
@@ -849,6 +930,7 @@ app.delete('/positions/:id', requireSpolei, (req, res) => {
   const gab = (positions[id] !== undefined) || (pending[id] !== undefined);
   delete positions[id];
   delete pending[id];
+  delete trackerStats[id];
   if (!gab) return res.status(404).json({ error: 'Kein Eintrag zu dieser ID' });
   console.log(`\u{1F5D1} Marker entfernt: ${id}`);
   res.json({ ok: true, id });
@@ -966,6 +1048,7 @@ app.get('/active', (req, res) => {
     eventName:  ev ? ev.name : null,
     category:   r.category,
     startTime:  r.startTime,
+    actualStart: r.actualStart || null,
     riderCount: r.riders.length,
     hasGpx:     !!r.gpx,
     gpxName:    r.gpx ? r.gpx.name : null,
@@ -1029,6 +1112,7 @@ function raceView(r) {
     category:   r.category,
     startTime:  r.startTime,
     status:     r.status,
+    actualStart: r.actualStart || null,
     createdAt:  r.createdAt,
     riderCount: r.riders.length,
     // Bewusst NUR Kennzeichen statt r.gpx: sonst haengen an jedem
@@ -1235,6 +1319,20 @@ app.post('/races/:id/favorite', requireSpolei, (req, res) => {
 // normal (status: null). Bewusst wie der Favoritenstern ein eigener,
 // fahrerbezogener Endpoint - ein PUT der ganzen Liste wuerde die
 // Zustaende aller uebrigen Fahrer mitloeschen.
+// Startschuss festhalten. { actual: true } setzt jetzt, { actual: false }
+// nimmt zurueck - ein versehentlicher Druck darf nicht das ganze Rennen
+// verfaelschen.
+app.post('/races/:id/start', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const an = req.body && req.body.actual !== false;
+  r.actualStart = an ? Date.now() : null;
+  saveRacesToDisk();
+  persistRace(r.id);
+  console.log(`\u{1F3C1} Start ${an ? 'gesetzt' : 'zurueckgenommen'}: "${r.name}"`);
+  res.json({ ok: true, actualStart: r.actualStart });
+});
+
 app.post('/races/:id/rider-status', requireSpolei, (req, res) => {
   const r = races[req.params.id];
   if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
@@ -1359,6 +1457,83 @@ app.post('/races/:id/duplicate', requireSpolei, (req, res) => {
 
 // Abstandsverlauf des Rennens. Die Tabelle wurde bisher zwar
 // geschrieben, aber nie gelesen.
+// Rennprotokoll als CSV. Variante "lang": eine Zeile je Gruppe und
+// Zeitpunkt. Das uebersteht Aufteilen und Zusammengehen, waehrend eine
+// Spalte je Gruppe mitten im Blatt verrutschen wuerde, sobald sich die
+// Gruppenzahl aendert.
+//
+// Semikolon als Trenner und BOM voran: dann oeffnet Excel die Datei
+// direkt richtig, ohne Importassistent und ohne zerschossene Umlaute.
+function csvFeld(v) {
+  const s = String(v === null || v === undefined ? '' : v);
+  return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function hhmmss(ms) {
+  if (ms === null || ms < 0) return '';
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}`
+       + `:${String(s % 60).padStart(2, '0')}`;
+}
+
+// "1:40" / "40" / "+1:40" -> Sekunden
+function gapSekunden(g) {
+  if (g === null || g === undefined || g === '') return null;
+  const s = String(g).trim().replace(/^\+/, '');
+  if (/^\d+$/.test(s)) return Number(s);
+  const m = /^(\d+):([0-5]\d)$/.exec(s);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+function secToGapText(s) {
+  return s < 60 ? String(s)
+       : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+app.get('/races/:id/protocol.csv', requireAuth, async (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  if (!db.enabled) return res.status(503).json({ error: 'Ohne Datenbank kein Verlauf' });
+
+  let rows = [];
+  try { rows = await db.listGapHistoryAll(r.id); }
+  catch (e) { return res.status(500).json({ error: 'Verlauf nicht lesbar' }); }
+
+  // Bezugspunkt fuer die Rennzeit: echter Start, sonst geplanter,
+  // sonst der erste Schnappschuss.
+  let start = r.actualStart || null;
+  if (!start && r.startTime) {
+    const t = new Date(r.startTime).getTime();
+    if (!isNaN(t)) start = t;
+  }
+  if (!start && rows.length) start = new Date(rows[0].ts).getTime();
+
+  const out = ['Rennzeit;Uhrzeit;Gruppe;Abstand_s;Abstand;Anzahl;Startnummern'];
+  for (const row of rows) {
+    const ts  = new Date(row.ts).getTime();
+    const uhr = new Date(ts).toLocaleTimeString('de-DE', { hour12: false });
+    const rz  = start ? hhmmss(ts - start) : '';
+    const gruppen = Array.isArray(row.snapshot) ? row.snapshot : [];
+    for (const g of gruppen) {
+      if (!g) continue;
+      const nrs = (g.riders || [])
+        .map(x => (x && typeof x === 'object') ? x.nr : x)
+        .filter(n => n !== null && n !== undefined);
+      const sek = gapSekunden(g.gap);
+      out.push([
+        rz, uhr, g.name || '', sek === null ? '' : sek,
+        sek === null ? '' : secToGapText(sek),
+        nrs.length, nrs.join(', ')
+      ].map(csvFeld).join(';'));
+    }
+  }
+
+  const datei = `Protokoll_${String(r.name).replace(/[^\w\-]+/g, '_').slice(0, 40)}.csv`;
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${datei}"`);
+  res.send('\uFEFF' + out.join('\r\n') + '\r\n');
+});
+
 // requireAuth: die Antwort enthaelt Gruppenzusammensetzung und
 // Startnummern, das gehoert nicht ohne Anmeldung heraus.
 // minutes begrenzt schon in der Datenbank - vorher kam die komplette
@@ -1645,6 +1820,7 @@ function connectMqtt() {
       }
 
       delete pending[id];   // Fix da -> raus aus der Warteliste
+      addDistance(id, lat, lon, Date.now());
       positions[id] = { lat, lon, timestamp: Date.now() };
       if (typeof bat === 'number') positions[id].bat = bat;
       if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;

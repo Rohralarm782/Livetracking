@@ -223,6 +223,15 @@ async function addGapSnapshot(raceId, groups) {
 // die Antwort ueber ein langes Rennen auf hunderte Snapshots an, von
 // denen das Frontend ohnehin nur die letzten Minuten auswertet - und
 // das alle 30 Sekunden ueber Mobilfunk.
+// Fuer den CSV-Export: der komplette Verlauf, ohne Zeitfenster.
+// Bewusst eine eigene Funktion statt eines Sonderwerts bei minutes -
+// so kann das Fenster im Live-Betrieb nicht versehentlich wegfallen.
+async function listGapHistoryAll(raceId) {
+  const r = await q('SELECT ts, snapshot FROM gap_history WHERE race_id = $1 ORDER BY ts ASC',
+                    [raceId]);
+  return r.rows;
+}
+
 async function listGapHistory(raceId, minutes) {
   const m = Number.isFinite(minutes) && minutes > 0 ? Math.floor(minutes) : 10;
   const r = await q(
@@ -239,5 +248,5 @@ module.exports = {
   listEvents, upsertEvent, getEvent, deleteEvent,
   listRaces, upsertRace, updateRaceRiders, setRaceStatus, clearActiveStatus,
   updateRaceGroups, updateRaceGpx, deleteRace,
-  addGapSnapshot, listGapHistory
+  addGapSnapshot, listGapHistory, listGapHistoryAll
 };

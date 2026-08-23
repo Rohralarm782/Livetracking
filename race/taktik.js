@@ -117,8 +117,67 @@ async function loadGroups() {
   } catch (e) { console.error('Groups:', e); }
 }
 
+// =======================
+// RUECKGAENGIG (nur Gruppen)
+// =======================
+// Ein einziger Ankerpunkt statt einer Zeile in jeder Aktion:
+// saveGroups() ist der Engpass, durch den jede Gruppenaenderung geht.
+// Der Stapel bekommt den Stand VOR der Aenderung - also den, der beim
+// letzten Speichern gueltig war.
+const UNDO_MAX = 20;
+let undoStack     = [];
+let lastSaved     = null;    // Stand nach dem letzten eigenen Speichern
+let undoRestoring = false;   // waehrend des Zurueckrollens nichts stapeln
+
+function groupsKopie(gs) {
+  return (gs || []).map(g => ({
+    id: g.id, name: g.name, color: g.color,
+    gap: g.gap || null, gapPrev: g.gapPrev || null, main: g.main === true,
+    riders: (g.riders || []).map(r => (r && typeof r === 'object') ? r.nr : r)
+  }));
+}
+
+function groupsSchluessel(gs) { return JSON.stringify(groupsKopie(gs)); }
+
+// Beschriftung aus dem Vergleich ableiten statt aus jedem Aufrufer.
+// Spart 10 Einzelpatches und kann nie danebenliegen, weil sie aus dem
+// tatsaechlichen Unterschied kommt.
+function undoLabel(alt, neu) {
+  if (!alt) return 'Aenderung';
+  if (neu.length > alt.length) return 'Gruppe angelegt';
+  if (neu.length < alt.length) return 'Gruppe entfernt';
+  const zahl = gs => gs.reduce((n, g) => n + g.riders.length, 0);
+  if (zahl(neu) !== zahl(alt))                                   return 'Fahrer verschoben';
+  if (neu.some((g, i) => g.name  !== alt[i].name))               return 'Umbenannt';
+  if (neu.some((g, i) => g.gap   !== alt[i].gap))                return 'Abstand';
+  if (neu.some((g, i) => g.main  !== alt[i].main))               return 'Hauptfeld';
+  if (groupsSchluessel(neu) !== groupsSchluessel(alt))           return 'Fahrer verschoben';
+  return 'Aenderung';
+}
+
+function undoMoeglich() { return undoStack.length > 0; }
+
+async function undoLast() {
+  if (!undoStack.length || !authToken) return;
+  const eintrag = undoStack.pop();
+  undoRestoring = true;
+  taktikGroups  = groupsKopie(eintrag.groups);
+  const ok = await saveGroups();
+  undoRestoring = false;
+  if (ok) { lastSaved = groupsSchluessel(taktikGroups); showToast('\u21B6 ' + eintrag.label); }
+  else    { undoStack.push(eintrag); }   // nicht gespeichert -> Schritt behalten
+  renderTaktikBody(); renderStrip(taktikGroups);
+}
+
 async function saveGroups() {
   if (!authToken) return;
+  if (!undoRestoring) {
+    const neu = groupsSchluessel(taktikGroups);
+    if (lastSaved !== null && lastSaved !== neu) {
+      undoStack.push({ groups: JSON.parse(lastSaved), label: undoLabel(JSON.parse(lastSaved), groupsKopie(taktikGroups)) });
+      if (undoStack.length > UNDO_MAX) undoStack.shift();
+    }
+  }
   groupsWriteLock = Date.now() + 4000;
   const payload = taktikGroups.map(g => ({
     id:      g.id,
@@ -154,6 +213,7 @@ async function saveGroups() {
   // Kurze Nachlaufzeit: der naechste Poll soll erst laufen, wenn der
   // Server den neuen Stand sicher ausliefert.
   groupsWriteLock = Date.now() + 800;
+  lastSaved = groupsSchluessel(taktikGroups);
   return true;
 }
 

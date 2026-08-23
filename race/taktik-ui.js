@@ -9,6 +9,7 @@ tkBody.addEventListener('click', function (e) {
   if (!btn) return;
   const { action, gid, id, nr } = btn.dataset;
   switch (action) {
+    case 'undo':               undoLast();                        break;
     case 'add-group':          addGroup();                        break;
     case 'open-events':        openEventsPanel();                 break;
     case 'add-rider':          addRider(gid);                     break;
@@ -124,7 +125,13 @@ function renderTaktikBody() {
           style="flex:0;padding:5px 10px;font-size:12px">\u{1F3C1} Rennen</button>
       </div>
     </div>`;
+    // Rueckgaengig steht bewusst links aussen und ist schmal: er wird
+    // im fahrenden Auto getroffen, aber nicht versehentlich.
+    const uLetzt = undoStack.length ? undoStack[undoStack.length - 1].label : null;
     html += `<div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn" data-action="undo" style="flex:0;padding:8px 12px"${
+        uLetzt ? ` title="${escH(uLetzt)} r\u00FCckg\u00E4ngig"` : ' disabled title="Nichts r\u00FCckg\u00E4ngig zu machen"'
+      }>\u21B6${uLetzt ? ' ' + escH(uLetzt) : ''}</button>
       <button class="btn" data-action="add-group" style="flex:1">\uFF0B Gruppe</button>
       <button class="btn" data-action="open-favs" style="flex:1"${
         activeRaceId ? '' : ' disabled title="Erst ein Rennen aktivieren"'}>\u2B50 Favoriten</button>

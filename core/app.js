@@ -9,6 +9,10 @@ setInterval(loadPending, 3000);
 // fetchGpxTrack() hier waere ein doppelter Request.
 loadActiveInfo();
 setInterval(loadActiveInfo, 20000);
+// Eigener Sekundentakt: die Uhr soll laufen, auch wenn gerade keine
+// Position hereinkommt.
+updateRaceClock();
+setInterval(updateRaceClock, 1000);
 loadMode();
 pollGroups();
 setInterval(pollGroups, 5000);

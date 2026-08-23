@@ -128,6 +128,21 @@
       z-index: 999; padding: 8px 14px; border-radius: 6px;
       font-size: 13px; background: white; border: 1px solid #ccc; font-weight: 500;
     }
+    /* Oben mittig: links sitzt die Leaflet-Zoomleiste, rechts auf dem
+       Desktop der Taktik-Knopf. Die Mitte ist die einzige Stelle, die
+       auf beiden Groessen frei bleibt. */
+    #raceClock {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 999; padding: 6px 14px; border-radius: 6px;
+      background: rgba(255,255,255,0.94); border: 1px solid #ccc;
+      font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums;
+      color: #333; white-space: nowrap; pointer-events: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    #raceClock.hidden { display: none; }
+    #raceClock .rcAvg { color: #666; font-weight: 400; margin-left: 8px; }
+    #raceClock.geplant { color: #999; }
+
     #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
     #status.warn { border-color: #f44336; color: #c62828; background: #ffebee; }
 

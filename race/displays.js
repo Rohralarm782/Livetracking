@@ -126,6 +126,15 @@ async function pollGroups() {
     // Zweite Pruefung: waehrend der Request lief, kann gespeichert
     // worden sein.
     if (Date.now() < groupsWriteLock) return;
+    // Hat ein zweites Geraet die Gruppen geaendert, zeigt der eigene
+    // Stapel auf einen Stand, den es nicht mehr gibt. Ein Undo wuerde
+    // dann die Arbeit des Kollegen ueberschreiben - lieber kein Undo.
+    const kommt = groupsSchluessel(next);
+    if (lastSaved !== null && kommt !== lastSaved && undoStack.length) {
+      undoStack = [];
+      showToast('\u21B6 R\u00FCckg\u00E4ngig verworfen \u2013 anderes Ger\u00E4t hat ge\u00E4ndert');
+    }
+    lastSaved = kommt;
     taktikGroups = next;
     if (!taktikOpen) { renderStrip(taktikGroups); return; }
     // Offene Taktikansicht mitziehen, damit Aenderungen von einem
