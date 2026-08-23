@@ -923,18 +923,30 @@ function pruefeRundendurchgang(id, sNeu) {
   const rel  = x => ((x - off) % g.L + g.L) % g.L;
 
   const alt = trackerS[id];
-  trackerS[id] = { s: sNeu, ts: Date.now() };
+  const bNeu = rel(sNeu);
+  // Hat dieser Tracker seit dem letzten Durchgang die Streckenmitte
+  // gesehen? Ohne diese Bedingung genuegt GPS-Zittern am Zielstrich:
+  // s pendelt zwischen 16845 und 5, das ergibt abwechselnd einen
+  // Rueckwaerts- und einen Vorwaertsdurchgang. Da die Zeitsperre nur
+  // vorwaerts greift, bliebe unterm Strich ein Abzug uebrig - das
+  // Rennen haette eine Runde verloren. Bis zur Streckenmitte kommt
+  // kein Zittern, eine echte Runde immer.
+  const mitte = bNeu > 0.35 * g.L && bNeu < 0.65 * g.L;
+  const sahMitte = alt ? (alt.mitte || mitte) : mitte;
+  trackerS[id] = { s: sNeu, ts: Date.now(), mitte: sahMitte };
   if (!alt || Date.now() - alt.ts > HINT_MAX_AGE_MS) return;
 
-  const a = rel(alt.s), b = rel(sNeu);
-  const vorwaerts  = a > 0.8 * g.L && b < 0.2 * g.L;
+  const a = rel(alt.s), b = bNeu;
+  const vorwaerts   = a > 0.8 * g.L && b < 0.2 * g.L;
   const rueckwaerts = a < 0.2 * g.L && b > 0.8 * g.L;
   if (!vorwaerts && !rueckwaerts) return;
+  if (!alt.mitte) return;                      // kein echter Rundenschluss
+  trackerS[id].mitte = false;                  // fuer die naechste Runde neu sammeln
 
-  // Sperre aus der Streckenlaenge statt als Festwert: eine Runde kann
-  // fruehestens nach L / 70 km/h wieder hochschalten. Damit passt sich
-  // die Zahl an kurze Kriteriums- wie an lange Strassenrunden an, und
-  // weder ein GPS-Ausreisser noch ein zweiter Tracker zaehlt doppelt.
+  // Zusaetzlich eine Zeitsperre auf Rennebene, gegen einen ZWEITEN
+  // Tracker: faehrt das Gruppetto zehn Minuten nach der Spitze durchs
+  // Ziel, darf es nicht noch einmal weiterschalten. L / 70 km/h passt
+  // sich dabei an kurze Kriteriums- wie an lange Strassenrunden an.
   const minRundeMs = (g.L / (70 / 3.6)) * 1000;
   if (vorwaerts && meta.lastLapTs && Date.now() - meta.lastLapTs < minRundeMs) return;
 
@@ -1546,7 +1558,10 @@ app.post('/races/:id/lap', requireSpolei, (req, res) => {
   else if (typeof delta === 'number') neu = neu + delta;
   else return res.status(400).json({ error: 'lap oder delta erforderlich' });
   m.currentLap = Math.max(1, Math.min(999, Math.round(neu)));
-  m.lastLapTs  = Date.now();
+  // lastLapTs bleibt bewusst stehen. Wuerde die Handkorrektur die
+  // Sperre neu starten, koennte ein echter Zieldurchgang kurz danach
+  // verschluckt werden - und gegen Zittern schuetzt jetzt ohnehin die
+  // Mitte-Bedingung, nicht die Zeit.
   persistRaceMeta();
   pushAutoDisplays();
   res.json({ ok: true, currentLap: m.currentLap, finalLap: istZielrunde(r.id) });

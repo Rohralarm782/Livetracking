@@ -554,9 +554,14 @@ function updateRaceClock() {
   // Zielrunde statt "4/4": im Auto zaehlt die Aussage, nicht die Zahl.
   let runde = '';
   if (activeInfo.currentLap) {
-    const txt = activeInfo.finalLap
-      ? '\u{1F3C1} Zielrunde'
-      : `Runde ${activeInfo.currentLap}${activeInfo.laps ? '/' + activeInfo.laps : ''}`;
+    // Herunterzaehlen wie die Tafel am Zielstrich: im Auto zaehlt die
+    // verbleibende Arbeit, nicht die geleistete. Ohne Sollrunden bleibt
+    // nur das Hochzaehlen uebrig.
+    let txt;
+    if (activeInfo.finalLap)      txt = '\u{1F3C1} Zielrunde';
+    else if (activeInfo.laps)     txt = `Noch ${activeInfo.laps - activeInfo.currentLap} Runden`;
+    else                          txt = `Runde ${activeInfo.currentLap}`;
+    if (activeInfo.laps && activeInfo.laps - activeInfo.currentLap === 1) txt = 'Noch 1 Runde';
     const darf   = authLevel === 'spolei';
     const minus  = darf ? '<button class="rcLap" data-lap="-1" title="Runde zur\u00FCck">\u2212</button>' : '';
     const plus   = darf ? '<button class="rcLap" data-lap="1" title="Runde weiter">+</button>' : '';
