@@ -363,6 +363,10 @@ function normalizeRace(r) {
     createdAt: r.createdAt || new Date().toISOString(),
     riders:    Array.isArray(r.riders) ? r.riders : [],
     groups:    Array.isArray(r.groups) ? r.groups : [],
+    // Sollrunden. Fuehrend ist raceMeta; hier steht die Zahl, damit sie
+    // in die races-Spalte laps geschrieben wird und Disk-Stand und
+    // Datenbank nicht auseinanderlaufen.
+    laps:      (typeof r.laps === 'number' && r.laps > 0) ? r.laps : null,
     // {coords:[[lat,lon],...], name} oder null - gehoert zum Rennen
     gpx:       (r.gpx && Array.isArray(r.gpx.coords) && r.gpx.coords.length) ? r.gpx : null
   };
@@ -505,6 +509,13 @@ async function loadStateFromDb() {
   // vorzeitig zurueck, die Einstellungen waeren sonst verloren.
   const ds = await db.getSetting('displaySettings');
   if (ds && typeof ds === 'object') displaySettings = sanitizeSettings(ds);
+
+  const rm = await db.getSetting('raceMeta');
+  if (rm && typeof rm === 'object') {
+    raceMeta = Object.assign(Object.create(null), rm);
+    const n = Object.keys(raceMeta).length;
+    if (n) console.log(`\u{1F501} Rundendaten fuer ${n} Rennen geladen`);
+  }
 
   // Tokens zurueckholen, sonst ist nach jedem Cold Start jeder
   // angemeldete Nutzer stillschweigend abgemeldet.
@@ -779,6 +790,169 @@ function resolveTimestamp(raw) {
 }
 
 // =======================
+// RENNDATEN JENSEITS DER SPALTEN
+// =======================
+// Rundenzaehler, Start/Ziel-Versatz und spaeter die Wertungen brauchen
+// einen Platz. Bewusst EIN settings-Eintrag statt neuer Spalten: die
+// settings-Tabelle und getSetting/setSetting sind erprobt, ein
+// Schema-Wechsel waere hier nicht zu testen und ginge im Zweifel erst
+// beim naechsten Rennen schief.
+//
+// raceId -> { laps, currentLap, startOffset, lastLapTs }
+let raceMeta = Object.create(null);
+
+function raceMetaOf(raceId) {
+  if (!raceMeta[raceId]) raceMeta[raceId] = { laps: null, currentLap: 1, startOffset: 0, lastLapTs: null };
+  return raceMeta[raceId];
+}
+
+function persistRaceMeta() {
+  if (!db.enabled) return;
+  db.setSetting('raceMeta', raceMeta).catch(dbFail('setSetting raceMeta'));
+}
+
+// Sollrunden erreicht? Dann laeuft die Zielrunde.
+function istZielrunde(raceId) {
+  const m = raceMeta[raceId];
+  return !!(m && m.laps && m.currentLap >= m.laps);
+}
+
+// =======================
+// STRECKENPROJEKTION UND RUNDENZAEHLER
+// =======================
+// Die GPX ist immer eine Runde. Jede Position wird auf die Linie
+// projiziert und ergibt s = Meter seit Streckenanfang. Springt s von
+// weit hinten nach weit vorn, war das ein Zieldurchgang.
+//
+// Bewusst ohne Radius um Start/Ziel: bei 2-s-Takt und 45 km/h liegen
+// 25 m zwischen zwei Meldungen. Eine Zone waere mal uebersprungen und
+// mal doppelt getroffen.
+
+// raceId -> { cum:[m je Punkt], L, pts:[[lat,lon]] }
+const gpxCache = Object.create(null);
+
+// Meter je Grad Laengengrad haengt von der Breite ab. Auf Renndistanz
+// reicht die ebene Naeherung voellig und spart je Punkt zwei Sinusse.
+function metersPerDeg(lat) {
+  return { y: 111320, x: 111320 * Math.cos(lat * Math.PI / 180) };
+}
+
+function trackGeometry(raceId) {
+  const r = races[raceId];
+  if (!r || !r.gpx || !Array.isArray(r.gpx.coords) || r.gpx.coords.length < 2) return null;
+  const c = gpxCache[raceId];
+  if (c && c.pts === r.gpx.coords) return c;
+  const pts = r.gpx.coords;
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) {
+    cum[i] = cum[i - 1] + haversineM(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]);
+  }
+  const g = { cum, L: cum[cum.length - 1], pts };
+  gpxCache[raceId] = g;
+  return g;
+}
+
+// Lotfusspunkt auf einem Segment, als Anteil 0..1.
+function segFraction(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const q = dx * dx + dy * dy;
+  if (q === 0) return 0;
+  return Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / q));
+}
+
+// s in Metern oder null. hintS begrenzt die Suche auf ein Fenster um
+// die letzte bekannte Position - ohne das springt die Projektion bei
+// Strecken, die sich selbst kreuzen, aufs falsche Segment.
+const SEARCH_WINDOW_M = 600;
+
+function projectToTrack(raceId, lat, lon, hintS) {
+  const g = trackGeometry(raceId);
+  if (!g) return null;
+  const m = metersPerDeg(lat);
+  const px = lon * m.x, py = lat * m.y;
+
+  let von = 0, bis = g.pts.length - 1;
+  if (typeof hintS === 'number') {
+    // Fenster in Indizes umrechnen; der Rand darf ueberlaufen, weil die
+    // Runde geschlossen ist - deshalb zusaetzlich der Ringdurchlauf.
+    von = 0; bis = g.pts.length - 1;
+  }
+
+  let bestD = Infinity, bestS = null;
+  for (let i = 0; i < g.pts.length - 1; i++) {
+    // Fenstertest ueber die Bogenlaenge, damit er auch am Rundenschluss
+    // greift (Abstand ringfoermig gemessen).
+    if (typeof hintS === 'number') {
+      const mid = (g.cum[i] + g.cum[i + 1]) / 2;
+      let d = Math.abs(mid - hintS);
+      d = Math.min(d, g.L - d);
+      if (d > SEARCH_WINDOW_M) continue;
+    }
+    const ax = g.pts[i][1] * m.x,     ay = g.pts[i][0] * m.y;
+    const bx = g.pts[i + 1][1] * m.x, by = g.pts[i + 1][0] * m.y;
+    const t  = segFraction(px, py, ax, ay, bx, by);
+    const cx = ax + (bx - ax) * t,    cy = ay + (by - ay) * t;
+    const dd = (px - cx) ** 2 + (py - cy) ** 2;
+    if (dd < bestD) {
+      bestD = dd;
+      bestS = g.cum[i] + (g.cum[i + 1] - g.cum[i]) * t;
+    }
+  }
+  // Nichts im Fenster gefunden -> ohne Fenster nochmal, der Tracker war
+  // vermutlich laenger weg.
+  if (bestS === null && typeof hintS === 'number') return projectToTrack(raceId, lat, lon, undefined);
+  return bestS;
+}
+
+// id -> { s, ts }
+const trackerS = Object.create(null);
+// Nach dieser Pause gilt die letzte Position nicht mehr als Anhaltspunkt.
+const HINT_MAX_AGE_MS = 30 * 1000;
+
+// Ein Zieldurchgang ist ein Sprung von hinten (>80 %) nach vorn (<20 %).
+function pruefeRundendurchgang(id, sNeu) {
+  const rid = activeRaceId;
+  const r   = rid ? races[rid] : null;
+  const g   = rid ? trackGeometry(rid) : null;
+  if (!r || !g || !g.L) return;
+
+  const meta = raceMetaOf(rid);
+  const off  = meta.startOffset || 0;
+  // Relativ zu Start/Ziel rechnen, damit der Durchgang dort liegt und
+  // nicht am zufaelligen ersten GPX-Punkt.
+  const rel  = x => ((x - off) % g.L + g.L) % g.L;
+
+  const alt = trackerS[id];
+  trackerS[id] = { s: sNeu, ts: Date.now() };
+  if (!alt || Date.now() - alt.ts > HINT_MAX_AGE_MS) return;
+
+  const a = rel(alt.s), b = rel(sNeu);
+  const vorwaerts  = a > 0.8 * g.L && b < 0.2 * g.L;
+  const rueckwaerts = a < 0.2 * g.L && b > 0.8 * g.L;
+  if (!vorwaerts && !rueckwaerts) return;
+
+  // Sperre aus der Streckenlaenge statt als Festwert: eine Runde kann
+  // fruehestens nach L / 70 km/h wieder hochschalten. Damit passt sich
+  // die Zahl an kurze Kriteriums- wie an lange Strassenrunden an, und
+  // weder ein GPS-Ausreisser noch ein zweiter Tracker zaehlt doppelt.
+  const minRundeMs = (g.L / (70 / 3.6)) * 1000;
+  if (vorwaerts && meta.lastLapTs && Date.now() - meta.lastLapTs < minRundeMs) return;
+
+  if (vorwaerts) {
+    meta.currentLap  = (meta.currentLap || 1) + 1;
+    meta.lastLapTs   = Date.now();
+    console.log(`\u{1F501} Runde ${meta.currentLap}${meta.laps ? '/' + meta.laps : ''} \u2013 ausgeloest von ${id}`);
+  } else {
+    // Rueckwaerts: Neutralisation oder GPS-Sprung. Nie unter 1.
+    meta.currentLap = Math.max(1, (meta.currentLap || 1) - 1);
+    meta.lastLapTs  = null;
+    console.log(`\u{1F501} Runde zurueck auf ${meta.currentLap} \u2013 ${id}`);
+  }
+  persistRaceMeta();
+  pushAutoDisplays();
+}
+
+// =======================
 // WEGSTRECKE JE TRACKER
 // =======================
 // Der Browser kann den Schnitt nicht rechnen: seine Spur ist seit
@@ -803,6 +977,17 @@ function haversineM(aLat, aLon, bLat, bLon) {
   const s = Math.sin(dLat / 2) ** 2
           + Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+// Position auf die Strecke abbilden und Zieldurchgang pruefen. Laeuft
+// bei jedem Fix, aber nur wenn ein Rennen mit Strecke aktiv ist.
+function verfolgeStrecke(id, lat, lon) {
+  if (!activeRaceId) return;
+  const alt  = trackerS[id];
+  const hint = (alt && Date.now() - alt.ts <= HINT_MAX_AGE_MS) ? alt.s : undefined;
+  const s    = projectToTrack(activeRaceId, lat, lon, hint);
+  if (s === null) return;
+  pruefeRundendurchgang(id, s);
 }
 
 function addDistance(id, lat, lon, ts) {
@@ -861,6 +1046,7 @@ app.post('/positions', (req, res) => {
   }
 
   addDistance(key, lat, lon, timestamp);
+  verfolgeStrecke(key, lat, lon);
   const entry = { lat, lon, timestamp };
   if (typeof bat === 'number' && bat >= 0 && bat <= 100) entry.bat = Math.round(bat);
   if (typeof acc === 'number' && acc >= 0)               entry.acc = Math.round(acc);
@@ -972,6 +1158,9 @@ app.post('/team-position', requireSpolei, (req, res) => {
     return res.status(400).json({ error: 'lat, lon required' });
   }
   positions['TEAMAUTO'] = { lat, lon, timestamp: Date.now() };
+  // Gleichberechtigt beim Rundenzaehlen: wer als Erster durchs Ziel
+  // faehrt, schaltet weiter - Hardware-Tracker oder Teamauto.
+  verfolgeStrecke('TEAMAUTO', lat, lon);
   res.json({ ok: true });
 });
 
@@ -1050,6 +1239,11 @@ app.get('/active', (req, res) => {
     startTime:  r.startTime,
     actualStart: r.actualStart || null,
     riderCount: r.riders.length,
+    laps:        raceMetaOf(r.id).laps,
+    currentLap:  raceMetaOf(r.id).currentLap || 1,
+    finalLap:    istZielrunde(r.id),
+    startOffset: Math.round(raceMetaOf(r.id).startOffset || 0),
+    trackLength: (() => { const g = trackGeometry(r.id); return g ? Math.round(g.L) : null; })(),
     hasGpx:     !!r.gpx,
     gpxName:    r.gpx ? r.gpx.name : null,
     gpxPoints:  r.gpx ? r.gpx.coords.length : 0
@@ -1113,6 +1307,8 @@ function raceView(r) {
     startTime:  r.startTime,
     status:     r.status,
     actualStart: r.actualStart || null,
+    laps:       raceMeta[r.id] ? raceMeta[r.id].laps : (r.laps || null),
+    currentLap: raceMeta[r.id] ? (raceMeta[r.id].currentLap || 1) : 1,
     createdAt:  r.createdAt,
     riderCount: r.riders.length,
     // Bewusst NUR Kennzeichen statt r.gpx: sonst haengen an jedem
@@ -1140,6 +1336,10 @@ function activateRace(id) {
   }
   activeRaceId = id;
   races[id].status = 'aktiv';
+  // Streckenpositionen vergessen: sonst vergleicht der Rundenzaehler
+  // den ersten Fix im neuen Rennen mit einem s aus dem alten und
+  // meldet einen Rueckwaertssprung.
+  for (const k of Object.keys(trackerS)) delete trackerS[k];
   // Marker aus dem vorherigen Rennen abraeumen. Wer gerade sendet,
   // ist juenger als 15 Minuten und bleibt stehen.
   sweepPositions(STALE_ON_ACTIVATE_MS, 'Rennenwechsel');
@@ -1333,6 +1533,57 @@ app.post('/races/:id/start', requireSpolei, (req, res) => {
   res.json({ ok: true, actualStart: r.actualStart });
 });
 
+// Rundenzaehler von Hand setzen. Die Automatik rechnet danach vom
+// korrigierten Stand weiter - deshalb wird lastLapTs mitgesetzt, sonst
+// koennte der naechste Durchgang sofort erneut hochschalten.
+app.post('/races/:id/lap', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const m = raceMetaOf(r.id);
+  const { lap, delta } = req.body || {};
+  let neu = m.currentLap || 1;
+  if (typeof lap === 'number')        neu = lap;
+  else if (typeof delta === 'number') neu = neu + delta;
+  else return res.status(400).json({ error: 'lap oder delta erforderlich' });
+  m.currentLap = Math.max(1, Math.min(999, Math.round(neu)));
+  m.lastLapTs  = Date.now();
+  persistRaceMeta();
+  pushAutoDisplays();
+  res.json({ ok: true, currentLap: m.currentLap, finalLap: istZielrunde(r.id) });
+});
+
+// Sollrunden und Start/Ziel-Versatz.
+app.patch('/races/:id/laps', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const m = raceMetaOf(r.id);
+  const { laps, startOffset, currentLap } = req.body || {};
+  if (laps !== undefined) {
+    m.laps = (laps === null || laps === '') ? null
+           : Math.max(1, Math.min(99, parseInt(laps) || 1));
+    r.laps = m.laps;
+  }
+  if (startOffset !== undefined) {
+    const g = trackGeometry(r.id);
+    const v = Number(startOffset) || 0;
+    m.startOffset = g ? ((v % g.L) + g.L) % g.L : Math.max(0, v);
+  }
+  // Bequemer Weg: Start/Ziel aus einer Koordinate. Der SpoLei steht vor
+  // dem Rennen am Zielstrich und drueckt einen Knopf - ein Eingabefeld
+  // in Metern waere am Streckenrand nicht zu bedienen.
+  if (req.body && typeof req.body.atLat === 'number' && typeof req.body.atLon === 'number') {
+    const s = projectToTrack(r.id, req.body.atLat, req.body.atLon);
+    if (s === null) return res.status(400).json({ error: 'Keine Strecke hinterlegt' });
+    m.startOffset = s;
+  }
+  if (currentLap !== undefined) m.currentLap = Math.max(1, parseInt(currentLap) || 1);
+  persistRaceMeta();
+  saveRacesToDisk();
+  persistRace(r.id);
+  pushAutoDisplays();
+  res.json({ ok: true, laps: m.laps, currentLap: m.currentLap, startOffset: Math.round(m.startOffset) });
+});
+
 app.post('/races/:id/rider-status', requireSpolei, (req, res) => {
   const r = races[req.params.id];
   if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
@@ -1449,6 +1700,16 @@ app.post('/races/:id/duplicate', requireSpolei, (req, res) => {
       return c;
     })
   });
+  // Sollrunden wandern mit - der zweite Lauf faehrt fast immer gleich
+  // viele. Der Zaehler faengt bei 1 an, und der Start/Ziel-Versatz
+  // bleibt 0, weil die Kopie bewusst ohne Strecke entsteht und der
+  // Versatz ohne sie keine Bedeutung haette.
+  const srcMeta = raceMeta[src.id];
+  if (srcMeta && srcMeta.laps) {
+    raceMeta[id] = { laps: srcMeta.laps, currentLap: 1, startOffset: 0, lastLapTs: null };
+    races[id].laps = srcMeta.laps;
+    persistRaceMeta();
+  }
   saveRacesToDisk();
   persistRace(id);
   console.log(`\u29C9 Rennen kopiert: "${src.name}" \u2192 "${races[id].name}" (${races[id].riders.length} Fahrer)`);
@@ -1565,6 +1826,10 @@ app.post('/races/:id/activate', requireSpolei, (req, res) => {
 app.delete('/races/:id', requireSpolei, (req, res) => {
   const { id } = req.params;
   if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
+  // Erst nach der Pruefung aufraeumen, sonst wirft auch ein 404 die
+  // Rundendaten weg.
+  if (raceMeta[id]) { delete raceMeta[id]; persistRaceMeta(); }
+  delete gpxCache[id];
   const name = races[id].name;
   delete races[id];
   if (activeRaceId === id) {
@@ -1821,6 +2086,7 @@ function connectMqtt() {
 
       delete pending[id];   // Fix da -> raus aus der Warteliste
       addDistance(id, lat, lon, Date.now());
+      verfolgeStrecke(id, lat, lon);
       positions[id] = { lat, lon, timestamp: Date.now() };
       if (typeof bat === 'number') positions[id].bat = bat;
       if (mode === 'training' || mode === 'race') positions[id].trackerMode = mode;

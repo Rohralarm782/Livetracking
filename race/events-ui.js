@@ -180,6 +180,14 @@ function renderEventsBody() {
           title="Strecke laden">\u{1F5FA}</button>
         <button class="btn" data-action="rc-copy" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px" title="Rennen kopieren (gleiche Startliste)">\u29C9</button>
+        ${r.isActive && r.hasGpx
+          ? `<button class="btn" data-action="rc-finishline" data-id="${r.id}"
+               style="flex:0;padding:4px 8px;font-size:12px"
+               title="Start/Ziel auf die aktuelle Position legen">\u{1F4CD}</button>`
+          : ''}
+        <button class="btn" data-action="rc-laps" data-id="${r.id}"
+          style="flex:0;padding:4px 8px;font-size:11px"
+          title="Sollrunden festlegen">\u{1F501}${r.laps ? ' ' + r.currentLap + '/' + r.laps : ''}</button>
         <button class="btn" data-action="rc-csv" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px"
           title="Rennprotokoll als CSV">\u{1F4CA}</button>
@@ -207,6 +215,8 @@ function renderEventsBody() {
           <input type="text" id="rcNewAk"    placeholder="AK, z.B. U17m">
           <input type="text" id="rcNewStart" placeholder="Start hh:mm">
         </div>
+        <input type="number" id="rcNewLaps" min="1" max="99"
+               placeholder="Runden (leer = ohne Rundenz\u00E4hlung)">
         <div style="display:flex;gap:6px">
           <button class="btn" data-action="rc-new-save" data-id="${ev.id}" style="flex:1">\u2713 Anlegen</button>
           <button class="btn" data-action="ev-cancel" style="flex:0;padding:7px 12px">\u2715</button>
@@ -321,7 +331,15 @@ evBody.addEventListener('click', function (e) {
         category:  val('#rcNewAk'),
         startTime: startTimeToIso(val('#rcNewStart'), day)
       };
-      guard(async () => { await createRace(payload); resetEventForms(); raceFormEvId = id; });
+      const runden = parseInt(val('#rcNewLaps'));
+      guard(async () => {
+        // createRace liefert die ID als String zurueck, kein Objekt.
+        const neuId = await createRace(payload);
+        // Runden gehen ueber einen eigenen Endpoint: sie liegen in
+        // raceMeta, nicht im Rennobjekt selbst.
+        if (runden > 0 && neuId) await setRaceLaps(neuId, { laps: runden });
+        resetEventForms(); raceFormEvId = id;
+      });
       break;
     }
 
@@ -340,6 +358,34 @@ evBody.addEventListener('click', function (e) {
         startTime: startTimeToIso(val('#rcEditStart'), day)
       };
       guard(async () => { await updateRace(id, payload); resetEventForms(); });
+      break;
+    }
+
+    case 'rc-laps': {
+      const rr = findRace(id);
+      const jetzt = rr && rr.laps ? String(rr.laps) : '';
+      const ein = prompt('Zu fahrende Runden (leer = ohne Rundenz\u00E4hlung):', jetzt);
+      if (ein === null) break;
+      const n = parseInt(ein);
+      guard(async () => {
+        await setRaceLaps(id, { laps: (ein.trim() === '' ? null : (n > 0 ? n : 1)) });
+        await loadEvents(); renderEventsBody();
+        showToast(ein.trim() === '' ? '\u{1F501} Rundenz\u00E4hlung aus' : `\u{1F501} ${n} Runden`);
+      });
+      break;
+    }
+
+    case 'rc-finishline': {
+      if (!navigator.geolocation) { showToast('\u26A0\uFE0F Kein GPS verf\u00FCgbar'); break; }
+      showToast('\u{1F4CD} Position wird bestimmt\u2026');
+      navigator.geolocation.getCurrentPosition(
+        p => guard(async () => {
+          const d = await setRaceLaps(id, { atLat: p.coords.latitude, atLon: p.coords.longitude });
+          showToast(`\u{1F3C1} Start/Ziel bei km ${(d.startOffset / 1000).toFixed(2).replace('.', ',')}`);
+        }),
+        () => showToast('\u26A0\uFE0F Position nicht ermittelbar'),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
       break;
     }
 

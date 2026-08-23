@@ -167,6 +167,12 @@ async function duplicateRace(id, name) {
 // Gruppenzusammensetzung und Startnummern. minutes begrenzt das Fenster
 // schon serverseitig; frueher kam die komplette Historie und wurde hier
 // bis auf die letzten Minuten weggeworfen.
+// Sollrunden, Start/Ziel-Versatz und Zaehlerstand. Liegen in raceMeta
+// und haben deshalb einen eigenen Endpoint neben PATCH /races/:id.
+async function setRaceLaps(id, felder) {
+  return apiSend(`/races/${id}/laps`, 'PATCH', felder);
+}
+
 async function loadRaceGaps(id, minutes) {
   if (!authToken) return [];
   try {

@@ -141,6 +141,19 @@
     }
     #raceClock.hidden { display: none; }
     #raceClock .rcAvg { color: #666; font-weight: 400; margin-left: 8px; }
+    /* Die Uhr selbst faengt keine Tipper ab, die Knoepfe schon. */
+    #raceClock .rcLapBox {
+      display: inline-flex; align-items: center; gap: 4px; margin-left: 10px;
+      padding-left: 10px; border-left: 1px solid #ddd; pointer-events: auto;
+    }
+    #raceClock .rcLapBox.final .rcLapTxt { color: #c62828; font-weight: 600; }
+    #raceClock .rcLapTxt { min-width: 62px; text-align: center; }
+    #raceClock .rcLap {
+      width: 26px; height: 26px; padding: 0; line-height: 1;
+      border: 1px solid #ccc; border-radius: 5px; background: #fff;
+      font-size: 15px; color: #555; cursor: pointer;
+    }
+    #raceClock .rcLap:active { background: #eee; }
     #raceClock.geplant { color: #999; }
 
     #status.ok   { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }

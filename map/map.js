@@ -524,6 +524,24 @@ function feldSchnitt() {
   return Math.round(w.reduce((a, b) => a + b, 0) / w.length * 10) / 10;
 }
 
+// Handkorrektur des Rundenzaehlers. Die Automatik rechnet danach vom
+// korrigierten Stand weiter.
+async function adjustLap(delta) {
+  if (!activeInfo || !activeInfo.raceId || !authToken) return;
+  try {
+    const res = await fetch(`${SERVER}/races/${activeInfo.raceId}/lap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ delta })
+    });
+    if (!res.ok) { checkAuth(res); showToast('\u26A0\uFE0F Runde nicht ge\u00E4ndert'); return; }
+    const d = await res.json();
+    activeInfo.currentLap = d.currentLap;
+    activeInfo.finalLap   = d.finalLap;
+    updateRaceClock();
+  } catch (e) { showToast('\u26A0\uFE0F ' + e.message); }
+}
+
 function updateRaceClock() {
   const el = document.getElementById('raceClock');
   if (!el) return;
@@ -533,8 +551,27 @@ function updateRaceClock() {
   const zeit = `${Math.floor(sek / 3600)}:${String(Math.floor(sek / 60) % 60).padStart(2, '0')}`
              + `:${String(sek % 60).padStart(2, '0')}`;
   const avg = feldSchnitt();
+  // Zielrunde statt "4/4": im Auto zaehlt die Aussage, nicht die Zahl.
+  let runde = '';
+  if (activeInfo.currentLap) {
+    const txt = activeInfo.finalLap
+      ? '\u{1F3C1} Zielrunde'
+      : `Runde ${activeInfo.currentLap}${activeInfo.laps ? '/' + activeInfo.laps : ''}`;
+    const darf   = authLevel === 'spolei';
+    const minus  = darf ? '<button class="rcLap" data-lap="-1" title="Runde zur\u00FCck">\u2212</button>' : '';
+    const plus   = darf ? '<button class="rcLap" data-lap="1" title="Runde weiter">+</button>' : '';
+    runde = `<span class="rcLapBox${activeInfo.finalLap ? ' final' : ''}">`
+          + minus + `<span class="rcLapTxt">${txt}</span>` + plus + '</span>';
+  }
   el.innerHTML = `\u23F1 ${zeit}`
+    + runde
     + (avg !== null ? `<span class="rcAvg">\u00D8 ${avg.toFixed(1).replace('.', ',')} km/h</span>` : '');
+  el.querySelectorAll('.rcLap').forEach(b => {
+    b.addEventListener('click', ev => {
+      ev.stopPropagation();
+      adjustLap(Number(b.dataset.lap));
+    });
+  });
   // Grau, solange der Startschuss nicht bestaetigt ist: dann laeuft die
   // Uhr auf den geplanten Termin und stimmt vermutlich nicht.
   el.classList.toggle('geplant', !s.echt);
