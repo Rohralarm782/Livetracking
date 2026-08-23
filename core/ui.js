@@ -143,6 +143,27 @@ optionsMenu.querySelectorAll('#optionsMain .btn').forEach(btn => {
 
 document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
 
+// Streckenmodus: Menue schliessen, Leiste zeigen, Linie hervorheben.
+document.getElementById('streckenBtn').addEventListener('click', () => {
+  closeOptionsMenu();
+  if (!activeInfo || !activeInfo.raceId) { showToast('\u26A0\uFE0F Erst ein Rennen aktivieren'); return; }
+  if (!gpxCoords.length)                 { showToast('\u26A0\uFE0F Dieses Rennen hat keine Strecke'); return; }
+  setStreckenModus(true);
+});
+document.getElementById('streckenFertig').addEventListener('click', () => setStreckenModus(false));
+
+// Genaue Eingabe fuer die Vorbereitung am Rechner.
+function streckenKmUebernehmen() {
+  const el = document.getElementById('streckenKm');
+  const v  = parseFloat(String(el.value).replace(',', '.'));
+  if (isNaN(v) || v < 0) { showToast('\u26A0\uFE0F Bitte Kilometer eingeben, z.\u202FB. 4,20'); zeigeZielKm(); return; }
+  sendeZiel({ startOffset: Math.round(v * 1000) });
+}
+document.getElementById('streckenKmOk').addEventListener('click', streckenKmUebernehmen);
+document.getElementById('streckenKm').addEventListener('keydown', e => {
+  if (e.key === 'Enter') streckenKmUebernehmen();
+});
+
 document.getElementById('advancedBtn').addEventListener('click', openAdvanced);
 document.getElementById('advCloseX').addEventListener('click', closeAdvanced);
 document.getElementById('advDoneBtn').addEventListener('click', closeAdvanced);
@@ -155,6 +176,7 @@ document.addEventListener('keydown', e => {
   const cc = document.getElementById('confirmClearModal');
   if (cc && !cc.classList.contains('hidden')) return;
   if (!advancedModal.classList.contains('hidden')) { closeAdvanced(); return; }
+  if (streckenModus) { setStreckenModus(false); return; }
   if (!optionsMenu.classList.contains('hidden')) closeOptionsMenu();
 });
 

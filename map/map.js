@@ -489,11 +489,17 @@ async function loadActiveInfo() {
     activeInfo = data || { raceId: null };
     // Auch die Strecke selbst kann sich aendern, ohne dass das Rennen
     // wechselt - deshalb gehoert der Streckenname mit in den Schluessel.
-    const key = `${activeInfo.raceId || ''}|${activeInfo.gpxName || ''}|${activeInfo.gpxPoints || 0}`;
+    // startOffset gehoert in den Schluessel: verschiebt ein zweites
+    // Geraet den Zielstrich, soll der Marker hier mitwandern.
+    const key = `${activeInfo.raceId || ''}|${activeInfo.gpxName || ''}|${activeInfo.gpxPoints || 0}`
+              + `|${activeInfo.startOffset || 0}`;
     if (key !== lastActiveKey) {
       const erster = lastActiveKey === null;
       lastActiveKey = key;
       await fetchGpxTrack();
+      // Der Zielmarker haengt an startOffset UND an der Strecke - beim
+      // Wechsel muss er neu gesetzt werden.
+      drawFinishMarker();
       if (!erster) showToast('\u{1F5FA} Strecke aktualisiert');
     }
   } catch (err) { console.error('Active:', err); }

@@ -11,6 +11,7 @@ function showAdminElements() {
   document.getElementById('advRaceGroup').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
+  document.getElementById('streckenBtn').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
 }
@@ -21,6 +22,16 @@ function showBetreuerElements() {
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('advRaceGroup').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
+  document.getElementById('streckenBtn').classList.add('hidden');
+  beendeStreckenModus();
+}
+
+// loadToken() laeuft schon beim Laden von auth.js - map/gpx.js, wo
+// setStreckenModus() steht, ist da noch nicht geladen. Ein direkter
+// Aufruf haette einem angemeldeten Betreuer die ganze Seite mit einem
+// ReferenceError zerlegt.
+function beendeStreckenModus() {
+  if (typeof setStreckenModus === 'function') setStreckenModus(false);
 }
 
 function hideAdminElements() {
@@ -29,6 +40,8 @@ function hideAdminElements() {
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
+  document.getElementById('streckenBtn').classList.add('hidden');
+  beendeStreckenModus();
   document.getElementById('loginBtnTop').classList.remove('hidden');
 }
 

@@ -106,6 +106,8 @@
       <input type="checkbox" id="teamCarCheckbox"> &#128663; Mein Standort
     </label>
 
+    <button class="btn hidden" id="streckenBtn">&#128208; Start/Ziel setzen</button>
+
     <button class="btn" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#8230;</button>
     <button class="btn logout hidden" id="logoutBtn">&#128682; Logout</button>
   </div>
@@ -209,6 +211,13 @@
   <div class="tk-body hidden" id="eventsBody"></div>
 </div>
 
+<div id="streckenBar" class="hidden">
+  <span class="sbTitel">&#128208; Start/Ziel setzen</span>
+  <span class="sbHint">auf die Strecke tippen &#8211; oder km eingeben:</span>
+  <input type="text" id="streckenKm" inputmode="decimal" aria-label="Kilometer von Start/Ziel">
+  <button class="btn" id="streckenKmOk">&#10003;</button>
+  <button class="btn" id="streckenFertig">Fertig</button>
+</div>
 <div id="raceClock" class="hidden"></div>
 <div id="status" class="warn">&#9898; Verbindung wird aufgebaut&#8230;</div>
 <div id="map"></div>
