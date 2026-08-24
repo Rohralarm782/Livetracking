@@ -1024,13 +1024,35 @@ function haversineM(aLat, aLon, bLat, bLon) {
 
 // Position auf die Strecke abbilden und Zieldurchgang pruefen. Laeuft
 // bei jedem Fix, aber nur wenn ein Rennen mit Strecke aktiv ist.
+// Kennung der Sportler-Uploads vom Garmin-Datenfeld. Solche Punkte
+// duerfen die Rundenzaehlung eines laufenden Rennens nicht anfassen:
+// faehrt jemand im Training zufaellig ueber die Ziellinie der aktiven
+// Strecke, waere das sonst ein Rundendurchgang.
+const TRAINING_ID_PREFIX = 'g-';
+
+function istTrainingsId(id) {
+  return String(id).startsWith(TRAINING_ID_PREFIX);
+}
+
+// Gibt jetzt die s-Koordinate zurueck (oder null). Die Gruppierung
+// braucht sie spaeter, und sie hier gleich mitzunehmen kostet nichts -
+// projectToTrack laeuft ohnehin bei jedem Punkt.
 function verfolgeStrecke(id, lat, lon) {
-  if (!activeRaceId) return;
+  if (!activeRaceId) return null;
   const alt  = trackerS[id];
   const hint = (alt && Date.now() - alt.ts <= HINT_MAX_AGE_MS) ? alt.s : undefined;
   const s    = projectToTrack(activeRaceId, lat, lon, hint);
-  if (s === null) return;
+  if (s === null) return null;
+
+  if (istTrainingsId(id)) {
+    // Suchhinweis trotzdem pflegen, sonst tastet projectToTrack jedes
+    // Mal die ganze Strecke ab. Nur die Rundenlogik bleibt aussen vor.
+    trackerS[id] = { s, ts: Date.now(), mitte: false };
+    return s;
+  }
+
   pruefeRundendurchgang(id, s);
+  return s;
 }
 
 function addDistance(id, lat, lon, ts) {
@@ -1073,6 +1095,40 @@ function avgKmhFor(id) {
 // Stapel-Weg (Garmin TeamCast) soll exakt dieselbe Pruefkette
 // durchlaufen wie der Einzelpunkt (Tracker-Firmware, Android-App).
 // Rueckgabe: 'ok' | 'bad' | 'stale' | 'out-of-order'
+// ---------------------------------------------------------------
+// VERLAUF JE TRACKER
+// ---------------------------------------------------------------
+// Bisher behielt der Server nur die letzte Position. Damit lassen sich
+// Marker nicht auf einen gemeinsamen Zeitpunkt rechnen: ist ein Punkt
+// 2 s alt und der andere 20 s, klaffen bei 45 km/h ueber 200 m
+// Phantomabstand, obwohl die beiden nebeneinander fahren.
+//
+// Der Puffer haelt je Tracker die letzten Minuten vor. Aufgeraeumt
+// wird beim Schreiben statt per Timer - kein Intervall, das bei
+// leerem Betrieb weiterlaeuft.
+const HISTORY_MAX_AGE_MS = 5 * 60 * 1000;
+const HISTORY_MAX_POINTS = 200;
+
+// id -> [ { t, lat, lon, s? } ], aufsteigend nach t
+const history = Object.create(null);
+
+function merkeVerlauf(key, t, lat, lon, s) {
+  let arr = history[key];
+  if (!arr) { arr = []; history[key] = arr; }
+
+  const p = { t, lat, lon };
+  if (typeof s === 'number') p.s = s;
+  arr.push(p);
+
+  // Die Reihenfolge stimmt bereits: aeltere Punkte hat ingestPosition
+  // vorher als out-of-order abgewiesen.
+  const grenze = t - HISTORY_MAX_AGE_MS;
+  let von = 0;
+  while (von < arr.length && arr[von].t < grenze) von++;
+  if (arr.length - von > HISTORY_MAX_POINTS) von = arr.length - HISTORY_MAX_POINTS;
+  if (von > 0) arr.splice(0, von);
+}
+
 function ingestPosition(src) {
   const { id, lat, lon, bat, acc, spd, ts } = src || {};
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') return 'bad';
@@ -1089,12 +1145,13 @@ function ingestPosition(src) {
   }
 
   addDistance(key, lat, lon, timestamp);
-  verfolgeStrecke(key, lat, lon);
+  const s = verfolgeStrecke(key, lat, lon);
   const entry = { lat, lon, timestamp };
   if (typeof bat === 'number' && bat >= 0 && bat <= 100) entry.bat = Math.round(bat);
   if (typeof acc === 'number' && acc >= 0)               entry.acc = Math.round(acc);
   if (typeof spd === 'number' && spd >= 0)               entry.spd = Math.round(spd * 10) / 10;
   positions[key] = entry;
+  merkeVerlauf(key, timestamp, lat, lon, s);
   delete pending[key];
   return 'ok';
 }
@@ -1166,6 +1223,34 @@ app.get('/positions', (req, res) => {
   res.json(enriched);
 });
 
+// Verlauf je Tracker. Bewusst getrennt von /positions: die Karte fragt
+// dort im Sekundentakt ab, und der Verlauf ist ein Vielfaches groesser.
+// Er wird nur gebraucht, wenn der Zeitabgleich eingeschaltet ist.
+//   ?sek=N  begrenzt auf die letzten N Sekunden (1..300)
+app.get('/history', (req, res) => {
+  const jetzt = Date.now();
+  let fenster = HISTORY_MAX_AGE_MS;
+  const sek = Number(req.query.sek);
+  if (isFinite(sek) && sek > 0) {
+    fenster = Math.min(HISTORY_MAX_AGE_MS, Math.round(sek) * 1000);
+  }
+  const grenze = jetzt - fenster;
+
+  const out = Object.create(null);
+  for (const [id, arr] of Object.entries(history)) {
+    // Karteileichen hier aufraeumen: merkeVerlauf kuerzt nur Puffer,
+    // in die noch geschrieben wird. Ein Tracker, der abgeschaltet
+    // wurde, bliebe sonst dauerhaft im Speicher stehen.
+    if (!arr.length || arr[arr.length - 1].t < jetzt - HISTORY_MAX_AGE_MS) {
+      delete history[id];
+      continue;
+    }
+    const pts = arr.filter(p => p.t >= grenze);
+    if (pts.length) out[id] = pts;
+  }
+  res.json(out);
+});
+
 // Tracker ohne Fix. Bewusst ein eigener Endpoint statt eines
 // zusaetzlichen Schluessels in /positions: das Frontend iteriert
 // dort mit Object.keys() ueber ALLE Eintraege, ein Sonderschluessel
@@ -1196,6 +1281,7 @@ app.delete('/positions', requireSpolei, (req, res) => {
   for (const key of Object.keys(positions))    delete positions[key];
   for (const key of Object.keys(pending))      delete pending[key];
   for (const key of Object.keys(trackerStats)) delete trackerStats[key];
+  for (const key of Object.keys(history))      delete history[key];
   console.log("🧹 Positionen gelöscht");
   res.json({ ok: true });
 });
@@ -1211,6 +1297,7 @@ app.delete('/positions/:id', requireSpolei, (req, res) => {
   delete positions[id];
   delete pending[id];
   delete trackerStats[id];
+  delete history[id];
   if (!gab) return res.status(404).json({ error: 'Kein Eintrag zu dieser ID' });
   console.log(`\u{1F5D1} Marker entfernt: ${id}`);
   res.json({ ok: true, id });
