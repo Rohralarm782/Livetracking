@@ -118,6 +118,13 @@ async function activateRaceById(id) {
   await loadEvents();
 }
 
+// Beendet das aktive Rennen, ohne ein anderes zu aktivieren. Danach ist
+// kein Rennen aktiv - der Aufrufer muss Gruppen und Strecke neu laden.
+async function deactivateRaceById(id) {
+  await apiSend(`/races/${id}/deactivate`, 'POST');
+  await loadEvents();
+}
+
 async function deleteRace(id) {
   await apiSend(`/races/${id}`, 'DELETE');
   await loadEvents();

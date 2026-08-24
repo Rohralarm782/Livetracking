@@ -1519,6 +1519,9 @@ function raceView(r) {
     actualStart: r.actualStart || null,
     laps:       raceMeta[r.id] ? raceMeta[r.id].laps : (r.laps || null),
     currentLap: raceMeta[r.id] ? (raceMeta[r.id].currentLap || 1) : 1,
+    // Bewusst ohne raceMetaOf(): das wuerde beim blossen Anzeigen der
+    // Rennliste fuer jedes Rennen einen raceMeta-Eintrag anlegen.
+    startOffset: raceMeta[r.id] ? Math.round(raceMeta[r.id].startOffset || 0) : 0,
     createdAt:  r.createdAt,
     riderCount: r.riders.length,
     // Bewusst NUR Kennzeichen statt r.gpx: sonst haengen an jedem
@@ -1572,6 +1575,34 @@ function activateRace(id) {
       }))
       .then(() => db.setSetting('activeRaceId', id))
       .catch(dbFail('activateRace'));
+  }
+  pushAutoDisplays();
+}
+
+// Rennen beenden, ohne ein anderes zu aktivieren. Bis hierhin ging das
+// nur ueber den Wechsel auf ein anderes Rennen - nach dem letzten Lauf
+// des Tages blieb zwangslaeufig eins aktiv.
+//
+// Der Taktik-Stand bleibt beim Rennen, genau wie beim Wechsel. Der
+// Aufrufer muss vorher pruefen, dass id wirklich das aktive Rennen ist.
+function deactivateRace(id) {
+  syncGroupsToRace();
+  races[id].status = 'beendet';
+  activeRaceId = null;
+  groups = [];
+  // Wie beim Rennenwechsel: alte Streckenpositionen vergessen, sonst
+  // vergleicht der Rundenzaehler den ersten Fix des naechsten Rennens
+  // mit einem s aus diesem und meldet einen Rueckwaertssprung.
+  for (const k of Object.keys(trackerS)) delete trackerS[k];
+  saveRacesToDisk();
+  // Verkettet, nicht parallel - dieselbe Begruendung wie in
+  // activateRace(): clearActiveStatus() darf erst laufen, wenn die
+  // Gruppen des Rennens geschrieben sind.
+  if (db.enabled) {
+    db.updateRaceGroups(id, races[id].groups || [])
+      .then(() => db.clearActiveStatus())
+      .then(() => db.setSetting('activeRaceId', null))
+      .catch(dbFail('deactivateRace'));
   }
   pushAutoDisplays();
 }
@@ -2034,6 +2065,19 @@ app.post('/races/:id/activate', requireSpolei, (req, res) => {
   activateRace(id);
   console.log(`✅ Aktives Rennen: "${races[id].name}"`);
   res.json({ ok: true, activeId: activeRaceId });
+});
+
+// Gegenstueck zu /activate. 409 statt 404, wenn das Rennen zwar
+// existiert, aber gar nicht aktiv ist - das ist ein anderer Fehler und
+// soll im Frontend anders aussehen.
+app.post('/races/:id/deactivate', requireSpolei, (req, res) => {
+  const { id } = req.params;
+  if (!races[id])        return res.status(404).json({ error: 'Nicht gefunden' });
+  if (activeRaceId !== id) return res.status(409).json({ error: 'Dieses Rennen ist nicht aktiv' });
+  const name = races[id].name;
+  deactivateRace(id);
+  console.log(`\u23F9\uFE0F Rennen beendet: "${name}" \u2013 kein Rennen aktiv`);
+  res.json({ ok: true, activeId: null });
 });
 
 app.delete('/races/:id', requireSpolei, (req, res) => {

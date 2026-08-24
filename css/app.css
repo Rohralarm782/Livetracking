@@ -592,6 +592,19 @@
     .ev-form .row input { flex: 1; min-width: 0; }
     .ev-empty { text-align: center; color: #bbb; font-size: 13px; padding: 30px 12px; }
 
+    /* START/ZIEL je Rennen - Panel unter der Rennzeile. Blaeulich
+       abgesetzt wie die Streckenleiste auf der Karte, damit beide
+       Wege sichtbar zusammengehoeren. */
+    .ev-ziel  { padding: 10px 14px; background: #f2f7fd; border-bottom: 1px solid #e3f2fd; }
+    .ev-ziel .zTitel { font-size: 12px; font-weight: 600; color: #1565c0; margin-bottom: 8px;
+                       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ev-ziel .row    { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .ev-ziel input   { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #ddd;
+                       border-radius: 6px; font-size: 13px; font-family: sans-serif; }
+    .ev-ziel input:focus { outline: none; border-color: #2196F3; }
+    .ev-ziel .zBtns  { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ev-ziel .zHint  { font-size: 11px; color: #999; margin-top: 8px; line-height: 1.4; }
+
     /* STARTLISTEN-EDITOR im Fahrer-Modal */
     .btn.active { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
     #favModal input[type="number"] {

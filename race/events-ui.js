@@ -15,9 +15,11 @@ let evFormOpen   = false;   // Formular "Veranstaltung anlegen"
 let evEditId     = null;    // Veranstaltung im Bearbeiten-Modus
 let raceFormEvId = null;    // Veranstaltung, in der ein Rennen angelegt wird
 let raceEditId   = null;    // Rennen im Bearbeiten-Modus
+let zielRaceForm = null;    // Rennen, dessen Start/Ziel gerade gesetzt wird
 
 function resetEventForms() {
   evFormOpen = false; evEditId = null; raceFormEvId = null; raceEditId = null;
+  zielRaceForm = null;
 }
 
 async function openEventsPanel() {
@@ -180,10 +182,11 @@ function renderEventsBody() {
           title="Strecke laden">\u{1F5FA}</button>
         <button class="btn" data-action="rc-copy" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px" title="Rennen kopieren (gleiche Startliste)">\u29C9</button>
-        ${r.isActive && r.hasGpx
-          ? `<button class="btn" data-action="rc-finishline" data-id="${r.id}"
-               style="flex:0;padding:4px 8px;font-size:12px"
-               title="Start/Ziel auf die aktuelle Position legen">\u{1F4CD}</button>`
+        ${r.hasGpx
+          ? `<button class="btn" data-action="rc-ziel" data-id="${r.id}"
+               style="flex:0;padding:4px 8px;font-size:12px${
+                 zielRaceForm === r.id ? ';color:#1565c0' : ''}"
+               title="Start/Ziel festlegen">\u{1F4D0}</button>`
           : ''}
         <button class="btn" data-action="rc-laps" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:11px"
@@ -200,12 +203,41 @@ function renderEventsBody() {
         <button class="btn" data-action="rc-edit" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px">\u270E</button>
         ${r.isActive
-          ? `<span style="font-size:11px;color:#2e7d32;font-weight:500;flex-shrink:0">aktiv</span>`
+          ? `<button class="btn" data-action="rc-deactivate" data-id="${r.id}"
+               style="flex:0;padding:4px 8px;font-size:11px;color:#2e7d32;border-color:#4caf50"
+               title="Rennen beenden \u2013 danach ist kein Rennen aktiv"
+             >aktiv \u2715</button>`
           : `<button class="btn" data-action="rc-activate" data-id="${r.id}"
                style="flex:0;padding:4px 8px;font-size:11px">Aktiv</button>`}
         <button class="btn" data-action="rc-del" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px;color:#f44336">\u2715</button>
       </div>`;
+
+      // Start/Ziel-Panel direkt unter der Rennzeile. Bewusst kein
+      // Modal: der Zielstrich gehoert zur Vorbereitung des Rennens und
+      // soll neben Startliste und Strecke stehen.
+      if (zielRaceForm === r.id) {
+        const km = ((r.startOffset || 0) / 1000).toFixed(2).replace('.', ',');
+        html += `<div class="ev-ziel">
+          <div class="zTitel">\u{1F4D0} Start/Ziel \u2013 ${escH(r.name)}</div>
+          <div class="row">
+            <input type="text" id="rcZielKm" inputmode="decimal" value="${km}"
+                   aria-label="Kilometer vom Streckenanfang">
+            <button class="btn" data-action="rc-ziel-km" data-id="${r.id}">\u2713 km</button>
+          </div>
+          <div class="zBtns">
+            <button class="btn" data-action="rc-ziel-hier" data-id="${r.id}"
+              title="Start/Ziel auf die aktuelle Position legen">\u{1F4CD} Hier</button>
+            ${r.isActive
+              ? `<button class="btn" data-action="rc-ziel-karte" data-id="${r.id}"
+                   >\u{1F5FA} Auf Karte tippen</button>`
+              : ''}
+            <button class="btn" data-action="ev-cancel">\u2715</button>
+          </div>
+          <div class="zHint">Kilometer ab Anfang der GPX-Datei.${
+            r.isActive ? '' : ' Auf der Karte tippen geht nur beim aktiven Rennen.'}</div>
+        </div>`;
+      }
     });
 
     if (raceFormEvId === ev.id) {
@@ -375,17 +407,52 @@ evBody.addEventListener('click', function (e) {
       break;
     }
 
-    case 'rc-finishline': {
+    case 'rc-ziel': {
+      // Panel auf/zu. Andere Formulare schliessen, damit nie zwei
+      // Eingaben gleichzeitig offen stehen.
+      const offen = zielRaceForm === id;
+      resetEventForms();
+      zielRaceForm = offen ? null : id;
+      renderEventsBody();
+      if (!offen) setTimeout(() => {
+        const el = evBody.querySelector('#rcZielKm');
+        if (el) { el.focus(); el.select(); }
+      }, 30);
+      break;
+    }
+
+    case 'rc-ziel-km': {
+      const v = parseFloat(String(val('#rcZielKm')).replace(',', '.'));
+      if (isNaN(v) || v < 0) { showToast('\u26A0\uFE0F Bitte Kilometer eingeben, z.\u202FB. 4,20'); break; }
+      // loadEvents() danach: sonst zeigt das Feld beim naechsten
+      // Rendern wieder den alten Wert aus der Rennliste.
+      guard(async () => {
+        if (await sendeZiel({ startOffset: Math.round(v * 1000) }, id)) await loadEvents();
+      });
+      break;
+    }
+
+    case 'rc-ziel-hier': {
       if (!navigator.geolocation) { showToast('\u26A0\uFE0F Kein GPS verf\u00FCgbar'); break; }
       showToast('\u{1F4CD} Position wird bestimmt\u2026');
       navigator.geolocation.getCurrentPosition(
         p => guard(async () => {
-          const d = await setRaceLaps(id, { atLat: p.coords.latitude, atLon: p.coords.longitude });
-          showToast(`\u{1F3C1} Start/Ziel bei km ${(d.startOffset / 1000).toFixed(2).replace('.', ',')}`);
+          if (await sendeZiel({ atLat: p.coords.latitude, atLon: p.coords.longitude }, id)) await loadEvents();
         }),
         () => showToast('\u26A0\uFE0F Position nicht ermittelbar'),
         { enableHighAccuracy: true, timeout: 10000 }
       );
+      break;
+    }
+
+    case 'rc-ziel-karte': {
+      // Nur das aktive Rennen: auf der Karte liegt genau dessen Linie.
+      const rz = findRace(id);
+      if (!rz || !rz.isActive)  { showToast('\u26A0\uFE0F Nur beim aktiven Rennen'); break; }
+      if (!gpxCoords.length)    { showToast('\u26A0\uFE0F Strecke noch nicht geladen'); break; }
+      zielRaceForm = null;
+      closeTaktikView();
+      setStreckenModus(true, id);
       break;
     }
 
@@ -418,7 +485,10 @@ evBody.addEventListener('click', function (e) {
       const an = !(rr && rr.actualStart);
       if (!an && !confirm('Startschuss zur\u00FCcknehmen? Fahrtzeit und Schnitt beziehen sich danach wieder auf den geplanten Start.')) break;
       guard(async () => {
-        await apiSend('POST', `/races/${id}/start`, { actual: an });
+        // Reihenfolge der Argumente: apiSend(path, method, body).
+        // Bis 1.12.1 stand hier apiSend('POST', ...) - fetch() warf
+        // deshalb bei jedem Druck auf "Start" einen TypeError.
+        await apiSend(`/races/${id}/start`, 'POST', { actual: an });
         await loadEvents();
         renderEventsBody();
         showToast(an ? '\u{1F3C1} Start festgehalten' : '\u{1F3C1} Start zur\u00FCckgenommen');
@@ -435,6 +505,20 @@ evBody.addEventListener('click', function (e) {
         await fetchGpxTrack();   // Strecke des neuen Rennens auf die Karte
       });
       break;
+
+    case 'rc-deactivate': {
+      const rd = findRace(id);
+      if (!rd) return;
+      if (!confirm(`Rennen \u201E${rd.name}\u201C beenden?\nDanach ist kein Rennen aktiv. Gruppen und Strecke bleiben beim Rennen gespeichert.`)) return;
+      guard(async () => {
+        await deactivateRaceById(id);
+        await loadGroups();
+        renderStrip(taktikGroups);
+        await fetchGpxTrack();   // raeumt die Strecke von der Karte
+        resetEventForms();
+      });
+      break;
+    }
 
     case 'rc-copy': {
       // Fuer Etappenrennen und zweite Laeufe: gleiche Startliste,
@@ -491,7 +575,8 @@ evBody.addEventListener('keydown', function (e) {
     rcNewStart: '[data-action="rc-new-save"]',
     rcEditName: '[data-action="rc-edit-save"]',
     rcEditAk:   '[data-action="rc-edit-save"]',
-    rcEditStart:'[data-action="rc-edit-save"]'
+    rcEditStart:'[data-action="rc-edit-save"]',
+    rcZielKm:   '[data-action="rc-ziel-km"]'
   };
   const sel = map[e.target.id];
   if (!sel) return;

@@ -186,13 +186,10 @@ optionsMenu.querySelectorAll('#optionsMain .btn').forEach(btn => {
 
 document.getElementById('teamCarToggle').addEventListener('change', () => closeOptionsMenu());
 
-// Streckenmodus: Menue schliessen, Leiste zeigen, Linie hervorheben.
-document.getElementById('streckenBtn').addEventListener('click', () => {
-  closeOptionsMenu();
-  if (!activeInfo || !activeInfo.raceId) { showToast('\u26A0\uFE0F Erst ein Rennen aktivieren'); return; }
-  if (!gpxCoords.length)                 { showToast('\u26A0\uFE0F Dieses Rennen hat keine Strecke'); return; }
-  setStreckenModus(true);
-});
+// Der Streckenmodus wird seit 1.13.0 aus der Rennverwaltung heraus
+// gestartet (race/events-ui.js, Aktion rc-ziel-karte). Hier bleibt nur
+// das Beenden: die Leiste liegt ueber der Karte, nicht im Menue, und
+// muss auch dann schliessbar sein, wenn die Taktikansicht zu ist.
 document.getElementById('streckenFertig').addEventListener('click', () => setStreckenModus(false));
 
 // Genaue Eingabe fuer die Vorbereitung am Rechner.

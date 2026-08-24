@@ -77,6 +77,13 @@ function gpxPointAt(meter) {
 let finishMarker = null;
 let streckenModus = false;
 
+// Rennen, dessen Start/Ziel gerade gesetzt wird. Frueher war das
+// implizit immer das aktive Rennen. Seit die Bedienung in der
+// Rennverwaltung sitzt, kann es auch ein vorbereitetes sein - dann
+// aber nur ueber die km-Eingabe, weil auf der Karte die Linie des
+// aktiven Rennens liegt.
+let zielRaceId = null;
+
 const finishIcon = L.divIcon({
   className: '', iconSize: [26, 26], iconAnchor: [13, 13],
   html: '<div style="font-size:19px;line-height:26px;text-align:center;'
@@ -96,8 +103,11 @@ function drawFinishMarker() {
     .bindTooltip('\u{1F3C1} Start / Ziel', { permanent: false, direction: 'top' });
 }
 
-function setStreckenModus(an) {
+function setStreckenModus(an, raceId) {
   streckenModus = !!an && authLevel === 'spolei';
+  zielRaceId = streckenModus
+    ? (raceId || (activeInfo && activeInfo.raceId) || null)
+    : null;
   document.getElementById('streckenBar').classList.toggle('hidden', !streckenModus);
   if (gpxLayer) {
     gpxLayer.setStyle(streckenModus
@@ -111,26 +121,52 @@ function setStreckenModus(an) {
 
 function zeigeZielKm() {
   const el = document.getElementById('streckenKm');
-  if (!el || !activeInfo) return;
-  el.value = ((activeInfo.startOffset || 0) / 1000).toFixed(2).replace('.', ',');
+  if (!el) return;
+  el.value = (zielOffset() / 1000).toFixed(2).replace('.', ',');
+}
+
+// Aktueller Versatz des Zielrennens. Bevorzugt die Rennliste, weil dort
+// auch nicht aktive Rennen stehen; activeInfo ist der Rueckfall, solange
+// die Liste noch nicht geladen ist (Zuschauer ohne Login).
+function zielOffset() {
+  if (zielRaceId && typeof findRace === 'function') {
+    const r = findRace(zielRaceId);
+    if (r) return r.startOffset || 0;
+  }
+  return (activeInfo && activeInfo.startOffset) || 0;
 }
 
 // Tipp auf die Strecke: der Server projiziert die Koordinate mit
 // derselben Rechnung wie eine GPS-Meldung.
 async function onTrackClick(e) {
+  // Auf der Karte liegt die Strecke des AKTIVEN Rennens. Ein Tipp darf
+  // deshalb nie auf ein anderes Rennen gehen, auch wenn zielRaceId aus
+  // irgendeinem Grund noch auf einem alten Wert steht.
   if (!streckenModus || !activeInfo || !activeInfo.raceId) return;
+  if (zielRaceId && zielRaceId !== activeInfo.raceId) return;
   L.DomEvent.stop(e);
-  await sendeZiel({ atLat: e.latlng.lat, atLon: e.latlng.lng });
+  await sendeZiel({ atLat: e.latlng.lat, atLon: e.latlng.lng }, activeInfo.raceId);
 }
 
-async function sendeZiel(felder) {
+// Setzt Start/Ziel eines Rennens. raceId ist optional: ohne Angabe gilt
+// das Rennen des Streckenmodus, sonst das aktive. Fehler landen im Toast
+// und nicht als Ausnahme beim Aufrufer - der Kartentipp hat keinen
+// Platz fuer einen Dialog.
+async function sendeZiel(felder, raceId) {
+  const ziel = raceId || zielRaceId || (activeInfo && activeInfo.raceId);
+  if (!ziel) { showToast('\u26A0\uFE0F Kein Rennen gew\u00E4hlt'); return null; }
   try {
-    const d = await setRaceLaps(activeInfo.raceId, felder);
-    activeInfo.startOffset = d.startOffset;
-    drawFinishMarker();
-    zeigeZielKm();
+    const d = await setRaceLaps(ziel, felder);
+    // Marker und Karte nur anfassen, wenn es wirklich das Rennen ist,
+    // das gerade auf der Karte liegt.
+    if (activeInfo && ziel === activeInfo.raceId) {
+      activeInfo.startOffset = d.startOffset;
+      drawFinishMarker();
+    }
+    if (streckenModus) zeigeZielKm();
     showToast(`\u{1F3C1} Start/Ziel bei km ${(d.startOffset / 1000).toFixed(2).replace('.', ',')}`);
-  } catch (err) { showToast('\u26A0\uFE0F ' + err.message); }
+    return d;
+  } catch (err) { showToast('\u26A0\uFE0F ' + err.message); return null; }
 }
 
 // Aus der Rennverwaltung: Datei waehlen und dem Rennen zuordnen.

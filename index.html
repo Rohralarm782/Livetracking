@@ -100,13 +100,14 @@
     <button class="btn hidden" id="betreuerBtn">&#128205; Standort teilen</button>
 
     <!-- SpoLei-Level -->
-    <!-- GPX laden/entfernen liegt in der Rennverwaltung (Taktik-Tab),
-         weil die Strecke zum Rennen gehoert und nicht zum Server. -->
+    <!-- GPX laden/entfernen und Start/Ziel liegen in der Rennverwaltung
+         (Taktik-Tab), weil Strecke und Zielstrich zum Rennen gehoeren
+         und nicht zum Server. Der Knopf "Start/Ziel setzen" stand bis
+         1.12.1 hier und wirkte still auf das aktive Rennen - das war
+         beim Vorbereiten mehrerer Rennen nicht zu bedienen. -->
     <label id="teamCarToggle" class="hidden">
       <input type="checkbox" id="teamCarCheckbox"> &#128663; Mein Standort
     </label>
-
-    <button class="btn hidden" id="streckenBtn">&#128208; Start/Ziel setzen</button>
 
     <button class="btn" id="advancedBtn">&#9881;&#65039; Erweiterte Einstellungen &#8230;</button>
     <button class="btn logout hidden" id="logoutBtn">&#128682; Logout</button>

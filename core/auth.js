@@ -11,7 +11,6 @@ function showAdminElements() {
   document.getElementById('advRaceGroup').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
-  document.getElementById('streckenBtn').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
 }
@@ -22,7 +21,6 @@ function showBetreuerElements() {
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('advRaceGroup').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
-  document.getElementById('streckenBtn').classList.add('hidden');
   beendeStreckenModus();
 }
 
@@ -40,7 +38,6 @@ function hideAdminElements() {
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
-  document.getElementById('streckenBtn').classList.add('hidden');
   beendeStreckenModus();
   document.getElementById('loginBtnTop').classList.remove('hidden');
 }
