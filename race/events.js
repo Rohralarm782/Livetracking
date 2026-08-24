@@ -180,6 +180,16 @@ async function setRaceLaps(id, felder) {
   return apiSend(`/races/${id}/laps`, 'PATCH', felder);
 }
 
+// Streckenmarker anlegen oder aendern. Ohne id entsteht ein neuer.
+// Die Antwort enthaelt die vollstaendige, nach km sortierte Liste.
+async function saveMarker(raceId, felder) {
+  return apiSend(`/races/${raceId}/marker`, 'POST', felder);
+}
+
+async function deleteMarker(raceId, mid) {
+  return apiSend(`/races/${raceId}/marker/${mid}`, 'DELETE');
+}
+
 async function loadRaceGaps(id, minutes) {
   if (!authToken) return [];
   try {

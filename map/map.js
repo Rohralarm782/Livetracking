@@ -575,6 +575,15 @@ async function loadPositions() {
     const zielT = now - syncLagS * 1000;
     const gruppenKandidaten = [];
 
+    // Streckenposition je Tracker, frisch aus /positions. Der Server
+    // rechnet sie ohnehin; frueher kam sie nur aus dem Verlauf und
+    // damit nur bei eingeschaltetem Zeitabgleich.
+    streckenPos = Object.create(null);
+    ids.forEach(id => {
+      const p = data[id];
+      if (p && p.type !== 'betreuer' && typeof p.s === 'number') streckenPos[id] = p.s;
+    });
+
     ids.forEach(id => {
       const pos         = data[id];
       const bat         = pos.bat;
@@ -700,6 +709,8 @@ async function loadPositions() {
 // und laesst sich deshalb guenstig pollen.
 let activeInfo    = { raceId: null };
 let lastActiveKey = null;
+// trackerId -> Meter auf der Strecke. Grundlage fuer "naechster Punkt".
+let streckenPos   = Object.create(null);
 
 async function loadActiveInfo() {
   try {
@@ -711,8 +722,14 @@ async function loadActiveInfo() {
     // wechselt - deshalb gehoert der Streckenname mit in den Schluessel.
     // startOffset gehoert in den Schluessel: verschiebt ein zweites
     // Geraet den Zielstrich, soll der Marker hier mitwandern.
+    // Die Streckenmarker gehoeren mit in den Schluessel: setzt ein
+    // zweites Geraet eine Wertung, soll sie hier auftauchen, ohne dass
+    // sich Rennen oder Strecke geaendert haben.
+    const mkKey = (activeInfo.marker || [])
+      .map(m => `${m.id}:${m.typ}:${m.s}:${m.sEnde === undefined || m.sEnde === null ? '' : m.sEnde}`)
+      .join(',');
     const key = `${activeInfo.raceId || ''}|${activeInfo.gpxName || ''}|${activeInfo.gpxPoints || 0}`
-              + `|${activeInfo.startOffset || 0}`;
+              + `|${activeInfo.startOffset || 0}|${mkKey}`;
     if (key !== lastActiveKey) {
       const erster = lastActiveKey === null;
       lastActiveKey = key;
@@ -720,6 +737,7 @@ async function loadActiveInfo() {
       // Der Zielmarker haengt an startOffset UND an der Strecke - beim
       // Wechsel muss er neu gesetzt werden.
       drawFinishMarker();
+      drawRaceMarker();
       if (!erster) showToast('\u{1F5FA} Strecke aktualisiert');
     }
   } catch (err) { console.error('Active:', err); }
@@ -768,6 +786,56 @@ async function adjustLap(delta) {
   } catch (e) { showToast('\u26A0\uFE0F ' + e.message); }
 }
 
+// Der naechste Streckenpunkt vor dem Feld. Bezugspunkt ist die Spitze,
+// gemessen ab Start/Ziel.
+//
+// Der Sonderfall am Zielstrich ist der wichtige: hat die Spitze gerade
+// ueberquert (relativ ~0) und das Gruppetto noch nicht (relativ ~L),
+// waere der hinterste der "weiteste". Deshalb zaehlt dann nur, wer
+// schon durch ist.
+function naechsterPunkt() {
+  if (!activeInfo || !activeInfo.raceId) return null;
+  const liste = Array.isArray(activeInfo.marker) ? activeInfo.marker : [];
+  const L = activeInfo.trackLength;
+  if (!liste.length || !L) return null;
+
+  const off = activeInfo.startOffset || 0;
+  const rel = x => (((x - off) % L) + L) % L;
+
+  const werte = Object.values(streckenPos).map(rel);
+  if (!werte.length) return null;
+  const vorn   = werte.filter(r => r < 0.10 * L);
+  const hinten = werte.filter(r => r > 0.90 * L);
+  const anker  = (vorn.length && hinten.length) ? Math.max(...vorn) : Math.max(...werte);
+
+  const runde = activeInfo.currentLap || 1;
+  let best = null;
+  for (const m of liste) {
+    if (!m || typeof m.s !== 'number') continue;
+    if (m.typ === 'start') continue;                    // sagt im Rennen nichts
+    if (Array.isArray(m.runden) && m.runden.length && !m.runden.includes(runde)) continue;
+    const d = (((rel(m.s) - anker) % L) + L) % L;
+    if (best === null || d < best.d) best = { d, m };
+  }
+  return best;
+}
+
+function naechsterPunktText() {
+  const b = naechsterPunkt();
+  if (!b) return '';
+  const a = (typeof markerArt === 'function') ? markerArt(b.m.typ) : { icon: '\u{1F4CC}', label: 'Punkt' };
+  const was = b.m.name || a.label;
+  const wo  = b.d < 50   ? 'jetzt'
+            : b.d < 1000 ? `in ${Math.round(b.d / 10) * 10} m`
+            :              `in ${(b.d / 1000).toFixed(1).replace('.', ',')} km`;
+  return `<span class="rcNext">${a.icon} ${escNext(was)} ${wo}</span>`;
+}
+
+// Marker-Namen sind frei eingegeben und landen hier in innerHTML.
+function escNext(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function updateRaceClock() {
   const el = document.getElementById('raceClock');
   if (!el) return;
@@ -796,7 +864,8 @@ function updateRaceClock() {
   }
   el.innerHTML = `\u23F1 ${zeit}`
     + runde
-    + (avg !== null ? `<span class="rcAvg">\u00D8 ${avg.toFixed(1).replace('.', ',')} km/h</span>` : '');
+    + (avg !== null ? `<span class="rcAvg">\u00D8 ${avg.toFixed(1).replace('.', ',')} km/h</span>` : '')
+    + naechsterPunktText();
   el.querySelectorAll('.rcLap').forEach(b => {
     b.addEventListener('click', ev => {
       ev.stopPropagation();

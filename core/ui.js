@@ -194,6 +194,10 @@ document.getElementById('streckenFertig').addEventListener('click', () => setStr
 
 // Genaue Eingabe fuer die Vorbereitung am Rechner.
 function streckenKmUebernehmen() {
+  // Zweiter Riegel neben dem Ausblenden in beschrifteStreckenBar():
+  // ein versehentlich verschobener Zielstrich verwirft mitten im
+  // Rennen die Rundenzaehlung.
+  if (typeof zielMarkerId !== 'undefined' && zielMarkerId) return;
   const el = document.getElementById('streckenKm');
   const v  = parseFloat(String(el.value).replace(',', '.'));
   if (isNaN(v) || v < 0) { showToast('\u26A0\uFE0F Bitte Kilometer eingeben, z.\u202FB. 4,20'); zeigeZielKm(); return; }

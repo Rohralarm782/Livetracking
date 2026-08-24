@@ -829,12 +829,58 @@ function resolveTimestamp(raw) {
 // Schema-Wechsel waere hier nicht zu testen und ginge im Zweifel erst
 // beim naechsten Rennen schief.
 //
-// raceId -> { laps, currentLap, startOffset, lastLapTs }
+// raceId -> { laps, currentLap, startOffset, lastLapTs, marker[] }
 let raceMeta = Object.create(null);
 
+// Streckenmarker. Bewusst NEBEN startOffset statt an dessen Stelle:
+// am Start/Ziel-Versatz haengt der Rundenzaehler mit Mitte-Bedingung,
+// Zeitsperre und Rueckwaertserkennung. Den umzubauen, damit der
+// Zielstrich formal aussieht wie die uebrigen Punkte, waere Risiko
+// ohne Gegenwert.
+//
+// Ein Marker: { id, typ, s, sEnde?, name, runden[] }
+//   s      Meter ab Streckenanfang, gleiche Rechnung wie startOffset
+//   sEnde  nur bei Zonen (Verpflegung, Frei) - eine Verpflegungszone
+//          ist im Reglement 100-200 m lang, ein Punkt waere gelogen
+//   runden leer = gilt in jeder Runde, sonst z.B. [2, 4, 6]
+const MARKER_TYPEN    = ['start', 'wertung', 'berg', 'verpflegung', 'frei'];
+const MARKER_ZONE     = ['verpflegung', 'frei'];
+const MARKER_MAX      = 20;   // Deckel: /active wird alle 20 s gepollt
+const MARKER_NAME_MAX = 30;
+
 function raceMetaOf(raceId) {
-  if (!raceMeta[raceId]) raceMeta[raceId] = { laps: null, currentLap: 1, startOffset: 0, lastLapTs: null };
+  if (!raceMeta[raceId]) raceMeta[raceId] = { laps: null, currentLap: 1, startOffset: 0, lastLapTs: null, marker: [] };
+  // Nachruesten: Staende aus der Datenbank, die vor 1.14.0 geschrieben
+  // wurden, kennen das Feld nicht.
+  if (!Array.isArray(raceMeta[raceId].marker)) raceMeta[raceId].marker = [];
   return raceMeta[raceId];
+}
+
+function markerListe(raceId) {
+  const m = raceMeta[raceId];
+  return (m && Array.isArray(m.marker)) ? m.marker : [];
+}
+
+function neueMarkerId() {
+  return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
+}
+
+// Meter auf die Runde falten - dieselbe Rechnung wie bei startOffset.
+function faltenAufRunde(raceId, v) {
+  const g = trackGeometry(raceId);
+  const x = Number(v) || 0;
+  return g ? ((x % g.L) + g.L) % g.L : Math.max(0, x);
+}
+
+// "2,4,6" bzw. [2,4,6] -> [2,4,6]. Leer heisst: gilt in jeder Runde.
+function normalizeRunden(v) {
+  const roh = Array.isArray(v) ? v : String(v === undefined || v === null ? '' : v).split(',');
+  const s = new Set();
+  for (const x of roh) {
+    const n = parseInt(x, 10);
+    if (n >= 1 && n <= 99) s.add(n);
+  }
+  return [...s].sort((a, b) => a - b);
 }
 
 function persistRaceMeta() {
@@ -1243,6 +1289,14 @@ app.get('/positions', (req, res) => {
       enriched[id] = { ...pos, displayName: trackerDisplayNames[id] || id };
       if (st)          enriched[id].distM  = Math.round(st.dist);
       if (avg !== null) enriched[id].avgKmh = avg;
+      // Streckenposition in Metern. Der Server rechnet sie ohnehin bei
+      // jedem Punkt aus (verfolgeStrecke); die Karte braucht sie fuer
+      // "naechste Wertung in 1,2 km" und musste sie bisher aus dem
+      // Verlauf holen - der nur bei eingeschaltetem Zeitabgleich laeuft.
+      const ts = trackerS[id];
+      if (ts && typeof ts.s === 'number' && Date.now() - ts.ts < HINT_MAX_AGE_MS) {
+        enriched[id].s = Math.round(ts.s);
+      }
     }
   }
   res.json(enriched);
@@ -1453,6 +1507,7 @@ app.get('/active', (req, res) => {
     currentLap:  raceMetaOf(r.id).currentLap || 1,
     finalLap:    istZielrunde(r.id),
     startOffset: Math.round(raceMetaOf(r.id).startOffset || 0),
+    marker:      raceMetaOf(r.id).marker,
     trackLength: (() => { const g = trackGeometry(r.id); return g ? Math.round(g.L) : null; })(),
     hasGpx:     !!r.gpx,
     gpxName:    r.gpx ? r.gpx.name : null,
@@ -1478,6 +1533,16 @@ app.delete('/races/:id/gpx', requireSpolei, (req, res) => {
   const r = races[req.params.id];
   if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
   r.gpx = null;
+  // Marker sind Meter auf genau dieser Strecke. Ohne sie haben sie
+  // keine Bedeutung mehr und wuerden bei der naechsten Strecke an
+  // falscher Stelle wieder auftauchen. Start/Ziel bleibt bewusst
+  // stehen: daran haengt der Rundenzaehler.
+  const meta = raceMeta[r.id];
+  if (meta && Array.isArray(meta.marker) && meta.marker.length) {
+    console.log(`   \u21B3 ${meta.marker.length} Marker mit entfernt`);
+    meta.marker = [];
+    persistRaceMeta();
+  }
   saveRacesToDisk();
   persistGpx(r.id);
   console.log(`🗑️ Strecke gelöscht: "${r.name}"`);
@@ -1522,6 +1587,9 @@ function raceView(r) {
     // Bewusst ohne raceMetaOf(): das wuerde beim blossen Anzeigen der
     // Rennliste fuer jedes Rennen einen raceMeta-Eintrag anlegen.
     startOffset: raceMeta[r.id] ? Math.round(raceMeta[r.id].startOffset || 0) : 0,
+    // Sechs kleine Objekte je Rennen - das faellt neben riderCount und
+    // gpxName nicht auf und spart dem Streckeneditor einen Request.
+    marker:      markerListe(r.id),
     createdAt:  r.createdAt,
     riderCount: r.riders.length,
     // Bewusst NUR Kennzeichen statt r.gpx: sonst haengen an jedem
@@ -2065,6 +2133,82 @@ app.post('/races/:id/activate', requireSpolei, (req, res) => {
   activateRace(id);
   console.log(`✅ Aktives Rennen: "${races[id].name}"`);
   res.json({ ok: true, activeId: activeRaceId });
+});
+
+// --- Streckenmarker ---
+// Einzeln statt als ganzes Array: schickten zwei Geraete gleichzeitig
+// ihre Liste, wuerde das eine die Aenderung des anderen ueberschreiben.
+app.post('/races/:id/marker', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const m = raceMetaOf(r.id);
+  const b = req.body || {};
+
+  const typ = String(b.typ || '').toLowerCase();
+  if (!MARKER_TYPEN.includes(typ)) {
+    return res.status(400).json({ error: 'typ muss sein: ' + MARKER_TYPEN.join(', ') });
+  }
+
+  // Position entweder als Meter oder als Koordinate - letztere wird mit
+  // derselben Rechnung projiziert wie eine GPS-Meldung.
+  let s;
+  if (typeof b.atLat === 'number' && typeof b.atLon === 'number') {
+    const p = projectToTrack(r.id, b.atLat, b.atLon);
+    if (p === null) return res.status(400).json({ error: 'Keine Strecke hinterlegt' });
+    s = p;
+  } else if (b.s !== undefined && b.s !== null && b.s !== '') {
+    s = faltenAufRunde(r.id, b.s);
+  }
+
+  const alt = b.id ? m.marker.find(x => x && x.id === b.id) : null;
+  if (b.id && !alt)     return res.status(404).json({ error: 'Marker nicht gefunden' });
+  if (!alt && s === undefined) return res.status(400).json({ error: 's oder atLat/atLon erforderlich' });
+  if (!alt && m.marker.length >= MARKER_MAX) {
+    return res.status(400).json({ error: `H\u00F6chstens ${MARKER_MAX} Marker je Rennen` });
+  }
+
+  const e = alt || { id: neueMarkerId(), runden: [] };
+  e.typ = typ;
+  if (s !== undefined) e.s = Math.round(s);
+  if (b.name !== undefined) {
+    const n = String(b.name).trim().slice(0, MARKER_NAME_MAX);
+    e.name = n || null;
+  } else if (e.name === undefined) e.name = null;
+
+  // Zone nur, wo sie fachlich Sinn ergibt. Wechselt ein Marker vom Typ
+  // Verpflegung auf Wertung, faellt das Ende weg statt unsichtbar
+  // liegenzubleiben.
+  if (MARKER_ZONE.includes(typ)) {
+    if (typeof b.atEndLat === 'number' && typeof b.atEndLon === 'number') {
+      const p = projectToTrack(r.id, b.atEndLat, b.atEndLon);
+      e.sEnde = (p === null) ? null : Math.round(p);
+    } else if (b.sEnde !== undefined) {
+      e.sEnde = (b.sEnde === null || b.sEnde === '') ? null : Math.round(faltenAufRunde(r.id, b.sEnde));
+    }
+  } else {
+    delete e.sEnde;
+  }
+
+  if (b.runden !== undefined) e.runden = normalizeRunden(b.runden);
+  if (!Array.isArray(e.runden)) e.runden = [];
+
+  if (!alt) m.marker.push(e);
+  m.marker.sort((x, y) => (x.s || 0) - (y.s || 0));
+  persistRaceMeta();
+  console.log(`\u{1F4CD} Marker ${alt ? 'ge\u00E4ndert' : 'gesetzt'}: "${r.name}" \u2013 ${typ} bei ${(e.s / 1000).toFixed(2)} km`);
+  res.json({ ok: true, marker: m.marker });
+});
+
+app.delete('/races/:id/marker/:mid', requireSpolei, (req, res) => {
+  const r = races[req.params.id];
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  const m = raceMetaOf(r.id);
+  const i = m.marker.findIndex(x => x && x.id === req.params.mid);
+  if (i < 0) return res.status(404).json({ error: 'Marker nicht gefunden' });
+  const weg = m.marker.splice(i, 1)[0];
+  persistRaceMeta();
+  console.log(`\u{1F5D1}\uFE0F Marker entfernt: "${r.name}" \u2013 ${weg.typ}`);
+  res.json({ ok: true, marker: m.marker });
 });
 
 // Gegenstueck zu /activate. 409 statt 404, wenn das Rennen zwar

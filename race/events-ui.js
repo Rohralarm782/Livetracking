@@ -16,10 +16,12 @@ let evEditId     = null;    // Veranstaltung im Bearbeiten-Modus
 let raceFormEvId = null;    // Veranstaltung, in der ein Rennen angelegt wird
 let raceEditId   = null;    // Rennen im Bearbeiten-Modus
 let zielRaceForm = null;    // Rennen, dessen Start/Ziel gerade gesetzt wird
+// Formular fuer einen Streckenpunkt. id === null heisst: neu anlegen.
+let mkForm = null;          // { raceId, id, typ }
 
 function resetEventForms() {
   evFormOpen = false; evEditId = null; raceFormEvId = null; raceEditId = null;
-  zielRaceForm = null;
+  zielRaceForm = null; mkForm = null;
 }
 
 async function openEventsPanel() {
@@ -219,7 +221,8 @@ function renderEventsBody() {
       if (zielRaceForm === r.id) {
         const km = ((r.startOffset || 0) / 1000).toFixed(2).replace('.', ',');
         html += `<div class="ev-ziel">
-          <div class="zTitel">\u{1F4D0} Start/Ziel \u2013 ${escH(r.name)}</div>
+          <div class="zTitel">\u{1F4D0} Strecke \u2013 ${escH(r.name)}</div>
+          <div class="zUnter">Start / Ziel</div>
           <div class="row">
             <input type="text" id="rcZielKm" inputmode="decimal" value="${km}"
                    aria-label="Kilometer vom Streckenanfang">
@@ -236,6 +239,7 @@ function renderEventsBody() {
           </div>
           <div class="zHint">Kilometer ab Anfang der GPX-Datei.${
             r.isActive ? '' : ' Auf der Karte tippen geht nur beim aktiven Rennen.'}</div>
+          ${markerBlockHtml(r)}
         </div>`;
       }
     });
@@ -288,6 +292,101 @@ function renderEventsBody() {
   </div>`;
 
   evBody.innerHTML = html;
+}
+
+// =======================
+// STRECKENPUNKTE
+// =======================
+// Fuenf Arten. Verpflegung und freie Punkte duerfen eine Ausdehnung
+// haben - eine Verpflegungszone ist im Reglement 100 bis 200 m lang.
+const MK_ARTEN = [
+  { typ: 'wertung',     icon: '\u{1F3C5}', label: 'Wertung',     zone: false },
+  { typ: 'berg',        icon: '\u26F0\uFE0F', label: 'Berg',     zone: false },
+  { typ: 'verpflegung', icon: '\u{1F34C}', label: 'Verpflegung', zone: true  },
+  { typ: 'start',       icon: '\u{1F6A9}', label: 'Start',       zone: false },
+  { typ: 'frei',        icon: '\u{1F4CC}', label: 'Frei',        zone: true  }
+];
+
+function mkArt(typ) { return MK_ARTEN.find(a => a.typ === typ) || MK_ARTEN[4]; }
+function mkKm(meter) { return ((meter || 0) / 1000).toFixed(2).replace('.', ','); }
+
+function markerBlockHtml(r) {
+  const liste = Array.isArray(r.marker) ? r.marker : [];
+  let h = `<div class="zUnter">Punkte auf der Strecke</div>`;
+
+  if (!liste.length && !(mkForm && mkForm.raceId === r.id)) {
+    h += `<div class="zHint" style="margin-top:0">Noch keine \u2013 Wertung, Bergwertung
+          oder Verpflegungszone lassen sich hier eintragen.</div>`;
+  }
+
+  liste.forEach(m => {
+    const a = mkArt(m.typ);
+    const bereich = (m.sEnde !== undefined && m.sEnde !== null)
+      ? ` \u2013 ${mkKm(m.sEnde)}` : '';
+    const runden = (Array.isArray(m.runden) && m.runden.length)
+      ? ` \u00B7 Runde ${m.runden.join(', ')}` : '';
+    h += `<div class="mk-zeile">
+      <span class="mk-icon">${a.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div class="mk-name">${escH(m.name || a.label)}</div>
+        <div class="mk-meta">km ${mkKm(m.s)}${bereich}${runden}</div>
+      </div>
+      <button class="btn" data-action="mk-edit" data-id="${r.id}" data-mid="${m.id}"
+        style="padding:4px 8px;font-size:12px">\u270E</button>
+      <button class="btn" data-action="mk-del" data-id="${r.id}" data-mid="${m.id}"
+        style="padding:4px 8px;font-size:12px;color:#f44336">\u2715</button>
+    </div>`;
+  });
+
+  if (mkForm && mkForm.raceId === r.id) {
+    const m = mkForm.id ? liste.find(x => x.id === mkForm.id) : null;
+    const a = mkArt(mkForm.typ);
+    h += `<div class="mk-form">
+      <div class="mk-typen">
+        ${MK_ARTEN.map(x => `<button class="btn ${x.typ === mkForm.typ ? 'active' : ''}"
+            data-action="mk-typ" data-id="${r.id}" data-typ="${x.typ}"
+            style="padding:5px 9px;font-size:12px">${x.icon} ${x.label}</button>`).join('')}
+      </div>
+      <input type="text" id="mkName" maxlength="30" value="${escH(m && m.name ? m.name : '')}"
+             placeholder="Name, z.\u202FB. Bergpreis Ilsenburg">
+      <div class="row">
+        <input type="text" id="mkKm" inputmode="decimal" value="${m ? mkKm(m.s) : ''}"
+               placeholder="km" aria-label="Kilometer">
+        <button class="btn" data-action="mk-hier" data-id="${r.id}"
+          title="aktuelle Position \u00FCbernehmen">\u{1F4CD}</button>
+      </div>
+      ${a.zone ? `<div class="row">
+        <input type="text" id="mkKmEnde" inputmode="decimal"
+               value="${m && m.sEnde !== undefined && m.sEnde !== null ? mkKm(m.sEnde) : ''}"
+               placeholder="Ende km (leer = Punkt statt Zone)" aria-label="Ende in Kilometern">
+      </div>` : ''}
+      <input type="text" id="mkRunden"
+             value="${m && Array.isArray(m.runden) ? m.runden.join(', ') : ''}"
+             placeholder="Runden, z.\u202FB. 2, 4 \u2013 leer = jede Runde">
+      <div class="zBtns">
+        <button class="btn" data-action="mk-save" data-id="${r.id}">\u2713 Speichern</button>
+        ${(mkForm.id && r.isActive)
+          ? `<button class="btn" data-action="mk-karte" data-id="${r.id}" data-mid="${mkForm.id}"
+               >\u{1F5FA} Auf Karte tippen</button>`
+          : ''}
+        <button class="btn" data-action="mk-abbruch" data-id="${r.id}">\u2715</button>
+      </div>
+    </div>`;
+  } else {
+    h += `<div class="zBtns" style="margin-top:8px">
+      <button class="btn" data-action="mk-neu" data-id="${r.id}">\uFF0B Punkt</button>
+    </div>`;
+  }
+  return h;
+}
+
+// km-Feld -> Meter. null heisst "leer gelassen", das ist bei der
+// Zonenlaenge ein gueltiger Wert.
+function mkMeter(sel) {
+  const roh = val(sel);
+  if (roh === '') return null;
+  const v = parseFloat(roh.replace(',', '.'));
+  return (isNaN(v) || v < 0) ? undefined : Math.round(v * 1000);
 }
 
 // =======================
@@ -445,6 +544,102 @@ evBody.addEventListener('click', function (e) {
       break;
     }
 
+    case 'mk-neu':
+      mkForm = { raceId: id, id: null, typ: 'wertung' };
+      renderEventsBody();
+      setTimeout(() => { const el = evBody.querySelector('#mkKm'); if (el) el.focus(); }, 30);
+      break;
+
+    case 'mk-typ':
+      if (mkForm) { mkForm.typ = btn.dataset.typ; renderEventsBody(); }
+      break;
+
+    case 'mk-edit': {
+      const rr = findRace(id);
+      const m  = rr && Array.isArray(rr.marker) ? rr.marker.find(x => x.id === btn.dataset.mid) : null;
+      if (!m) break;
+      mkForm = { raceId: id, id: m.id, typ: m.typ };
+      renderEventsBody();
+      break;
+    }
+
+    case 'mk-abbruch':
+      mkForm = null;
+      renderEventsBody();
+      break;
+
+    case 'mk-save': {
+      if (!mkForm) break;
+      const s = mkMeter('#mkKm');
+      if (s === undefined) { showToast('\u26A0\uFE0F Bitte Kilometer eingeben, z.\u202FB. 3,40'); break; }
+      if (s === null && !mkForm.id) { showToast('\u26A0\uFE0F Ohne Kilometer geht es nicht'); break; }
+      const felder = { typ: mkForm.typ, name: val('#mkName'), runden: val('#mkRunden') };
+      if (mkForm.id) felder.id = mkForm.id;
+      if (s !== null) felder.s = s;
+      if (mkArt(mkForm.typ).zone) {
+        const e = mkMeter('#mkKmEnde');
+        if (e === undefined) { showToast('\u26A0\uFE0F Ende bitte als Kilometer, z.\u202FB. 3,60'); break; }
+        felder.sEnde = e;   // null loescht die Ausdehnung
+      }
+      guard(async () => {
+        const d = await saveMarker(id, felder);
+        uebernehmeMarker(id, d.marker);
+        await loadEvents();
+        mkForm = null;
+        showToast(`${mkArt(felder.typ).icon} Punkt gespeichert`);
+      });
+      break;
+    }
+
+    case 'mk-hier': {
+      if (!navigator.geolocation) { showToast('\u26A0\uFE0F Kein GPS verf\u00FCgbar'); break; }
+      showToast('\u{1F4CD} Position wird bestimmt\u2026');
+      navigator.geolocation.getCurrentPosition(
+        p => guard(async () => {
+          if (!mkForm) return;
+          const felder = { typ: mkForm.typ, name: val('#mkName'), runden: val('#mkRunden'),
+                           atLat: p.coords.latitude, atLon: p.coords.longitude };
+          if (mkForm.id) felder.id = mkForm.id;
+          const d = await saveMarker(id, felder);
+          uebernehmeMarker(id, d.marker);
+          await loadEvents();
+          // Formular offen lassen und auf den neuen Punkt umschalten:
+          // Name und Runden will man meist gleich danach nachtragen.
+          const neu = (d.marker || []).find(x => !mkForm.id ? true : x.id === mkForm.id);
+          mkForm.id = mkForm.id || (neu ? neu.id : null);
+          showToast('\u{1F4CD} Punkt auf die aktuelle Position gelegt');
+        }),
+        () => showToast('\u26A0\uFE0F Position nicht ermittelbar'),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+      break;
+    }
+
+    case 'mk-del': {
+      const rr = findRace(id);
+      const m  = rr && Array.isArray(rr.marker) ? rr.marker.find(x => x.id === btn.dataset.mid) : null;
+      if (!m) break;
+      if (!confirm(`\u201E${m.name || mkArt(m.typ).label}\u201C bei km ${mkKm(m.s)} entfernen?`)) break;
+      guard(async () => {
+        const d = await deleteMarker(id, m.id);
+        uebernehmeMarker(id, d.marker);
+        await loadEvents();
+        mkForm = null;
+      });
+      break;
+    }
+
+    case 'mk-karte': {
+      const rr = findRace(id);
+      if (!rr || !rr.isActive) { showToast('\u26A0\uFE0F Nur beim aktiven Rennen'); break; }
+      if (!gpxCoords.length)   { showToast('\u26A0\uFE0F Strecke noch nicht geladen'); break; }
+      zielRaceForm = null;
+      mkForm = null;
+      closeTaktikView();
+      setStreckenModus(true, id, btn.dataset.mid);
+      break;
+    }
+
     case 'rc-ziel-karte': {
       // Nur das aktive Rennen: auf der Karte liegt genau dessen Linie.
       const rz = findRace(id);
@@ -576,7 +771,11 @@ evBody.addEventListener('keydown', function (e) {
     rcEditName: '[data-action="rc-edit-save"]',
     rcEditAk:   '[data-action="rc-edit-save"]',
     rcEditStart:'[data-action="rc-edit-save"]',
-    rcZielKm:   '[data-action="rc-ziel-km"]'
+    rcZielKm:   '[data-action="rc-ziel-km"]',
+    mkName:     '[data-action="mk-save"]',
+    mkKm:       '[data-action="mk-save"]',
+    mkKmEnde:   '[data-action="mk-save"]',
+    mkRunden:   '[data-action="mk-save"]'
   };
   const sel = map[e.target.id];
   if (!sel) return;

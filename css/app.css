@@ -169,10 +169,26 @@
       font-variant-numeric: tabular-nums;
     }
     #streckenBar .btn { padding: 6px 12px; font-size: 13px; }
+    /* Markerlage: andere Randfarbe, damit auf einen Blick klar ist,
+       dass gerade NICHT der Zielstrich gesetzt wird. */
+    #streckenBar.mkModus { border-color: #6a1b9a; }
+    #streckenBar.mkModus .sbTitel { color: #6a1b9a; }
+    #streckenBar input.hidden,
+    #streckenBar .btn.hidden { display: none; }
     @media (max-width: 560px) {
       #streckenBar .sbHint { flex-basis: 100%; order: 3; font-size: 12px; }
     }
     #raceClock .rcAvg { color: #666; font-weight: 400; margin-left: 8px; }
+    /* Naechster Streckenpunkt. Bricht auf schmalen Geraeten in eine
+       eigene Zeile, damit die Uhr nicht aus dem Kasten laeuft. */
+    #raceClock .rcNext {
+      color: #6a1b9a; font-weight: 500; margin-left: 10px;
+      padding-left: 10px; border-left: 1px solid #ddd;
+    }
+    @media (max-width: 560px) {
+      #raceClock { white-space: normal; max-width: 92vw; text-align: center; }
+      #raceClock .rcNext { display: block; margin: 4px 0 0; padding: 0; border-left: 0; }
+    }
     /* Die Uhr selbst faengt keine Tipper ab, die Knoepfe schon. */
     #raceClock .rcLapBox {
       display: inline-flex; align-items: center; gap: 4px; margin-left: 10px;
@@ -604,6 +620,44 @@
     .ev-ziel input:focus { outline: none; border-color: #2196F3; }
     .ev-ziel .zBtns  { display: flex; gap: 6px; flex-wrap: wrap; }
     .ev-ziel .zHint  { font-size: 11px; color: #999; margin-top: 8px; line-height: 1.4; }
+    .ev-ziel .zUnter {
+      font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+      color: #90a4ae; margin: 12px 0 6px;
+    }
+    .ev-ziel .zUnter:first-of-type { margin-top: 0; }
+
+    /* Punkte auf der Strecke. Grosszuegige Zeilenhoehe: die Knoepfe
+       muessen im fahrenden Auto einhaendig zu treffen sein. */
+    .mk-zeile {
+      display: flex; align-items: center; gap: 8px; padding: 7px 9px; margin-bottom: 6px;
+      background: #fff; border: 1px solid #e3f2fd; border-radius: 7px;
+    }
+    .mk-zeile .mk-icon { font-size: 17px; flex: 0 0 auto; }
+    .mk-zeile .mk-name {
+      font-size: 13px; font-weight: 500; color: #333;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .mk-zeile .mk-meta { font-size: 11px; color: #90a4ae; margin-top: 1px;
+                         font-variant-numeric: tabular-nums; }
+    .mk-form {
+      background: #fff; border: 1px solid #bbdefb; border-radius: 8px;
+      padding: 10px; margin-bottom: 8px;
+    }
+    .mk-form input {
+      width: 100%; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #ddd;
+      border-radius: 6px; font-size: 13px; font-family: sans-serif;
+    }
+    .mk-form input:focus { outline: none; border-color: #2196F3; }
+    .mk-form .row { display: flex; gap: 8px; align-items: flex-start; }
+    .mk-form .row input { flex: 1; min-width: 0; }
+    .mk-typen { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 9px; }
+
+    /* Symbol eines Streckenpunkts auf der Karte */
+    .lt-mk {
+      width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.95);
+      border: 2px solid #999; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; line-height: 1; box-shadow: 0 1px 3px rgba(0,0,0,.35);
+    }
 
     /* STARTLISTEN-EDITOR im Fahrer-Modal */
     .btn.active { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }
