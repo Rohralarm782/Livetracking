@@ -135,6 +135,28 @@
       <button type="button" data-style="osm">OSM</button>
     </div>
 
+    <div class="adv-group">Kartenansicht</div>
+    <div class="adv-row">
+      <div>
+        <div class="adv-txt">&#9203; Zeitabgleich</div>
+        <div class="adv-sub" id="syncSub">&nbsp;</div>
+      </div>
+      <div id="syncSwitch" class="adv-switch"><i></i></div>
+    </div>
+    <div class="adv-row hidden" id="syncLagRow">
+      <div style="flex:1; min-width:0;">
+        <div class="adv-txt">R&uuml;ckstand: <span id="syncLagVal">25 s</span></div>
+        <input type="range" id="syncLagRange" min="5" max="60" step="5" value="25">
+      </div>
+    </div>
+    <div class="adv-row">
+      <div>
+        <div class="adv-txt">&#128101; Gruppen zusammenfassen</div>
+        <div class="adv-sub" id="groupSub">&nbsp;</div>
+      </div>
+      <div id="groupSwitch" class="adv-switch"><i></i></div>
+    </div>
+
     <div class="adv-group">Ger&auml;t</div>
     <div class="adv-row">
       <div>

@@ -323,6 +323,59 @@ function showMarkerMenu(e, markerId) {
 // =======================
 // AUTO-ZOOM TOGGLE
 // =======================
+function updateSyncUi() {
+  const sw  = document.getElementById('syncSwitch');
+  const sub = document.getElementById('syncSub');
+  const row = document.getElementById('syncLagRow');
+  const val = document.getElementById('syncLagVal');
+  const rng = document.getElementById('syncLagRange');
+  if (!sw) return;
+  sw.classList.toggle('on', syncOn);
+  if (sub) sub.textContent = syncOn
+    ? 'Alle Fahrer auf denselben Zeitpunkt gerechnet. Die Karte hinkt um den Rueckstand hinterher.'
+    : 'Aus. Jeder Marker zeigt seine letzte Meldung \u2013 unterschiedlich alt.';
+  if (row) row.classList.toggle('hidden', !syncOn);
+  if (val) val.textContent = syncLagS + ' s';
+  if (rng) rng.value = syncLagS;
+}
+
+function updateGroupUi() {
+  const sw  = document.getElementById('groupSwitch');
+  const sub = document.getElementById('groupSub');
+  if (!sw) return;
+  sw.classList.toggle('on', groupOn);
+  if (sub) sub.textContent = groupOn
+    ? 'Fahrer im Umkreis von 30 m werden zu einem Marker zusammengefasst.'
+    : 'Aus. Jeder Fahrer bekommt einen eigenen Marker.';
+}
+
+document.getElementById('syncSwitch').addEventListener('click', () => {
+  syncOn = !syncOn;
+  localStorage.setItem('syncPref', syncOn ? 'on' : 'off');
+  if (!syncOn) historyData = {};
+  updateSyncUi();
+  loadPositions();
+});
+
+document.getElementById('syncLagRange').addEventListener('input', e => {
+  const v = parseInt(e.target.value, 10);
+  if (!isFinite(v)) return;
+  syncLagS = v;
+  localStorage.setItem('syncLagS', String(v));
+  const val = document.getElementById('syncLagVal');
+  if (val) val.textContent = v + ' s';
+});
+
+document.getElementById('groupSwitch').addEventListener('click', () => {
+  groupOn = !groupOn;
+  localStorage.setItem('groupPref', groupOn ? 'on' : 'off');
+  updateGroupUi();
+  loadPositions();
+});
+
+updateSyncUi();
+updateGroupUi();
+
 document.getElementById('autoZoomBtn').addEventListener('click', () => {
   autoZoom = !autoZoom;
   const btn = document.getElementById('autoZoomBtn');
@@ -333,10 +386,157 @@ document.getElementById('autoZoomBtn').addEventListener('click', () => {
 // =======================
 // LOAD POSITIONS
 // =======================
+// =======================
+// ZEITABGLEICH UND GRUPPEN
+// =======================
+// Marker sind unterschiedlich alt: ist einer 2 s alt und der andere
+// 20 s, klaffen bei 45 km/h ueber 200 m Phantomabstand, obwohl die
+// beiden nebeneinander fahren. Der Zeitabgleich rechnet stattdessen
+// alle Fahrer auf denselben Zeitpunkt - "jetzt minus Rueckstand" -
+// und interpoliert dafuer zwischen den Punkten aus /history.
+//
+// Der Preis ist ein Kartenbild, das der Wirklichkeit um den
+// Rueckstand hinterherhinkt. Fuer die taktische Beurteilung zaehlen
+// die Abstaende zueinander, nicht die absolute Aktualitaet.
+let syncOn   = localStorage.getItem('syncPref')  === 'on';
+let groupOn  = localStorage.getItem('groupPref') === 'on';
+let syncLagS = (() => {
+  const v = parseInt(localStorage.getItem('syncLagS'), 10);
+  return (isFinite(v) && v >= 5 && v <= 60) ? v : 25;
+})();
+
+const GROUP_MAX_M = 30;
+let historyData = {};
+const groupMarkers = {};
+
+// Zwischen den beiden umgebenden Punkten linear interpolieren.
+// exakt=false heisst: der Zeitpunkt liegt ausserhalb des Verlaufs,
+// zurueck kommt dann der Rand. Das passiert bei einem Funkloch - und
+// muss sichtbar sein, damit ein stiller Tracker nicht wie ein
+// abgehaengter Fahrer aussieht.
+function interpoliere(pts, t) {
+  if (!Array.isArray(pts) || pts.length === 0) return null;
+  const erster = pts[0], letzter = pts[pts.length - 1];
+  if (t <= erster.t)  return { lat: erster.lat,  lon: erster.lon,  s: erster.s,  exakt: false };
+  if (t >= letzter.t) return { lat: letzter.lat, lon: letzter.lon, s: letzter.s, exakt: false };
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    if (t < a.t || t > b.t) continue;
+    const f = (b.t === a.t) ? 0 : (t - a.t) / (b.t - a.t);
+    const out = {
+      lat: a.lat + (b.lat - a.lat) * f,
+      lon: a.lon + (b.lon - a.lon) * f,
+      exakt: true
+    };
+    // s nur interpolieren, wenn kein Rundenschluss dazwischenliegt -
+    // sonst mittelt man zwischen Streckenende und Streckenanfang.
+    if (typeof a.s === 'number' && typeof b.s === 'number') {
+      out.s = (Math.abs(b.s - a.s) < 1000) ? a.s + (b.s - a.s) * f : a.s;
+    } else if (typeof a.s === 'number') {
+      out.s = a.s;
+    }
+    return out;
+  }
+  return null;
+}
+
+function anzeigePosition(id, pos, zielT, isBetreuer) {
+  // Betreuer stehen fest an der Verpflegungszone - nichts abzugleichen.
+  if (!syncOn || isBetreuer) return { lat: pos.lat, lon: pos.lon, unsicher: false };
+  const ip = interpoliere(historyData[id], zielT);
+  if (!ip) return { lat: pos.lat, lon: pos.lon, unsicher: true };
+  return { lat: ip.lat, lon: ip.lon, s: ip.s, unsicher: !ip.exakt };
+}
+
+// Entlang der Strecke messen, wenn beide ein s haben. Zwei Fahrer
+// beidseits einer Haarnadel sind luftlinienmaessig 50 m auseinander
+// und streckenmaessig 800 m - nur der zweite Wert taugt.
+function abstandM(a, b) {
+  if (typeof a.s === 'number' && typeof b.s === 'number') return Math.abs(a.s - b.s);
+  const dLat = (a.lat - b.lat) * 111320;
+  const dLon = (a.lon - b.lon) * 111320 * Math.cos(a.lat * Math.PI / 180);
+  return Math.hypot(dLat, dLon);
+}
+
+function bildeGruppen(liste) {
+  const rest = liste.slice();
+  const gruppen = [];
+  while (rest.length) {
+    const kern = rest.shift();
+    const g = [kern];
+    for (let i = rest.length - 1; i >= 0; i--) {
+      if (abstandM(kern, rest[i]) <= GROUP_MAX_M) g.push(rest.splice(i, 1)[0]);
+    }
+    gruppen.push(g);
+  }
+  return gruppen;
+}
+
+function gruppenIcon(n) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="lt-group-bubble">${n}</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
+  });
+}
+
+// Mitglieder einer Gruppe verschwinden von der Karte, dafuer kommt ein
+// Kreis mit der Anzahl. Die Marker werden nur aus- und wieder
+// eingehaengt, nicht zerstoert - Tooltip, Kontextmenue und Spur
+// bleiben dadurch erhalten.
+function zeichneGruppen(kandidaten) {
+  const gebraucht = new Set();
+
+  if (groupOn) {
+    bildeGruppen(kandidaten).forEach(g => {
+      if (g.length < 2) return;
+      const key = g.map(x => x.id).sort().join('|');
+      gebraucht.add(key);
+      const lat = g.reduce((a, x) => a + x.lat, 0) / g.length;
+      const lon = g.reduce((a, x) => a + x.lon, 0) / g.length;
+      const namen = g.map(x => x.name).join(' \u00B7 ');
+
+      g.forEach(x => { if (map.hasLayer(markers[x.id])) map.removeLayer(markers[x.id]); });
+
+      if (!groupMarkers[key]) {
+        groupMarkers[key] = L.marker([lat, lon], { icon: gruppenIcon(g.length), zIndexOffset: 500 })
+          .addTo(map)
+          .bindTooltip(`${g.length} Fahrer \u2013 ${namen}`, { permanent: true, direction: 'top' });
+      } else {
+        groupMarkers[key].setLatLng([lat, lon]);
+        groupMarkers[key].setTooltipContent(`${g.length} Fahrer \u2013 ${namen}`);
+      }
+    });
+  }
+
+  Object.keys(groupMarkers).forEach(k => {
+    if (gebraucht.has(k)) return;
+    map.removeLayer(groupMarkers[k]);
+    delete groupMarkers[k];
+  });
+
+  // Alles, was nicht (mehr) in einer Gruppe steckt, gehoert zurueck
+  // auf die Karte.
+  const versteckt = new Set();
+  gebraucht.forEach(k => k.split('|').forEach(id => versteckt.add(id)));
+  kandidaten.forEach(x => {
+    if (versteckt.has(x.id)) return;
+    if (markers[x.id] && !map.hasLayer(markers[x.id])) markers[x.id].addTo(map);
+  });
+}
+
 async function loadPositions() {
   try {
-    const res  = await fetch(`${SERVER}/positions`);
+    const anfragen = [fetch(`${SERVER}/positions`)];
+    if (syncOn) anfragen.push(fetch(`${SERVER}/history?sek=${Math.max(30, syncLagS + 20)}`));
+    const [res, hres] = await Promise.all(anfragen);
     const data = await res.json();
+    if (hres) {
+      try { historyData = await hres.json(); } catch (e) { historyData = {}; }
+    } else {
+      historyData = {};
+    }
     lastPosData = data;
     const ids  = Object.keys(data);
 
@@ -354,6 +554,7 @@ async function loadPositions() {
       delete markers[id];
       if (trails[id]) { map.removeLayer(trails[id]); delete trails[id]; }
       delete lastPositions[id];
+      delete historyData[id];
     });
 
     if (ids.length === 0) { updateStatus(); return; }
@@ -366,14 +567,17 @@ async function loadPositions() {
     if (newest > 0) lastDataTime = newest;
     updateStatus();
 
-    const now = Date.now();
+    const now   = Date.now();
+    const zielT = now - syncLagS * 1000;
+    const gruppenKandidaten = [];
 
     ids.forEach(id => {
       const pos         = data[id];
-      const latlng      = [pos.lat, pos.lon];
       const bat         = pos.bat;
       const displayName = pos.displayName || id;
       const isBetreuer  = pos.type === 'betreuer';
+      const anz         = anzeigePosition(id, pos, zielT, isBetreuer);
+      const latlng      = [anz.lat, anz.lon];
       const age         = pos.timestamp ? now - pos.timestamp : 0;
       const stale       = !isBetreuer && age > STALE_MS;
 
@@ -406,6 +610,9 @@ async function loadPositions() {
         }
 
         markers[id] = marker;
+        if (!isBetreuer && id !== 'TEAMAUTO') {
+          gruppenKandidaten.push({ id, name: displayName, lat: anz.lat, lon: anz.lon, s: anz.s });
+        }
         lastPositions[id] = latlng;
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
@@ -439,7 +646,13 @@ async function loadPositions() {
         lastPositions[id].stale       = stale;
         lastPositions[id].betreuer    = isBetreuer;
 
-        if (!isBetreuer) markers[id].setOpacity(stale ? 0.45 : 1);
+        if (!isBetreuer && id !== 'TEAMAUTO') {
+          gruppenKandidaten.push({ id, name: displayName, lat: anz.lat, lon: anz.lon, s: anz.s });
+        }
+        // Unsicher heisst: fuer diesen Zeitpunkt lag kein Punkt vor,
+        // gezeigt wird der Rand des Verlaufs. Muss sich von einem
+        // frischen Marker unterscheiden.
+        if (!isBetreuer) markers[id].setOpacity(stale ? 0.45 : (anz.unsicher ? 0.65 : 1));
         // Die frueher hier stehende Ausnahme fuer TEAMAUTO hat dessen
         // Tooltip nach dem Anlegen nie wieder angefasst: Alter und
         // Akkustand froren auf dem Stand der ersten Meldung ein, nur
@@ -449,6 +662,8 @@ async function loadPositions() {
         }
       }
     });
+
+    zeichneGruppen(gruppenKandidaten);
 
     if (autoZoom) {
       // Nur frische, echte Tracker bestimmen den Ausschnitt.

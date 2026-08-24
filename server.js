@@ -896,7 +896,17 @@ function segFraction(px, py, ax, ay, bx, by) {
 // Strecken, die sich selbst kreuzen, aufs falsche Segment.
 const SEARCH_WINDOW_M = 600;
 
-function projectToTrack(raceId, lat, lon, hintS) {
+// Wie weit darf ein Tracker neben der Strecke liegen, damit seine
+// s-Koordinate noch etwas aussagt? Wer im Training quer durch die
+// Stadt faehrt, bekommt sonst den immer gleichen naechstgelegenen
+// Streckenpunkt zurueck - und wuerde mit jedem anderen Fahrer weit
+// weg der Strecke in eine Gruppe geworfen.
+const TRACK_MAX_OFFSET_M = 200;
+
+// Liefert { s, distM } oder null. projectToTrack() bleibt als
+// schlanke Huelle daneben stehen, damit die bestehenden Aufrufer
+// unveraendert weiterlaufen.
+function projectToTrackDetail(raceId, lat, lon, hintS) {
   const g = trackGeometry(raceId);
   if (!g) return null;
   const m = metersPerDeg(lat);
@@ -931,8 +941,16 @@ function projectToTrack(raceId, lat, lon, hintS) {
   }
   // Nichts im Fenster gefunden -> ohne Fenster nochmal, der Tracker war
   // vermutlich laenger weg.
-  if (bestS === null && typeof hintS === 'number') return projectToTrack(raceId, lat, lon, undefined);
-  return bestS;
+  if (bestS === null && typeof hintS === 'number') return projectToTrackDetail(raceId, lat, lon, undefined);
+  if (bestS === null) return null;
+  // bestD ist ein Quadrat in Meter-Einheiten (die Koordinaten wurden
+  // oben ueber metersPerDeg skaliert), deshalb hier die Wurzel.
+  return { s: bestS, distM: Math.sqrt(bestD) };
+}
+
+function projectToTrack(raceId, lat, lon, hintS) {
+  const d = projectToTrackDetail(raceId, lat, lon, hintS);
+  return d === null ? null : d.s;
 }
 
 // id -> { s, ts }
@@ -1041,18 +1059,25 @@ function verfolgeStrecke(id, lat, lon) {
   if (!activeRaceId) return null;
   const alt  = trackerS[id];
   const hint = (alt && Date.now() - alt.ts <= HINT_MAX_AGE_MS) ? alt.s : undefined;
-  const s    = projectToTrack(activeRaceId, lat, lon, hint);
-  if (s === null) return null;
+  const proj = projectToTrackDetail(activeRaceId, lat, lon, hint);
+  if (proj === null) return null;
+  const s = proj.s;
+
+  // Weit neben der Strecke ist s bedeutungslos. Die Rundenlogik
+  // unten bleibt bewusst unveraendert - sie betrifft nur Tracker im
+  // Rennen, und dort waere eine neue Schwelle ein Risiko. Nur der
+  // Rueckgabewert, aus dem der Verlauf gespeist wird, faellt weg.
+  const brauchbar = proj.distM <= TRACK_MAX_OFFSET_M;
 
   if (istTrainingsId(id)) {
     // Suchhinweis trotzdem pflegen, sonst tastet projectToTrack jedes
     // Mal die ganze Strecke ab. Nur die Rundenlogik bleibt aussen vor.
     trackerS[id] = { s, ts: Date.now(), mitte: false };
-    return s;
+    return brauchbar ? s : null;
   }
 
   pruefeRundendurchgang(id, s);
-  return s;
+  return brauchbar ? s : null;
 }
 
 function addDistance(id, lat, lon, ts) {
