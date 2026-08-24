@@ -63,6 +63,21 @@ let currentMarkerMenu = null;
 let firstDevice  = true;
 let lastDataTime = null;
 let autoZoom     = true;
+
+// Zeitabgleich und Gruppen. Muss hier oben stehen, nicht erst bei den
+// Hilfsfunktionen weiter unten: die Bedienelemente werden schon beim
+// autoZoomBtn verdrahtet, und mit let deklarierte Variablen sind vor
+// ihrer Deklaration nicht zugreifbar - die Datei braeche dort ab.
+let syncOn   = localStorage.getItem('syncPref')  === 'on';
+let groupOn  = localStorage.getItem('groupPref') === 'on';
+let syncLagS = (() => {
+  const v = parseInt(localStorage.getItem('syncLagS'), 10);
+  return (isFinite(v) && v >= 5 && v <= 60) ? v : 25;
+})();
+
+const GROUP_MAX_M = 30;
+let historyData = {};
+const groupMarkers = {};
 // Ab wann eine Position als veraltet gilt. Im Renn-Modus meldet ein
 // Tracker alle 2 s (bewegt) bzw. 30 s (stehend), im Training alle
 // 10/60 s - 3 Minuten Stille heisst also wirklich "meldet nicht mehr".
@@ -398,17 +413,6 @@ document.getElementById('autoZoomBtn').addEventListener('click', () => {
 // Der Preis ist ein Kartenbild, das der Wirklichkeit um den
 // Rueckstand hinterherhinkt. Fuer die taktische Beurteilung zaehlen
 // die Abstaende zueinander, nicht die absolute Aktualitaet.
-let syncOn   = localStorage.getItem('syncPref')  === 'on';
-let groupOn  = localStorage.getItem('groupPref') === 'on';
-let syncLagS = (() => {
-  const v = parseInt(localStorage.getItem('syncLagS'), 10);
-  return (isFinite(v) && v >= 5 && v <= 60) ? v : 25;
-})();
-
-const GROUP_MAX_M = 30;
-let historyData = {};
-const groupMarkers = {};
-
 // Zwischen den beiden umgebenden Punkten linear interpolieren.
 // exakt=false heisst: der Zeitpunkt liegt ausserhalb des Verlaufs,
 // zurueck kommt dann der Rand. Das passiert bei einem Funkloch - und

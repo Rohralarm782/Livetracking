@@ -410,6 +410,10 @@
       text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
     }
     #syncLagRange { width: 100%; margin-top: 8px; }
+    /* In dieser Datei gibt es keine generische .hidden-Regel - jedes
+       .hidden ist an eine ID gebunden. Ohne diese Zeile bliebe der
+       Regler immer sichtbar, weil .adv-row auf display:flex steht. */
+    #syncLagRow.hidden { display: none; }
 
     #modeToggleRow {
       display: flex; align-items: center; justify-content: space-between;
