@@ -3,4 +3,13 @@
          verbundene Tracker wird angelernt und dauerhaft gespeichert.
          Ein Eintrag wie "t2" erzwingt einen bestimmten Tracker. -->
     <property id="trackerId" type="string"></property>
+
+    <!-- Upload der eigenen Position ans Livetracking (Training).
+         Leer = aus. Ein Eintrag wie "g-max" schaltet den Upload ein
+         und dient zugleich als Tracker-Kennung auf der Karte. -->
+    <property id="uploadId" type="string"></property>
+    <!-- Sendeabstand in Sekunden. Abgetastet wird unabhaengig davon
+         alle 5 s; dieser Wert bestimmt nur, wie oft der gesammelte
+         Stapel rausgeht. -->
+    <property id="uploadIntervalS" type="number">20</property>
 </properties>

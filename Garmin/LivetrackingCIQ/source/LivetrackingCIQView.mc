@@ -38,6 +38,11 @@
  *      Stufe 0 und bekam FONT_MEDIUM, obwohl Stufe 4 FONT_LARGE
  *      geboten haette. Ohne Ziffern beginnt die Suche jetzt bei
  *      LT_TEXT_LEVEL.
+ *  v10: compute() reicht Activity.Info zusaetzlich an den
+ *      Uploader weiter. Die Anzeigelogik bleibt unberuehrt -
+ *      der Uploader liest nur mit und schickt die eigene
+ *      Position ans Livetracking, wenn eine Upload-ID gesetzt
+ *      ist. Ist keine gesetzt, kehrt er sofort zurueck.
  * ============================================================
  */
 
@@ -55,6 +60,7 @@ const LT_TEXT_LEVEL = 4;
 class LivetrackingCIQView extends WatchUi.DataField {
 
     hidden var mBle as LivetrackingCIQBleDelegate? = null;
+    hidden var mUp as LivetrackingCIQUploader? = null;
 
     // Groessenstufen, parallel: Index i gehoert zusammen.
     // Ziffernsegmente nehmen mNumFonts[i], Text mTxtFonts[i].
@@ -92,9 +98,11 @@ class LivetrackingCIQView extends WatchUi.DataField {
     hidden var mCacheLevel = -1;
     hidden var mCacheDrop  = 0;
 
-    function initialize(bleDelegate as LivetrackingCIQBleDelegate?) {
+    function initialize(bleDelegate as LivetrackingCIQBleDelegate?,
+                        uploader as LivetrackingCIQUploader?) {
         DataField.initialize();
         mBle = bleDelegate;
+        mUp  = uploader;
     }
 
     // Die Daten kommen asynchron per BLE, nicht aus Activity.Info -
@@ -103,6 +111,9 @@ class LivetrackingCIQView extends WatchUi.DataField {
     function compute(info as Activity.Info) as Void {
         if (mBle != null) {
             mBle.tick();
+        }
+        if (mUp != null) {
+            mUp.onCompute(info);
         }
     }
 

@@ -5,4 +5,14 @@
              prompt="@Strings.SettingTrackerIdPrompt">
         <settingConfig type="alphaNumeric" maxLength="8" required="false" />
     </setting>
+    <setting propertyKey="@Properties.uploadId"
+             title="@Strings.SettingUploadIdLabel"
+             prompt="@Strings.SettingUploadIdPrompt">
+        <settingConfig type="alphaNumeric" maxLength="12" required="false" />
+    </setting>
+    <setting propertyKey="@Properties.uploadIntervalS"
+             title="@Strings.SettingUploadIntervalLabel"
+             prompt="@Strings.SettingUploadIntervalPrompt">
+        <settingConfig type="numeric" min="5" max="120" />
+    </setting>
 </settings>

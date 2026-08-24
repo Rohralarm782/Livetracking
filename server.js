@@ -1069,23 +1069,23 @@ function avgKmhFor(id) {
   return Math.round((st.dist / 1000) / h * 10) / 10;
 }
 
-app.post('/positions', (req, res) => {
-  if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const { id, lat, lon, bat, acc, spd, ts } = req.body;
-  if (!id || typeof lat !== 'number' || typeof lon !== 'number') {
-    return res.status(400).json({ error: 'id, lat, lon required' });
-  }
+// Kern des Ingests, bewusst aus dem Handler herausgeloest: der
+// Stapel-Weg (Garmin TeamCast) soll exakt dieselbe Pruefkette
+// durchlaufen wie der Einzelpunkt (Tracker-Firmware, Android-App).
+// Rueckgabe: 'ok' | 'bad' | 'stale' | 'out-of-order'
+function ingestPosition(src) {
+  const { id, lat, lon, bat, acc, spd, ts } = src || {};
+  if (!id || typeof lat !== 'number' || typeof lon !== 'number') return 'bad';
+
   const key       = String(id).slice(0, 40);
   const timestamp = resolveTimestamp(ts);
-  if (timestamp === null) return res.json({ ok: true, skipped: 'stale' });
+  if (timestamp === null) return 'stale';
 
   // Einen aelteren Punkt nicht ueber einen neueren schreiben. Ohne das
   // setzt ein nachgelieferter Puffer-Punkt den Marker zurueck.
   const prev = positions[key];
   if (prev && typeof prev.timestamp === 'number' && prev.timestamp > timestamp) {
-    return res.json({ ok: true, skipped: 'out-of-order' });
+    return 'out-of-order';
   }
 
   addDistance(key, lat, lon, timestamp);
@@ -1096,6 +1096,57 @@ app.post('/positions', (req, res) => {
   if (typeof spd === 'number' && spd >= 0)               entry.spd = Math.round(spd * 10) / 10;
   positions[key] = entry;
   delete pending[key];
+  return 'ok';
+}
+
+// Das Garmin-Datenfeld schickt Sekunden, nicht Millisekunden: Monkey C
+// rechnet mit 32-Bit-Ganzzahlen, eine Millisekunden-Epoche passt dort
+// nicht hinein. Erkennung ueber die Groessenordnung - 1e11 ms liegt im
+// Jahr 1973, 1e11 s laege im Jahr 5138. Verwechslung ausgeschlossen.
+const TS_SECONDS_THRESHOLD = 1e11;
+
+function normalizeTs(ts) {
+  if (typeof ts !== 'number' || !isFinite(ts)) return ts;
+  return ts < TS_SECONDS_THRESHOLD ? ts * 1000 : ts;
+}
+
+// Deckel gegen zu grosse Stapel. Das Datenfeld puffert hoechstens
+// 120 Punkte und schickt 30 je Request; 200 ist reichlich Luft.
+const BATCH_MAX_POINTS = 200;
+
+app.post('/positions', (req, res) => {
+  if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const body = req.body || {};
+
+  // Stapelform { id, points: [ { lat, lon, ts, spd }, ... ] } - vom
+  // Garmin-Datenfeld. Die ID steht nur einmal oben, das spart Nutzlast
+  // auf der BLE-Strecke zum Handy.
+  if (Array.isArray(body.points)) {
+    if (!body.id) return res.status(400).json({ error: 'id required' });
+    const pts = body.points
+      .filter(p => p && typeof p.lat === 'number' && typeof p.lon === 'number')
+      .slice(0, BATCH_MAX_POINTS)
+      .map(p => ({ ...p, id: body.id, ts: normalizeTs(p.ts) }))
+      // Aufsteigend sortieren: sonst verwirft der Schutz gegen
+      // vertauschte Reihenfolge die Haelfte der Punkte und
+      // addDistance() rechnet die Strecke rueckwaerts.
+      .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+
+    let n = 0;
+    for (const p of pts) { if (ingestPosition(p) === 'ok') n++; }
+    // Antwort bewusst winzig: jedes Byte muss das Datenfeld puffern.
+    return res.json({ ok: 1, n });
+  }
+
+  const result = ingestPosition(body);
+  if (result === 'bad') {
+    return res.status(400).json({ error: 'id, lat, lon required' });
+  }
+  if (result !== 'ok') {
+    return res.json({ ok: true, skipped: result });
+  }
   res.json({ ok: true });
 });
 

@@ -2,4 +2,8 @@
     <string id="AppName">TeamCast</string>
     <string id="SettingTrackerIdLabel">Tracker-ID</string>
     <string id="SettingTrackerIdPrompt">Leer lassen = Tracker automatisch binden. Eintrag wie t1, t2 erzwingt einen bestimmten Tracker.</string>
+    <string id="SettingUploadIdLabel">Eigene Position senden (ID)</string>
+    <string id="SettingUploadIdPrompt">Leer lassen = kein Upload. Eintrag wie g-max schaltet den Upload ein und erscheint so auf der Karte. Handy mit Garmin Connect muss dabei sein.</string>
+    <string id="SettingUploadIntervalLabel">Sendeabstand (Sekunden)</string>
+    <string id="SettingUploadIntervalPrompt">Wie oft die gesammelten Punkte rausgehen. 5 bis 120, Standard 20. Aufgezeichnet wird unabhaengig davon alle 5 Sekunden.</string>
 </strings>

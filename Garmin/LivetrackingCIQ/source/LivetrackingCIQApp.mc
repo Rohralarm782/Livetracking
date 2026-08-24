@@ -9,6 +9,10 @@ class LivetrackingCIQApp extends Application.AppBase {
     // Variable wuerde vom Garbage Collector eingesammelt.
     hidden var mBleDelegate = null;
 
+    // Schickt die eigene Position ans Livetracking (Training).
+    // Bleibt untaetig, solange keine Upload-ID gesetzt ist.
+    hidden var mUploader = null;
+
     function initialize() {
         AppBase.initialize();
     }
@@ -22,6 +26,8 @@ class LivetrackingCIQApp extends Application.AppBase {
             Ble.setDelegate(mBleDelegate);
             mBleDelegate.start();
         }
+        mUploader = new LivetrackingCIQUploader();
+        mUploader.start();
     }
 
     // onStop() is called when your application is exiting
@@ -29,6 +35,10 @@ class LivetrackingCIQApp extends Application.AppBase {
         if (mBleDelegate != null) {
             mBleDelegate.stop();
             mBleDelegate = null;
+        }
+        if (mUploader != null) {
+            mUploader.stop();
+            mUploader = null;
         }
     }
 
@@ -38,11 +48,14 @@ class LivetrackingCIQApp extends Application.AppBase {
         if (mBleDelegate != null) {
             mBleDelegate.reloadSettings();
         }
+        if (mUploader != null) {
+            mUploader.reloadSettings();
+        }
     }
 
     // Return the initial view of your application here
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [ new LivetrackingCIQView(mBleDelegate) ];
+        return [ new LivetrackingCIQView(mBleDelegate, mUploader) ];
     }
 
 }
