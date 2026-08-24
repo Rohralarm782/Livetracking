@@ -1,4 +1,4 @@
-// LT Tracker v1.2.0
+// LT Tracker v1.2.1
 // Stufe 3: Die App zeigt die Website und sendet nebenher die Position.
 // Zwei unabhaengige Wege zum Server - der native Sender mit Tracker-Key,
 // das WebView mit normaler Anmeldung. Faellt einer aus, laeuft der andere.
@@ -9,6 +9,7 @@ import {
   TextInput, PermissionsAndroid, BackHandler, ActivityIndicator,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -289,7 +290,9 @@ const hms = (sec) => {
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-export default function App() {
+// Der Inhalt liegt unterhalb des SafeAreaProvider, damit
+// useSafeAreaInsets() die echten Systemleisten-Masse liefert.
+function Tracker() {
   const [running, setRunning] = useState(false);
   const [status, setStatus] = useState('Bereit');
   const [stats, setStats] = useState(null);
@@ -302,6 +305,10 @@ export default function App() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const webRef = useRef(null);
+
+  // Android zeichnet seit SDK 56 zwingend randlos. Ohne diese Masse
+  // liegt der untere Rand des WebViews unter der Systemnavigation.
+  const insets = useSafeAreaInsets();
 
   // Zurueck-Taste blaettert in der Website statt die App zu schliessen.
   useEffect(() => {
@@ -469,11 +476,11 @@ export default function App() {
   const ok = stats && stats.count > 1 && stats.gaps.length === 0;
 
   return (
-    <View style={s.root}>
+    <View style={[s.root, { paddingBottom: insets.bottom }]}>
       <StatusBar barStyle="light-content" backgroundColor="#101317" />
 
       {/* Schmale Leiste: Zustand des Senders, immer sichtbar. */}
-      <View style={s.bar}>
+      <View style={[s.bar, { paddingTop: insets.top + 10 }]}>
         <View style={[s.dot, running ? s.dotOn : s.dotOff]} />
         <View style={s.barTextWrap}>
           <Text style={s.barTitle} numberOfLines={1}>
@@ -555,7 +562,7 @@ export default function App() {
       </View>
 
       {showCfg && (
-      <ScrollView style={s.panel} contentContainerStyle={s.pad}>
+      <ScrollView style={s.panel} contentContainerStyle={[s.pad, { paddingTop: insets.top + 12 }]}>
         <Text style={s.h1}>Sender</Text>
 
         <View style={[s.badge, running ? s.badgeOn : s.badgeOff]}>
@@ -739,6 +746,16 @@ export default function App() {
       </ScrollView>
       )}
     </View>
+  );
+}
+
+// Wurzel der App. Der Provider misst die Systemleisten einmal und
+// stellt die Werte allen darunterliegenden Komponenten bereit.
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Tracker />
+    </SafeAreaProvider>
   );
 }
 
