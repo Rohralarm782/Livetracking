@@ -300,7 +300,7 @@ function renderEventsBody() {
 // Fuenf Arten. Verpflegung und freie Punkte duerfen eine Ausdehnung
 // haben - eine Verpflegungszone ist im Reglement 100 bis 200 m lang.
 const MK_ARTEN = [
-  { typ: 'wertung',     icon: '\u{1F3C5}', label: 'Wertung',     zone: false },
+  { typ: 'wertung',     icon: '\u{1F3C5}', label: 'Sprint',      zone: false },
   { typ: 'berg',        icon: '\u26F0\uFE0F', label: 'Berg',     zone: false },
   { typ: 'verpflegung', icon: '\u{1F34C}', label: 'Verpflegung', zone: true  },
   { typ: 'start',       icon: '\u{1F6A9}', label: 'Start',       zone: false },
@@ -315,7 +315,7 @@ function markerBlockHtml(r) {
   let h = `<div class="zUnter">Punkte auf der Strecke</div>`;
 
   if (!liste.length && !(mkForm && mkForm.raceId === r.id)) {
-    h += `<div class="zHint" style="margin-top:0">Noch keine \u2013 Wertung, Bergwertung
+    h += `<div class="zHint" style="margin-top:0">Noch keine \u2013 Sprint, Bergwertung
           oder Verpflegungszone lassen sich hier eintragen.</div>`;
   }
 

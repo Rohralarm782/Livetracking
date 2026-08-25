@@ -133,13 +133,13 @@ function drawFinishMarker() {
 // =======================
 // STRECKENMARKER
 // =======================
-// Wertung, Bergwertung, Verpflegungszone und freie Punkte. Sie liegen
+// Sprint, Bergwertung, Verpflegungszone und freie Punkte. Sie liegen
 // als Meter am Rennen (raceMeta.marker) und kommen ueber /active mit.
 // Start/Ziel ist bewusst NICHT dabei - das ist startOffset und haengt
 // am Rundenzaehler.
 const MARKER_ART = {
   start:       { icon: '\u{1F6A9}', label: 'Start',        farbe: '#2e7d32', zone: false },
-  wertung:     { icon: '\u{1F3C5}', label: 'Wertung',      farbe: '#1565c0', zone: false },
+  wertung:     { icon: '\u{1F3C5}', label: 'Sprint',       farbe: '#1565c0', zone: false },
   berg:        { icon: '\u26F0\uFE0F', label: 'Bergwertung', farbe: '#6d4c41', zone: false },
   verpflegung: { icon: '\u{1F34C}', label: 'Verpflegung',  farbe: '#ef6c00', zone: true  },
   frei:        { icon: '\u{1F4CC}', label: 'Punkt',        farbe: '#6a1b9a', zone: true  }

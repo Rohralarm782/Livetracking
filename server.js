@@ -843,6 +843,10 @@ let raceMeta = Object.create(null);
 //   sEnde  nur bei Zonen (Verpflegung, Frei) - eine Verpflegungszone
 //          ist im Reglement 100-200 m lang, ein Punkt waere gelogen
 //   runden leer = gilt in jeder Runde, sonst z.B. [2, 4, 6]
+// Der Schluessel 'wertung' heisst in der Bedienung seit 1.14.1
+// "Sprint". Bewusst nur die Beschriftung geaendert: ein Umbenennen des
+// Schluessels wuerde jeden bereits eingetragenen Punkt ungueltig machen
+// und braeuchte eine Migration - fuer ein Wort auf einem Knopf.
 const MARKER_TYPEN    = ['start', 'wertung', 'berg', 'verpflegung', 'frei'];
 const MARKER_ZONE     = ['verpflegung', 'frei'];
 const MARKER_MAX      = 20;   // Deckel: /active wird alle 20 s gepollt
