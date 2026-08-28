@@ -169,7 +169,8 @@ function renderEventsBody() {
       }
       const start = fmtStart(r.startTime);
       html += `<div class="ev-race">
-        <div class="sl-dot" style="background:${statusColor(r)}"></div>
+        <div class="sl-dot" style="background:${r.color || statusColor(r)}"
+             title="${r.color ? 'Farbe dieses Rennens auf der Karte' : ''}"></div>
         <div style="flex:1;min-width:0">
           <div class="ev-rname">${escH(r.name)}</div>
           <div class="ev-meta">${r.riderCount} Fahrer${start ? ' \u00B7 ' + start : ''}${
@@ -214,6 +215,17 @@ function renderEventsBody() {
         <button class="btn" data-action="rc-del" data-id="${r.id}"
           style="flex:0;padding:4px 8px;font-size:12px;color:#f44336">\u2715</button>
       </div>`;
+
+      // Zugeordnete Tracker. Nur sichtbar, wenn es welche gibt - im
+      // Einzelrennen-Betrieb ordnet niemand zu, dann bleibt die Zeile
+      // weg. Zugeordnet wird auf der Karte per Rechtsklick bzw. langem
+      // Druck auf den Marker.
+      if (Array.isArray(r.tracker) && r.tracker.length) {
+        html += `<div class="ev-tracker">
+          <span class="tPunkt" style="background:${r.color || '#90a4ae'}"></span>
+          ${r.tracker.length} Tracker: ${escH(r.tracker.join(', '))}
+        </div>`;
+      }
 
       // Start/Ziel-Panel direkt unter der Rennzeile. Bewusst kein
       // Modal: der Zielstrich gehoert zur Vorbereitung des Rennens und
@@ -288,7 +300,11 @@ function renderEventsBody() {
     Ablauf: Veranstaltung anlegen, Rennen mit AK darin anlegen, Startliste
     importieren, Strecke \u{1F5FA} laden, dann das Rennen aktiv schalten.
     Startliste, Strecke und Taktik-Stand geh\u00F6ren zum Rennen \u2013 beim
-    Wechsel bleiben sie beim alten Rennen gespeichert.
+    Wechsel bleiben sie beim alten Rennen gespeichert.<br><br>
+    Tracker werden auf der Karte zugeordnet: langer Druck bzw. Rechtsklick
+    auf den Marker. Ein zugeordneter Tracker tr\u00E4gt die Farbe seines
+    Rennens und rechnet auf dessen Strecke. Beim Beenden eines Rennens
+    werden seine Tracker wieder frei.
   </div>`;
 
   evBody.innerHTML = html;

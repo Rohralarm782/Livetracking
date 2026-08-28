@@ -127,6 +127,9 @@ document.getElementById('mapStyleSeg').addEventListener('click', e => {
 // STATE
 // =======================
 const markers       = {};
+// Marker-ID -> zuletzt gesetzte Rennfarbe (null = keine Zuordnung).
+// Ohne diesen Merker muesste bei jedem Poll das Icon neu gebaut werden.
+const markerRace    = {};
 const lastPositions = {};
 const trails        = {};
 let currentMarkerMenu = null;
@@ -342,6 +345,47 @@ function tooltipContent(id, bat, age, avgKmh) {
 }
 
 // =======================
+// MARKER-SYMBOLE
+// =======================
+// Der Standard-Pin von Leaflet, unveraendert wie bis 1.15.1. Als
+// Funktion, damit ihn das Zuruecksetzen nach dem Aufheben einer
+// Zuordnung wiederverwenden kann.
+function standardPin() {
+  return L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+  });
+}
+
+// Pin in der Farbe des Rennens. Bewusst als Inline-SVG statt als
+// eingefaerbtes PNG: die Farbe kommt vom Server und ist damit nicht im
+// Voraus bekannt, ein CSS-Filter auf das blaue Standardbild trifft sie
+// nicht. Masse und Ankerpunkt sind identisch zum Standard-Pin, damit
+// die Spitze weiter genau auf der Position sitzt.
+function rennPin(farbe) {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">' +
+    '<path d="M12.5 0.8C6 0.8 0.8 6 0.8 12.5c0 8.8 11.7 27.4 11.7 27.4S24.2 21.3 24.2 12.5' +
+    'C24.2 6 19 0.8 12.5 0.8z" fill="' + farbe + '" stroke="#ffffff" stroke-width="1.6"/>' +
+    '<circle cx="12.5" cy="12.5" r="4.6" fill="#ffffff" fill-opacity="0.9"/></svg>';
+  return L.divIcon({
+    className: 'rennPin', html: svg,
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+  });
+}
+
+// Marker und Spur auf die Rennfarbe setzen. Faerbt beides, damit ein
+// Tracker im Rennen als Ganzes erkennbar ist und nicht nur sein Kopf.
+function setzeRennFarbe(id, farbe) {
+  const neu = farbe || null;
+  if (markerRace[id] === neu) return;
+  markerRace[id] = neu;
+  if (markers[id]) markers[id].setIcon(neu ? rennPin(neu) : standardPin());
+  if (trails[id])  trails[id].setStyle({ color: neu || '#3388ff' });
+}
+
+// =======================
 // CONTEXT MENU
 // =======================
 async function deleteTracker(markerId) {
@@ -352,6 +396,7 @@ async function deleteTracker(markerId) {
     if (!res.ok) { checkAuth(res); showToast('\u26A0\uFE0F Entfernen fehlgeschlagen'); return; }
     if (markers[markerId]) { map.removeLayer(markers[markerId]); delete markers[markerId]; }
     if (trails[markerId])  { map.removeLayer(trails[markerId]);  delete trails[markerId];  }
+    delete markerRace[markerId];
     delete lastPositions[markerId];
     delete spurDaten[markerId];
     showToast('\u{1F5D1} Marker entfernt');
@@ -409,12 +454,67 @@ function showMarkerMenu(e, markerId) {
     if (confirm(`Marker \u201E${markerId}\u201C von der Karte nehmen?`)) deleteTracker(markerId);
   });
 
+  // Rennzuordnung. Steht zwischen Umbenennen und Entfernen, weil sie
+  // zur Vorbereitung gehoert und nicht zum Aufraeumen.
+  const zuTitel = document.createElement('div');
+  zuTitel.className   = 'markerZuTitel';
+  zuTitel.textContent = '\u{1F3C1} Rennen';
+
+  const sel = document.createElement('select');
+  sel.className = 'markerZu';
+  sel.innerHTML = '<option value="">Keinem Rennen zugeordnet</option>';
+  const aktuell = (lastPosData[markerId] && lastPosData[markerId].raceId) || '';
+  fuelleRennAuswahl(sel, aktuell);
+  sel.addEventListener('change', async () => {
+    const wert = sel.value || null;
+    try {
+      const res = await fetch(`${SERVER}/tracker-race`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ trackerId: markerId, raceId: wert })
+      });
+      if (!res.ok) { checkAuth(res); showToast('\u26A0\uFE0F Zuordnung fehlgeschlagen'); return; }
+      const data = await res.json();
+      // Sofort faerben statt auf den naechsten Poll zu warten.
+      setzeRennFarbe(markerId, data.color || null);
+      if (lastPosData[markerId]) {
+        lastPosData[markerId].raceId    = data.raceId || undefined;
+        lastPosData[markerId].raceColor = data.color  || undefined;
+      }
+      showToast(wert ? '\u{1F517} Zugeordnet' : '\u{1F517} Zuordnung aufgehoben');
+      container.remove();
+    } catch (err) { showToast('\u26A0\uFE0F ' + err.message); }
+  });
+
   container.appendChild(input);
   container.appendChild(renameBtn);
+  container.appendChild(zuTitel);
+  container.appendChild(sel);
   container.appendChild(delBtn);
   document.body.appendChild(container);
   currentMarkerMenu = container;
   input.focus(); input.select();
+}
+
+// Rennliste in ein <select> fuellen. Die Rennen stehen in eventList aus
+// race/events.js - die wird aber erst beim Oeffnen der Rennverwaltung
+// geladen. Wer direkt auf der Karte zuordnet, hat sie noch nicht,
+// deshalb wird bei Bedarf nachgeladen und danach nachgetragen.
+function fuelleRennAuswahl(sel, aktuell) {
+  const eintragen = () => {
+    const rennen = (typeof allRaces === 'function') ? allRaces() : [];
+    for (const r of rennen) {
+      if (r.status === 'beendet' && r.id !== aktuell) continue;
+      const o = document.createElement('option');
+      o.value       = r.id;
+      o.textContent = r.name + (r.category ? ' \u00B7 ' + r.category : '')
+                    + (r.isActive ? ' (aktiv)' : '');
+      if (r.id === aktuell) o.selected = true;
+      sel.appendChild(o);
+    }
+  };
+  if (typeof allRaces === 'function' && allRaces().length > 0) { eintragen(); return; }
+  if (typeof loadEvents === 'function') loadEvents().then(eintragen).catch(() => {});
 }
 
 // =======================
@@ -713,6 +813,7 @@ async function loadPositions() {
       if (id === 'TEAMAUTO' && teamCarMarker !== null) return;
       map.removeLayer(markers[id]);
       delete markers[id];
+      delete markerRace[id];
       if (trails[id]) { map.removeLayer(trails[id]); delete trails[id]; }
       delete lastPositions[id];
       delete historyData[id];
@@ -757,7 +858,7 @@ async function loadPositions() {
       if (!trails[id]) {
         const color = id === 'TEAMAUTO' ? '#e53935'
                     : isBetreuer        ? '#ff9800'
-                    : '#3388ff';
+                    : (pos.raceColor || '#3388ff');
         trails[id] = L.polyline([], { color, weight: 3, opacity: 0.6 }).addTo(map);
         // Reihenfolge offen: /track kann vor dem ersten /positions
         // geantwortet haben. Dann liegen die Punkte schon bereit und
@@ -768,11 +869,8 @@ async function loadPositions() {
       if (!markers[id]) {
         const icon = id === 'TEAMAUTO' ? teamCarIcon
                    : isBetreuer        ? betreuerIcon
-                   : L.icon({
-                       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                       iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                     });
+                   : (pos.raceColor ? rennPin(pos.raceColor) : standardPin());
+        if (!isBetreuer && id !== 'TEAMAUTO') markerRace[id] = pos.raceColor || null;
 
         const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age, pos.avgKmh);
 
@@ -827,6 +925,10 @@ async function loadPositions() {
         if (!isBetreuer) {
           markers[id].setTooltipContent(tooltipContent(displayName, bat, age, pos.avgKmh));
         }
+        // Zuordnung kann sich waehrend des Rennens aendern - auch von
+        // einem anderen Geraet aus. Der Vergleich in setzeRennFarbe()
+        // sorgt dafuer, dass hier im Regelfall nichts passiert.
+        if (!isBetreuer && id !== 'TEAMAUTO') setzeRennFarbe(id, pos.raceColor || null);
       }
     });
 

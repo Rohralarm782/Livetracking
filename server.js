@@ -83,6 +83,13 @@ let currentMode = 'race'; // 'race' | 'training'
 // Hardware-ID → Anzeigename; bleibt bei /positions DELETE erhalten
 const trackerDisplayNames = Object.create(null);
 
+// Hardware-ID → Rennen. Wird ausschliesslich von Hand gesetzt
+// (POST /tracker-race). Kein Eintrag heisst nicht "gehoert nirgends
+// hin", sondern "gilt fuer das aktive Rennen" - siehe raceOfTracker().
+// Damit verhaelt sich ein Stand ohne jede Zuordnung genau wie bisher.
+// Die Zuordnungen eines Rennens fallen weg, sobald es beendet wird.
+const trackerRace = Object.create(null);
+
 // Tracker, die sich gemeldet haben, aber noch keinen GPS-Fix haben.
 // id -> { since, timestamp, sats }
 //   since     = erste Meldung DIESER Suchphase (fuer die Laufzeit-Anzeige)
@@ -505,7 +512,8 @@ function persistRuntime() {
   db.setSetting('runtime', {
     autoDisplay:         Object.keys(autoDisplay).filter(id => autoDisplay[id]),
     currentMode,
-    trackerDisplayNames
+    trackerDisplayNames,
+    trackerRace
   }).catch(dbFail('setSetting runtime'));
 }
 
@@ -567,7 +575,16 @@ async function loadStateFromDb() {
         if (typeof nm === 'string') trackerDisplayNames[id] = nm;
       }
     }
-    console.log(`\u267B\uFE0F Laufzeit-Zustand geladen: Modus ${currentMode}, ${Object.keys(autoDisplay).length} Auto-Tracker, ${Object.keys(trackerDisplayNames).length} Namen`);
+    // Die Rennen sind hier noch nicht geladen, deshalb wird nicht
+    // gegen races{} geprueft. Das erledigt raceOfTracker() bei jedem
+    // Zugriff - eine Zuordnung auf ein geloeschtes Rennen faellt dort
+    // still auf das aktive Rennen zurueck.
+    if (rt.trackerRace && typeof rt.trackerRace === 'object') {
+      for (const [id, rid] of Object.entries(rt.trackerRace)) {
+        if (typeof rid === 'string' && rid) trackerRace[id] = rid;
+      }
+    }
+    console.log(`\u267B\uFE0F Laufzeit-Zustand geladen: Modus ${currentMode}, ${Object.keys(autoDisplay).length} Auto-Tracker, ${Object.keys(trackerDisplayNames).length} Namen, ${Object.keys(trackerRace).length} Renn-Zuordnung(en)`);
   }
 
   const rows = await db.listRaces();
@@ -913,6 +930,72 @@ function persistRaceMeta() {
   db.setSetting('raceMeta', raceMeta).catch(dbFail('setSetting raceMeta'));
 }
 
+// =======================
+// TRACKER -> RENNEN
+// =======================
+// Welches Rennen gilt fuer diesen Tracker? Ohne ausdrueckliche
+// Zuordnung das aktive - damit ist ein Stand ohne jede Zuordnung
+// identisch zum Verhalten vor 1.16.0. Zeigt die Zuordnung auf ein
+// geloeschtes Rennen, greift dieselbe Rueckfallebene.
+function raceOfTracker(id) {
+  const rid = trackerRace[id];
+  return (rid && races[rid]) ? rid : activeRaceId;
+}
+
+// Anzeigenamen der Tracker eines Rennens - fuer die Rennverwaltung.
+function trackerOfRace(raceId) {
+  return Object.keys(trackerRace)
+    .filter(t => trackerRace[t] === raceId)
+    .map(t => trackerDisplayNames[t] || t)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+// Zuordnungen loesen. Wird aufgerufen, sobald ein Rennen auf 'beendet'
+// geht - danach faellt der Tracker auf das dann aktive Rennen zurueck
+// und kann neu vergeben werden.
+function loeseTrackerZuordnung(raceId) {
+  let n = 0;
+  for (const t of Object.keys(trackerRace)) {
+    if (trackerRace[t] === raceId) { delete trackerRace[t]; n++; }
+  }
+  if (n) persistRuntime();
+  return n;
+}
+
+// Feste Palette statt freier Farbwahl: auf einem sonnenbeschienenen
+// Display im Auto muss die Farbe auch bei flachem Blickwinkel noch
+// zu unterscheiden sein. Die Reihenfolge ist die des Mockups.
+const RENN_FARBEN = ['#e53935', '#1e88e5', '#43a047', '#8e24aa',
+                     '#fb8c00', '#00838f', '#5d4037', '#c2185b'];
+
+// Nur lesen, nie anlegen.
+function farbeOf(raceId) {
+  const m = raceMeta[raceId];
+  return (m && typeof m.farbe === 'string') ? m.farbe : null;
+}
+
+// Farbe festlegen, falls das Rennen noch keine hat. Bewusst NICHT ueber
+// raceMetaOf(): das legt einen Eintrag mit laps: null an und wuerde
+// eine aus der Rennliste stammende Rundenzahl stillschweigend
+// verlieren. Ein neuer Eintrag uebernimmt sie deshalb hier.
+function sichereFarbe(raceId) {
+  const vorhanden = raceMeta[raceId];
+  if (vorhanden && typeof vorhanden.farbe === 'string') return vorhanden.farbe;
+  const belegt = new Set(Object.values(raceMeta).map(m => m && m.farbe).filter(Boolean));
+  const farbe  = RENN_FARBEN.find(f => !belegt.has(f)) || RENN_FARBEN[0];
+  if (vorhanden) {
+    vorhanden.farbe = farbe;
+  } else {
+    const r = races[raceId];
+    raceMeta[raceId] = {
+      laps:       (r && typeof r.laps === 'number') ? r.laps : null,
+      currentLap: 1, startOffset: 0, lastLapTs: null, marker: [], farbe
+    };
+  }
+  persistRaceMeta();
+  return farbe;
+}
+
 // Sollrunden erreicht? Dann laeuft die Zielrunde.
 function istZielrunde(raceId) {
   const m = raceMeta[raceId];
@@ -1127,10 +1210,13 @@ function istTrainingsId(id) {
 // braucht sie spaeter, und sie hier gleich mitzunehmen kostet nichts -
 // projectToTrack laeuft ohnehin bei jedem Punkt.
 function verfolgeStrecke(id, lat, lon) {
-  if (!activeRaceId) return null;
+  // Seit 1.16.0 die Strecke des Rennens, dem dieser Tracker zugeordnet
+  // ist. Ohne Zuordnung ist das weiterhin das aktive Rennen.
+  const rid = raceOfTracker(id);
+  if (!rid) return null;
   const alt  = trackerS[id];
   const hint = (alt && Date.now() - alt.ts <= HINT_MAX_AGE_MS) ? alt.s : undefined;
-  const proj = projectToTrackDetail(activeRaceId, lat, lon, hint);
+  const proj = projectToTrackDetail(rid, lat, lon, hint);
   if (proj === null) return null;
   const s = proj.s;
 
@@ -1147,7 +1233,20 @@ function verfolgeStrecke(id, lat, lon) {
     return brauchbar ? s : null;
   }
 
-  pruefeRundendurchgang(id, s);
+  // Der Rundenzaehler bleibt an das aktive Rennen gebunden. Er
+  // vergleicht s gegen die Geometrie und den Start/Ziel-Versatz von
+  // activeRaceId - fuer einen Tracker, dessen s auf einer anderen
+  // Strecke gerechnet wurde, waere dieser Vergleich sinnlos und wuerde
+  // Durchgaenge erfinden. Solange nur ein Rennen aktiv sein kann, geht
+  // dadurch nichts verloren.
+  if (rid === activeRaceId) {
+    pruefeRundendurchgang(id, s);
+  } else {
+    // Wie im Trainings-Zweig: trackerS trotzdem fuehren. Daran haengt
+    // nicht nur die Rundenlogik, sondern auch der Suchhinweis fuer die
+    // naechste Projektion und das s, das /positions ausliefert.
+    trackerS[id] = { s, ts: Date.now(), mitte: false };
+  }
   return brauchbar ? s : null;
 }
 
@@ -1167,8 +1266,9 @@ function addDistance(id, lat, lon, ts) {
 
 // Bezugszeitpunkt fuer den Schnitt: die echte Startzeit, sonst die
 // geplante, sonst gar keiner (dann wird kein Schnitt ausgewiesen).
-function raceStartMs() {
-  const r = activeRaceId ? races[activeRaceId] : null;
+function raceStartMs(raceId) {
+  const rid = (raceId === undefined) ? activeRaceId : raceId;
+  const r = rid ? races[rid] : null;
   if (!r) return null;
   if (r.actualStart) return r.actualStart;
   if (r.startTime) {
@@ -1180,7 +1280,7 @@ function raceStartMs() {
 
 function avgKmhFor(id) {
   const st = trackerStats[id];
-  const start = raceStartMs();
+  const start = raceStartMs(raceOfTracker(id));
   if (!st || !start) return null;
   const h = (Date.now() - start) / 3600000;
   if (h < 1 / 120) return null;             // unter 30 s ist der Wert Unfug
@@ -1447,6 +1547,16 @@ app.get('/positions', (req, res) => {
       if (ts && typeof ts.s === 'number' && Date.now() - ts.ts < HINT_MAX_AGE_MS) {
         enriched[id].s = Math.round(ts.s);
       }
+      // Nur die ausdrueckliche Zuordnung, nicht die Rueckfallebene aus
+      // raceOfTracker(). Ein nicht zugeordneter Tracker soll auf der
+      // Karte genauso aussehen wie vor 1.16.0 - blau und ohne Rennbezug.
+      const zug = trackerRace[id];
+      if (zug && races[zug]) {
+        enriched[id].raceId   = zug;
+        enriched[id].raceName = races[zug].name;
+        const f = farbeOf(zug);
+        if (f) enriched[id].raceColor = f;
+      }
     }
   }
   res.json(enriched);
@@ -1619,6 +1729,30 @@ app.post('/rename-tracker', requireSpolei, (req, res) => {
   res.json({ ok: true });
 });
 
+// Tracker einem Rennen zuordnen oder die Zuordnung aufheben
+// (raceId: null). Die Farbe des Rennens wird beim ersten Zuordnen
+// vergeben und mit zurueckgegeben, damit die Karte sie sofort setzen
+// kann, ohne auf den naechsten Poll zu warten.
+app.post('/tracker-race', requireSpolei, (req, res) => {
+  const { trackerId, raceId } = req.body || {};
+  if (!trackerId) return res.status(400).json({ error: 'trackerId required' });
+  const key = String(trackerId).slice(0, 40);
+
+  if (raceId === null || raceId === undefined || raceId === '') {
+    delete trackerRace[key];
+    persistRuntime();
+    console.log(`\u{1F517} Tracker ${key} keinem Rennen mehr zugeordnet`);
+    return res.json({ ok: true, raceId: null, color: null });
+  }
+
+  if (!races[raceId]) return res.status(404).json({ error: 'Rennen nicht gefunden' });
+  trackerRace[key] = raceId;
+  const color = sichereFarbe(raceId);
+  persistRuntime();
+  console.log(`\u{1F517} Tracker ${key} \u2192 "${races[raceId].name}"`);
+  res.json({ ok: true, raceId, color });
+});
+
 // =======================
 // CLAUDE API PROXY
 // API-Key bleibt server-seitig, Browser-CORS-Problem umgangen
@@ -1778,6 +1912,11 @@ function raceView(r) {
     // GET /events saemtliche Streckenpunkte aller Rennen.
     hasGpx:     !!r.gpx,
     gpxName:    r.gpx ? r.gpx.name : null,
+    // Farbe nur lesen: eine Rennliste anzusehen soll keine Farbe
+    // vergeben. Die entsteht beim Aktivieren oder beim ersten
+    // zugeordneten Tracker.
+    color:      farbeOf(r.id),
+    tracker:    trackerOfRace(r.id),
     isActive:   r.id === activeRaceId
   };
 }
@@ -1796,9 +1935,12 @@ function activateRace(id) {
     races[activeRaceId].groups = groups;
     races[activeRaceId].status = 'beendet';
     persistRace(activeRaceId);
+    // Das alte Rennen ist beendet - seine Tracker werden frei.
+    loeseTrackerZuordnung(activeRaceId);
   }
   activeRaceId = id;
   races[id].status = 'aktiv';
+  sichereFarbe(id);
   // Streckenpositionen vergessen: sonst vergleicht der Rundenzaehler
   // den ersten Fix im neuen Rennen mit einem s aus dem alten und
   // meldet einen Rueckwaertssprung.
@@ -1838,6 +1980,7 @@ function activateRace(id) {
 function deactivateRace(id) {
   syncGroupsToRace();
   races[id].status = 'beendet';
+  loeseTrackerZuordnung(id);
   activeRaceId = null;
   groups = [];
   // Wie beim Rennenwechsel: alte Streckenpositionen vergessen, sonst
