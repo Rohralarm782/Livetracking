@@ -753,6 +753,27 @@ app.get('/version', (req, res) => {
 });
 
 // =======================
+// KARTEN-KONFIGURATION
+// =======================
+// CARTO verlangt seit August 2026 einen Schluessel fuer die
+// Raster-Basemaps; Anfragen ohne Schluessel bekommen ein Wasserzeichen
+// ueber jede Kachel gelegt. Der Schluessel steht bewusst NICHT im
+// Repository: er kommt aus der Render-Umgebung und laesst sich damit
+// austauschen, ohne dass ein Deploy noetig waere.
+//
+// Geheim ist er trotzdem nicht - jeder Browser schickt ihn bei jeder
+// Kachel mit. Der Gewinn liegt allein darin, dass er nicht oeffentlich
+// im Git steht.
+const CARTO_KEY = process.env.CARTO_KEY || '';
+
+// Ohne Anmeldung erreichbar, weil die Karte auch ohne Login sichtbar
+// ist - ein Token-Zwang wuerde genau diese Ansicht grau lassen.
+app.get('/mapconfig', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ cartoKey: CARTO_KEY });
+});
+
+// =======================
 // AUTH ENDPOINTS
 // =======================
 app.post('/login', (req, res) => {

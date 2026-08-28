@@ -11,16 +11,22 @@ const map = L.map('map').setView([52.52, 13.405], 13);
 // ob man den Verlauf in zwei Sekunden erfasst oder suchen muss.
 // OSM-Standard bleibt waehlbar: er beschriftet mehr und hilft in duenn
 // besiedelten Gegenden bei der Orientierung.
+// braucht_key: CARTO verlangt seit August 2026 einen Schluessel fuer
+// die Raster-Kacheln. Ohne ihn liegt ueber jeder Kachel ein
+// Wasserzeichen. Der Schluessel kommt aus der Server-Umgebung, siehe
+// ladeCartoKey().
 const TILE_STYLES = {
   voyager: {
     label: 'Voyager',
     url:   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    braucht_key: true,
     opts:  { maxZoom: 20, subdomains: 'abcd',
              attribution: '&copy; OpenStreetMap, &copy; CARTO' }
   },
   osm: {
     label: 'OSM',
     url:   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    braucht_key: false,
     opts:  { maxZoom: 19, subdomains: 'abc',
              attribution: '&copy; OpenStreetMap' }
   }
@@ -29,19 +35,83 @@ const TILE_STYLES = {
 let tileStyle = localStorage.getItem('tileStyle') === 'osm' ? 'osm' : 'voyager';
 let tileLayer = null;
 
+// Womit die aktuelle Ebene gebaut wurde. Damit ein nachgereichter
+// Schluessel die Kacheln nur dann neu anfordert, wenn sich wirklich
+// etwas geaendert hat - sonst blitzt die Karte bei jedem Start einmal
+// weiss auf.
+let tileLayerUrl = null;
+let tileLayerKey = null;
+
+// Laeuft hoch bei jedem Stilwechsel. Eine spaet eintreffende Antwort
+// darf den inzwischen gewaehlten Stil nicht ueberschreiben.
+let tileLadeLauf = 0;
+
+// null = noch nie geholt, '' = es gibt keinen. Der zuletzt erfolgreich
+// geholte Schluessel liegt im localStorage: Render Free schlaeft nach
+// 15 Minuten ein und braucht fuer die erste Antwort mehrere Sekunden -
+// ohne diesen Zwischenspeicher bliebe die Karte so lange grau.
+const CARTO_KEY_SPEICHER = 'cartoKey';
+let cartoKey = localStorage.getItem(CARTO_KEY_SPEICHER);
+let cartoKeyPromise = null;
+
+function ladeCartoKey() {
+  if (cartoKeyPromise) return cartoKeyPromise;
+  cartoKeyPromise = fetch(SERVER + '/mapconfig', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      const k = (d && typeof d.cartoKey === 'string') ? d.cartoKey : '';
+      cartoKey = k;
+      if (k) localStorage.setItem(CARTO_KEY_SPEICHER, k);
+      else   localStorage.removeItem(CARTO_KEY_SPEICHER);
+      if (!k) console.warn('\u26A0\uFE0F Kein Kartenschluessel - Voyager mit Wasserzeichen.');
+      return k;
+    })
+    .catch(() => {
+      // Kein Netz oder Server schlaeft. Ein bekannter Schluessel bleibt
+      // gueltig; sonst wird Voyager ohne Schluessel geladen. Bewusst
+      // KEIN stiller Wechsel auf OSM - der Stil bleibt der gewaehlte.
+      const k = cartoKey || '';
+      cartoKey = k;
+      console.warn('\u26A0\uFE0F Kartenschluessel nicht abrufbar.');
+      return k;
+    });
+  return cartoKeyPromise;
+}
+
+// Baut die Kachel-Ebene. lauf schuetzt vor veralteten Antworten, der
+// Vergleich von URL und Schluessel vor ueberfluessigem Neuaufbau.
+function setzeTileLayer(def, key, lauf) {
+  if (lauf !== tileLadeLauf) return;
+  if (tileLayer && tileLayerUrl === def.url && tileLayerKey === key) return;
+  if (tileLayer) map.removeLayer(tileLayer);
+  const url = def.url + (key ? '?key=' + encodeURIComponent(key) : '');
+  // Ganz nach unten: sonst liegen die frischen Kacheln ueber Strecke,
+  // Spuren und Markern.
+  tileLayer = L.tileLayer(url, def.opts).addTo(map);
+  tileLayer.bringToBack();
+  tileLayerUrl = def.url;
+  tileLayerKey = key;
+}
+
 function applyTileStyle(key) {
   const def = TILE_STYLES[key] || TILE_STYLES.voyager;
   tileStyle = TILE_STYLES[key] ? key : 'voyager';
-  if (tileLayer) map.removeLayer(tileLayer);
-  // Ganz nach unten: sonst liegen die frischen Kacheln ueber Strecke,
-  // Spuren und Markern.
-  tileLayer = L.tileLayer(def.url, def.opts).addTo(map);
-  tileLayer.bringToBack();
   const seg = document.getElementById('mapStyleSeg');
   if (seg) seg.querySelectorAll('button').forEach(b => {
     b.classList.toggle('on', b.dataset.style === tileStyle);
   });
   localStorage.setItem('tileStyle', tileStyle);
+
+  const lauf = ++tileLadeLauf;
+  // OSM braucht keinen Schluessel und laedt wie bisher sofort, ohne
+  // einen einzigen Netzaufruf abzuwarten.
+  if (!def.braucht_key) { setzeTileLayer(def, '', lauf); return; }
+  // Bekannter Schluessel: sofort zeichnen. Beim allerersten Aufruf auf
+  // einem Geraet ist er unbekannt, dann bleibt die Kartenflaeche kurz
+  // leer statt gewaesserte Kacheln zu holen, die der Browser-Cache
+  // anschliessend festhaelt.
+  if (cartoKey !== null) setzeTileLayer(def, cartoKey, lauf);
+  ladeCartoKey().then(k => setzeTileLayer(def, k, lauf));
 }
 
 applyTileStyle(tileStyle);
