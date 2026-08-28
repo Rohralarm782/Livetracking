@@ -89,6 +89,17 @@ const STALE_MS   = 3 * 60 * 1000;
 const OFFLINE_MS = 75 * 1000;
 // Punkte je Spur. Bei 2-s-Takt entspricht das etwa der letzten Stunde.
 const TRAIL_MAX_POINTS = 1800;
+// Spur je Tracker, wie der Server sie aufgezeichnet hat.
+// id -> [ [t, lat, lon], ... ], aufsteigend nach t.
+const spurDaten = {};
+// Zeitstempel des letzten /track-Abrufs, vom Server geliefert. Danach
+// wird nur noch der Zuwachs geholt.
+let spurCursor = 0;
+// Groesser als diese Luecke heisst: dazwischen lag keine Aufzeichnung.
+// Dann wird die Linie unterbrochen statt quer ueber die Karte gezogen -
+// genau das war der Fehler, den eine im Hintergrund eingefrorene Seite
+// erzeugt hat.
+const SPUR_GAP_MS = 60 * 1000;
 // Tracker, die online sind, aber noch keinen GPS-Fix haben.
 // [{ id, displayName, sats, since, timestamp }]
 let pendingTrackers = [];
@@ -272,6 +283,7 @@ async function deleteTracker(markerId) {
     if (markers[markerId]) { map.removeLayer(markers[markerId]); delete markers[markerId]; }
     if (trails[markerId])  { map.removeLayer(trails[markerId]);  delete trails[markerId];  }
     delete lastPositions[markerId];
+    delete spurDaten[markerId];
     showToast('\u{1F5D1} Marker entfernt');
   } catch (err) { showToast('\u26A0\uFE0F ' + err.message); }
 }
@@ -530,6 +542,81 @@ function zeichneGruppen(kandidaten) {
   });
 }
 
+// Zeichnet die Spur eines Trackers neu. Luecken laenger als
+// SPUR_GAP_MS trennen die Linie in mehrere Abschnitte - Leaflet nimmt
+// dafuer ein Array von Punktlisten, es braucht also keinen zweiten
+// Layer.
+function zeichneSpur(id) {
+  const pts = spurDaten[id];
+  if (!trails[id] || !pts || !pts.length) return;
+
+  const segmente = [];
+  let seg    = [];
+  let letztT = null;
+  for (const p of pts) {
+    if (letztT !== null && p[0] - letztT > SPUR_GAP_MS) {
+      if (seg.length > 1) segmente.push(seg);
+      seg = [];
+    }
+    seg.push([p[1], p[2]]);
+    letztT = p[0];
+  }
+  if (seg.length > 1) segmente.push(seg);
+  trails[id].setLatLngs(segmente);
+}
+
+// Die Spur kommt vom Server, nicht mehr aus den eigenen Polls. Damit
+// ist sie vollstaendig, auch wenn das Handy zwischendurch geschlafen
+// hat oder die Seite erst spaet geoeffnet wurde.
+async function ladeSpuren() {
+  try {
+    const url = spurCursor ? `${SERVER}/track?seit=${spurCursor}` : `${SERVER}/track`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const d = await res.json();
+
+    // Kleinere Nummer als beim letzten Mal heisst: der Server wurde neu
+    // gestartet und zaehlt wieder von vorn. Auf Render passiert das von
+    // allein. Ohne diesen Fall haette die Karte auf eine Nummer
+    // gewartet, die nie wieder kommt, und die Spur waere stehen
+    // geblieben.
+    if (typeof d.bis === 'number' && d.bis < spurCursor) {
+      Object.keys(spurDaten).forEach(id => delete spurDaten[id]);
+      spurCursor = 0;
+      const nres = await fetch(`${SERVER}/track`);
+      if (!nres.ok) return;
+      const nd = await nres.json();
+      if (typeof nd.bis === 'number') spurCursor = nd.bis;
+      uebernimmSpuren(nd.spuren || {});
+      return;
+    }
+    if (typeof d.bis === 'number') spurCursor = d.bis;
+
+    uebernimmSpuren(d.spuren || {});
+  } catch (err) { /* Netz weg - beim naechsten Lauf erneut */ }
+}
+
+function uebernimmSpuren(spuren) {
+  Object.keys(spuren).forEach(id => {
+    const neu = spuren[id];
+    if (!Array.isArray(neu) || !neu.length) return;
+    if (!spurDaten[id]) spurDaten[id] = [];
+
+    const vorher = spurDaten[id];
+    const letzt  = vorher.length ? vorher[vorher.length - 1][0] : null;
+    Array.prototype.push.apply(vorher, neu);
+    // Nachgelieferte Punkte aus einem Geraetepuffer koennen aelter sein
+    // als bereits vorhandene. Nur dann sortieren - im Normalfall haengt
+    // der Zuwachs ohnehin hinten an.
+    if (letzt !== null && neu[0][0] < letzt) vorher.sort((a, b) => a[0] - b[0]);
+
+    if (vorher.length > TRAIL_MAX_POINTS) {
+      spurDaten[id] = vorher.slice(vorher.length - TRAIL_MAX_POINTS);
+    }
+    zeichneSpur(id);
+  });
+}
+
 async function loadPositions() {
   try {
     const anfragen = [fetch(`${SERVER}/positions`)];
@@ -559,6 +646,7 @@ async function loadPositions() {
       if (trails[id]) { map.removeLayer(trails[id]); delete trails[id]; }
       delete lastPositions[id];
       delete historyData[id];
+      delete spurDaten[id];
     });
 
     if (ids.length === 0) { updateStatus(); return; }
@@ -601,6 +689,10 @@ async function loadPositions() {
                     : isBetreuer        ? '#ff9800'
                     : '#3388ff';
         trails[id] = L.polyline([], { color, weight: 3, opacity: 0.6 }).addTo(map);
+        // Reihenfolge offen: /track kann vor dem ersten /positions
+        // geantwortet haben. Dann liegen die Punkte schon bereit und
+        // muessen nur noch in die frische Linie.
+        zeichneSpur(id);
       }
 
       if (!markers[id]) {
@@ -640,19 +732,11 @@ async function loadPositions() {
           animateMarker(markers[id], lastPositions[id], latlng);
         }
 
-        const prev  = lastPositions[id];
-        const moved = Math.abs(prev[0] - latlng[0]) > 0.000005 || Math.abs(prev[1] - latlng[1]) > 0.000005;
-        if (moved && !isBetreuer) {
-          trails[id].addLatLng(latlng);
-          // Im Renn-Modus meldet ein fahrender Tracker alle 2 s. Ueber
-          // drei Stunden waeren das gut 5000 Punkte je Spur, die Leaflet
-          // bei jedem Verschieben neu zeichnet. TRAIL_MAX_POINTS deckt
-          // rund die letzte Stunde ab, das reicht zum Nachvollziehen.
-          const pts = trails[id].getLatLngs();
-          if (pts.length > TRAIL_MAX_POINTS) {
-            trails[id].setLatLngs(pts.slice(pts.length - TRAIL_MAX_POINTS));
-          }
-        }
+        // Hier wurde bis 1.14.1 die Spur aus den Poll-Punkten
+        // aufgebaut. Das ging nur so lange gut, wie die Seite im
+        // Vordergrund lief: schlief das Handy, fehlten alle Punkte
+        // dazwischen und Leaflet zog eine Gerade darueber. Die Spur
+        // kommt jetzt aus ladeSpuren().
         lastPositions[id] = latlng;
         lastPositions[id].bat         = bat;
         lastPositions[id].trackerMode = pos.trackerMode || null;
@@ -932,6 +1016,11 @@ async function clearMap() {
     Object.keys(markers).forEach(id => { map.removeLayer(markers[id]); delete markers[id]; });
     Object.keys(trails).forEach(id  => { map.removeLayer(trails[id]);  delete trails[id];  });
     Object.keys(lastPositions).forEach(id => delete lastPositions[id]);
+    // Der Server hat die aufgezeichneten Spuren mitgeloescht. Der
+    // Cursor muss zurueck auf null, sonst fragt die Karte nur noch nach
+    // Punkten "seit" einem Zeitpunkt, zu dem es nichts mehr gibt.
+    Object.keys(spurDaten).forEach(id => delete spurDaten[id]);
+    spurCursor = 0;
     lastDataTime = null; firstDevice = true; updateStatus();
   } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }

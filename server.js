@@ -1204,6 +1204,130 @@ function merkeVerlauf(key, t, lat, lon, s) {
   if (von > 0) arr.splice(0, von);
 }
 
+// =======================
+// SPUR (Streckenaufzeichnung)
+// =======================
+// Bis 1.14.1 entstand die Spur auf der Karte ausschliesslich im
+// Browser: jeder Poll haengte einen Punkt an die Polylinie. Ging das
+// Display aus oder wechselte der Browser in den Hintergrund, hielt
+// Android die Timer an - beim Aufwachen kam genau ein Punkt dazu, und
+// Leaflet zog eine Gerade vom Startpunkt zum aktuellen Standort. Die
+// Spur gehoert deshalb auf den Server, wo sie unabhaengig davon
+// entsteht, ob gerade jemand zuschaut.
+//
+// Der Speicher ist die Wahrheit fuer /track, die Datenbank sichert ihn
+// gegen Neustarts. Beides wird nach SPUR_MAX_AGE_MS verworfen.
+const SPUR_MAX_AGE_MS  = 24 * 60 * 60 * 1000;
+const SPUR_MAX_POINTS  = 20000;
+// Ein stehender Tracker soll die Spur nicht zumuellen: naeher als
+// SPUR_MIN_DIST_M am letzten Punkt wird nur aufgezeichnet, wenn seither
+// mindestens SPUR_MIN_GAP_MS vergangen sind. Damit bleibt sichtbar,
+// dass der Tracker gemeldet hat, ohne dass tausend Punkte aufeinander
+// liegen.
+const SPUR_MIN_DIST_M  = 8;
+const SPUR_MIN_GAP_MS  = 30 * 1000;
+const SPUR_FLUSH_MS    = 15 * 1000;
+const SPUR_QUEUE_MAX   = 400;
+const SPUR_PURGE_MS    = 30 * 60 * 1000;
+
+// id -> [ { t, lat, lon, q } ], aufsteigend nach t.
+// q ist eine fortlaufende Nummer ueber alle Tracker und dient der Karte
+// als Cursor. Ein Zeitstempel taugt dafuer nicht: das Garmin-Datenfeld
+// schickt seinen Puffer mit bis zu 20 Sekunden Verzug, ein solcher
+// Punkt traegt also eine Zeit VOR dem letzten Abruf und waere fuer die
+// Karte unsichtbar geblieben - genau die Loecher, die abgestellt werden
+// sollen.
+const spur = Object.create(null);
+let spurSeq = 0;
+// Noch nicht in die Datenbank geschriebene Punkte.
+let spurQueue      = [];
+let spurSchreibt   = false;
+
+function kuerzeSpur(key) {
+  const arr = spur[key];
+  if (!arr) return;
+  const grenze = Date.now() - SPUR_MAX_AGE_MS;
+  let von = 0;
+  while (von < arr.length && arr[von].t < grenze) von++;
+  if (arr.length - von > SPUR_MAX_POINTS) von = arr.length - SPUR_MAX_POINTS;
+  if (von > 0) arr.splice(0, von);
+  if (!arr.length) delete spur[key];
+}
+
+function spurPunkt(key, t, lat, lon) {
+  let arr = spur[key];
+  if (!arr) { arr = []; spur[key] = arr; }
+
+  const letzt = arr.length ? arr[arr.length - 1] : null;
+  if (letzt) {
+    if (t <= letzt.t) return;
+    if (t - letzt.t < SPUR_MIN_GAP_MS &&
+        haversineM(letzt.lat, letzt.lon, lat, lon) < SPUR_MIN_DIST_M) return;
+  }
+
+  arr.push({ t, lat, lon, q: ++spurSeq });
+  // Ohne Datenbank gibt es nichts zu schreiben. Die Punkte trotzdem in
+  // die Warteschlange zu legen hiesse, sie nie wieder loszuwerden -
+  // flushSpur() steigt ohne db.enabled sofort aus.
+  if (db.enabled) spurQueue.push({ id: key, t, lat, lon });
+  kuerzeSpur(key);
+  if (spurQueue.length >= SPUR_QUEUE_MAX) flushSpur();
+}
+
+// Bewusst ohne await am Aufrufort: ein haengender Datenbankschreiber
+// darf die Positionsannahme nicht bremsen. Faellt der Schreibversuch
+// aus, bleibt die Spur im Speicher vollstaendig - verloren waere sie
+// erst bei einem Neustart.
+async function flushSpur() {
+  if (spurSchreibt || !spurQueue.length || !db.enabled) return;
+  spurSchreibt = true;
+  const stapel = spurQueue;
+  spurQueue = [];
+  try {
+    await db.addTrackPoints(stapel);
+  } catch (e) {
+    console.error('\u274C Spur nicht gespeichert:', e.message);
+  } finally {
+    spurSchreibt = false;
+  }
+}
+
+// trackerId weggelassen heisst: alle Spuren.
+async function leereSpur(trackerId) {
+  if (trackerId) {
+    delete spur[trackerId];
+    spurQueue = spurQueue.filter(p => p.id !== trackerId);
+  } else {
+    for (const key of Object.keys(spur)) delete spur[key];
+    spurQueue = [];
+  }
+  try { await db.deleteTrackPoints(trackerId || null); }
+  catch (e) { console.error('\u274C Spur nicht geloescht:', e.message); }
+}
+
+async function ladeSpurAusDb() {
+  if (!db.enabled) return;
+  const ab = Date.now() - SPUR_MAX_AGE_MS;
+  const daten = await db.listTrackPoints(ab, SPUR_MAX_POINTS);
+  let n = 0;
+  for (const [id, pts] of Object.entries(daten)) {
+    pts.forEach(p => { p.q = ++spurSeq; });
+    spur[id] = pts;
+    n += pts.length;
+  }
+  if (n) console.log(`\u{1F4CD} Spur geladen: ${n} Punkte, ${Object.keys(daten).length} Tracker`);
+}
+
+function starteSpurTimer() {
+  setInterval(() => { flushSpur(); }, SPUR_FLUSH_MS).unref?.();
+  setInterval(() => {
+    for (const key of Object.keys(spur)) kuerzeSpur(key);
+    db.purgeTrackPoints(Date.now() - SPUR_MAX_AGE_MS)
+      .then(n => { if (n) console.log(`\u{1F9F9} Spur: ${n} alte Punkte verworfen`); })
+      .catch(e => console.error('\u274C Spur-Aufraeumen:', e.message));
+  }, SPUR_PURGE_MS).unref?.();
+}
+
 function ingestPosition(src) {
   const { id, lat, lon, bat, acc, spd, ts } = src || {};
   if (!id || typeof lat !== 'number' || typeof lon !== 'number') return 'bad';
@@ -1227,6 +1351,7 @@ function ingestPosition(src) {
   if (typeof spd === 'number' && spd >= 0)               entry.spd = Math.round(spd * 10) / 10;
   positions[key] = entry;
   merkeVerlauf(key, timestamp, lat, lon, s);
+  spurPunkt(key, timestamp, lat, lon);
   delete pending[key];
   return 'ok';
 }
@@ -1334,6 +1459,36 @@ app.get('/history', (req, res) => {
   res.json(out);
 });
 
+// Gefahrene Spur je Tracker, aus der Serveraufzeichnung. Getrennt von
+// /history: das ist ein Fuenf-Minuten-Puffer fuer den Zeitabgleich,
+// hier geht es um Stunden.
+//   ?seit=<n>   liefert nur Punkte mit einer hoeheren laufenden Nummer
+//               als n - die Karte holt einmal alles und danach nur den
+//               Zuwachs. n stammt aus dem Feld "bis" der letzten
+//               Antwort, nie aus der Uhr des Geraets.
+// Antwortform bewusst als Zahlentripel [t, lat, lon] statt als Objekte:
+// ueber Mobilfunk spart das bei ein paar tausend Punkten spuerbar.
+// Nach einem Serverneustart faengt die Nummerierung neu an. Dann ist
+// "bis" kleiner als der Cursor der Karte - daran erkennt sie, dass sie
+// die Spur komplett neu holen muss.
+app.get('/track', (req, res) => {
+  const seit = Number(req.query.seit);
+  const von  = (isFinite(seit) && seit > 0) ? seit : 0;
+
+  const out = Object.create(null);
+  const bis = spurSeq;
+  for (const [id, arr] of Object.entries(spur)) {
+    const pts = von ? arr.filter(p => p.q > von) : arr;
+    if (!pts.length) continue;
+    out[id] = pts.map(p => [
+      p.t,
+      Math.round(p.lat * 1e5) / 1e5,
+      Math.round(p.lon * 1e5) / 1e5
+    ]);
+  }
+  res.json({ bis, spuren: out });
+});
+
 // Tracker ohne Fix. Bewusst ein eigener Endpoint statt eines
 // zusaetzlichen Schluessels in /positions: das Frontend iteriert
 // dort mit Object.keys() ueber ALLE Eintraege, ein Sonderschluessel
@@ -1365,6 +1520,7 @@ app.delete('/positions', requireSpolei, (req, res) => {
   for (const key of Object.keys(pending))      delete pending[key];
   for (const key of Object.keys(trackerStats)) delete trackerStats[key];
   for (const key of Object.keys(history))      delete history[key];
+  leereSpur();
   console.log("🧹 Positionen gelöscht");
   res.json({ ok: true });
 });
@@ -1381,6 +1537,7 @@ app.delete('/positions/:id', requireSpolei, (req, res) => {
   delete pending[id];
   delete trackerStats[id];
   delete history[id];
+  leereSpur(id);
   if (!gab) return res.status(404).json({ error: 'Kein Eintrag zu dieser ID' });
   console.log(`\u{1F5D1} Marker entfernt: ${id}`);
   res.json({ ok: true, id });
@@ -2520,9 +2677,12 @@ const PORT = process.env.PORT || 3000;
   try {
     await db.init();
     await loadStateFromDb();
+    await ladeSpurAusDb();
   } catch (e) {
     console.error('❌ DB-Start fehlgeschlagen, laufe ohne Persistenz:', e.message);
   }
+  // Auch ohne Datenbank sinnvoll: der Timer kuerzt den Speicherpuffer.
+  starteSpurTimer();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`📦 Livetracking v${VERSION.version}`
       + (VERSION.date  ? ` – ${VERSION.date}`  : '')

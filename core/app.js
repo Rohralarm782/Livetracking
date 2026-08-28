@@ -5,6 +5,12 @@ loadPositions();
 setInterval(loadPositions, 1000);
 loadPending();
 setInterval(loadPending, 3000);
+// Die Spur ist Vergangenheit, sie muss nicht im Sekundentakt kommen.
+// Alle 15 s reicht - und der erste Lauf holt alles bereits
+// Aufgezeichnete, damit eine spaet geoeffnete Karte die komplette
+// bisherige Strecke zeigt.
+ladeSpuren();
+setInterval(ladeSpuren, 15000);
 // Holt beim ersten Lauf auch die Strecke. Ein zusaetzliches
 // fetchGpxTrack() hier waere ein doppelter Request.
 loadVersion();

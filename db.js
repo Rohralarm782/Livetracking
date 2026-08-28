@@ -11,6 +11,10 @@
 //               (riders_json) und den aktuellen Taktik-Stand (groups_json).
 //   gap_history Ereignis-basiert: jede Gruppen-Aenderung eine Zeile.
 //   settings    Key/Value fuer Globales (aktives Rennen, GPX).
+//   track_points Gefahrene Spur je Tracker. Bewusst ohne Bezug auf
+//               races: die Spur haengt am Geraet, nicht am Rennen, und
+//               ueberlebt einen Rennenwechsel. Wird nach 24 Stunden
+//               automatisch verworfen.
 
 const { Pool } = require('pg');
 
@@ -83,6 +87,21 @@ async function init() {
     key   TEXT PRIMARY KEY,
     value JSONB
   )`);
+
+  // Spur je Tracker. Keine Fremdschluessel: ein Tracker kann melden,
+  // bevor ein Rennen angelegt ist, und ein geloeschtes Rennen darf die
+  // laufende Aufzeichnung nicht mitreissen. t als BIGINT statt
+  // TIMESTAMPTZ - der Server rechnet durchgaengig in Millisekunden,
+  // und eine Umrechnung an der Schreibstelle waere eine Fehlerquelle
+  // ohne Gegenwert.
+  await q(`CREATE TABLE IF NOT EXISTS track_points (
+    id         BIGSERIAL PRIMARY KEY,
+    tracker_id TEXT   NOT NULL,
+    t          BIGINT NOT NULL,
+    lat        DOUBLE PRECISION NOT NULL,
+    lon        DOUBLE PRECISION NOT NULL
+  )`);
+  await q(`CREATE INDEX IF NOT EXISTS track_points_id_t ON track_points (tracker_id, t)`);
 
   console.log('💾 Datenbank verbunden, Schema geprüft');
   return true;
@@ -242,11 +261,68 @@ async function listGapHistory(raceId, minutes) {
   return r.rows;
 }
 
+// =======================
+// SPUR (track_points)
+// =======================
+// Geschrieben wird gebuendelt, nicht je Punkt: bei zwoelf Trackern im
+// 5-Sekunden-Takt waeren das 2,4 Inserts pro Sekunde ueber die ganze
+// Renndauer - fuer Neon Free zu viel. Der Server sammelt und ruft das
+// hier alle paar Sekunden mit einem Stapel auf.
+async function addTrackPoints(punkte) {
+  if (!enabled || !Array.isArray(punkte) || !punkte.length) return;
+  const werte = [];
+  const teile = [];
+  punkte.forEach((p, i) => {
+    const b = i * 4;
+    teile.push(`($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4})`);
+    werte.push(p.id, p.t, p.lat, p.lon);
+  });
+  await q(`INSERT INTO track_points (tracker_id, t, lat, lon) VALUES ${teile.join(', ')}`, werte);
+}
+
+// Beim Serverstart: die Spur der letzten Stunden zurueck in den
+// Speicher. Ohne das haette ein Neustart auf Render - und die kommen
+// auf dem Free-Tier von allein - die Spur des laufenden Rennens
+// verschluckt, obwohl sie in der Datenbank steht.
+async function listTrackPoints(abMs, maxProTracker) {
+  if (!enabled) return {};
+  const r = await q(
+    `SELECT tracker_id, t, lat, lon FROM track_points
+      WHERE t >= $1 ORDER BY tracker_id ASC, t ASC`, [abMs]);
+  const out = Object.create(null);
+  for (const row of r.rows) {
+    const id = row.tracker_id;
+    if (!out[id]) out[id] = [];
+    out[id].push({ t: Number(row.t), lat: Number(row.lat), lon: Number(row.lon) });
+  }
+  if (Number.isFinite(maxProTracker) && maxProTracker > 0) {
+    for (const id of Object.keys(out)) {
+      if (out[id].length > maxProTracker) out[id] = out[id].slice(-maxProTracker);
+    }
+  }
+  return out;
+}
+
+// trackerId weggelassen heisst: alles. Wird von "alle Positionen
+// loeschen" gerufen, mit ID vom Entfernen eines einzelnen Markers.
+async function deleteTrackPoints(trackerId) {
+  if (!enabled) return;
+  if (trackerId) await q('DELETE FROM track_points WHERE tracker_id = $1', [String(trackerId)]);
+  else           await q('DELETE FROM track_points');
+}
+
+async function purgeTrackPoints(aelterAlsMs) {
+  if (!enabled) return 0;
+  const r = await q('DELETE FROM track_points WHERE t < $1', [aelterAlsMs]);
+  return r.rowCount || 0;
+}
+
 module.exports = {
   enabled, init,
   getSetting, setSetting,
   listEvents, upsertEvent, getEvent, deleteEvent,
   listRaces, upsertRace, updateRaceRiders, setRaceStatus, clearActiveStatus,
   updateRaceGroups, updateRaceGpx, deleteRace,
-  addGapSnapshot, listGapHistory, listGapHistoryAll
+  addGapSnapshot, listGapHistory, listGapHistoryAll,
+  addTrackPoints, listTrackPoints, deleteTrackPoints, purgeTrackPoints
 };
