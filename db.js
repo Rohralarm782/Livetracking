@@ -34,20 +34,98 @@ if (enabled) {
   pool.on('error', e => console.error('❌ PG Pool:', e.message));
 }
 
+// Schreibschutz. Setzt der Server, wenn die Datenbank zwar erreichbar
+// ist, der Zustand beim Start aber nicht geladen werden konnte. Ohne
+// diesen Schutz haette der leere Speicherstand beim ersten Klick die
+// noch vorhandenen Daten ueberschrieben: persistRaceMeta() und
+// persistRuntime() schreiben jeweils die komplette Map, nicht einen
+// einzelnen Eintrag.
+//
+// Der Schutz sitzt bewusst hier im gemeinsamen Query-Pfad und nicht an
+// den rund zwanzig Aufrufstellen im Server: so kann keine kuenftige
+// Schreibstelle ihn versehentlich umgehen.
+let degraded  = false;
+let blockiert = 0;
+const SCHREIBEND = /^\s*(INSERT|UPDATE|DELETE)\b/i;
+
+function setDegraded(an) {
+  const vorher = degraded;
+  degraded = !!an;
+  if (degraded && !vorher) {
+    console.warn('\u{1F512} Datenbank im Schreibschutz – Lesen laeuft weiter, Schreiben wird verworfen');
+  }
+}
+
 async function q(text, params) {
   if (!enabled) return { rows: [] };
+  // Lesen bleibt erlaubt: eine Abfrage kann nichts kaputt machen, und
+  // der Abstandsverlauf soll auch im Schreibschutz noch antworten.
+  // Schema-Statements (CREATE/ALTER) ebenfalls - sonst koennte sich der
+  // Server aus einem kaputten Schema nie selbst befreien.
+  if (degraded && SCHREIBEND.test(text)) {
+    if (blockiert === 0) console.warn('\u{1F512} Schreibzugriff verworfen (Schreibschutz aktiv)');
+    blockiert++;
+    return { rows: [], rowCount: 0 };
+  }
   return pool.query(text, params);
+}
+
+function status() {
+  return {
+    enabled,
+    degraded,
+    blockierteSchreibzugriffe: blockiert,
+    schemaFehler: schemaFehler.slice()
+  };
 }
 
 // =======================
 // SCHEMA
 // =======================
+// Einzelnes Schema-Statement. Fehler werden geloggt statt geworfen.
+// Bis 1.16.0 lief init() in einem Rutsch: ein einziger fehlgeschlagener
+// Index - der auf track_points.t gegen eine Tabelle im Altformat - riss
+// den gesamten Startvorgang mit. loadStateFromDb() lief dann nie, und
+// der Server stand mit leerem Zustand da, obwohl Rennen und
+// Veranstaltungen unveraendert in der Datenbank lagen.
+const schemaFehler = [];
+
+async function ddl(sql, bezeichnung) {
+  try {
+    await q(sql);
+    return true;
+  } catch (e) {
+    schemaFehler.push(bezeichnung);
+    console.error(`\u274C Schema "${bezeichnung}": ${e.message}`);
+    return false;
+  }
+}
+
+// Einmalige Migration. Vor 1.15.0 gab es track_points in einem anderen
+// Layout ohne Spalte t. CREATE TABLE IF NOT EXISTS uebergeht eine
+// vorhandene Tabelle stillschweigend, der Index darauf scheitert dann
+// an der fehlenden Spalte - genau der Fehler vom 29.08.2026.
+// Umbenannt statt geloescht: das ist umkehrbar, und Spurpunkte aelter
+// als 24 Stunden werden ohnehin verworfen.
+async function migrateTrackPoints() {
+  const r = await q(`SELECT column_name FROM information_schema.columns
+                      WHERE table_schema = current_schema()
+                        AND table_name   = 'track_points'`);
+  if (!r.rows.length) return false;            // gibt es nicht - CREATE legt sie gleich an
+  const spalten = r.rows.map(x => x.column_name);
+  if (spalten.includes('t')) return false;     // aktuelles Layout, nichts zu tun
+  const ziel = 'track_points_alt_' + Date.now();
+  await q(`ALTER TABLE track_points RENAME TO ${ziel}`);
+  console.log(`\u{1F527} track_points im Altformat (${spalten.join(', ')}) \u2192 umbenannt in ${ziel}`);
+  return true;
+}
+
 async function init() {
   if (!enabled) {
     console.log('💾 Keine DATABASE_URL gesetzt – Persistenz deaktiviert (RAM/Disk wie bisher)');
     return false;
   }
-  await q(`CREATE TABLE IF NOT EXISTS events (
+  await ddl(`CREATE TABLE IF NOT EXISTS events (
     id         TEXT PRIMARY KEY,
     name       TEXT NOT NULL,
     ort        TEXT,
@@ -55,11 +133,11 @@ async function init() {
     date_to    DATE,
     notes      TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-  )`);
+  )`, 'events');
 
   // Spaltennamen bewusst mit _json: "groups" ist in Postgres ein
   // Keyword (Window-Frames) und muesste sonst ueberall gequotet werden.
-  await q(`CREATE TABLE IF NOT EXISTS races (
+  await ddl(`CREATE TABLE IF NOT EXISTS races (
     id          TEXT PRIMARY KEY,
     event_id    TEXT REFERENCES events(id) ON DELETE CASCADE,
     name        TEXT NOT NULL,
@@ -73,20 +151,21 @@ async function init() {
     gpx_json    JSONB,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-  )`);
+  )`, 'races');
 
-  await q(`CREATE TABLE IF NOT EXISTS gap_history (
+  await ddl(`CREATE TABLE IF NOT EXISTS gap_history (
     id       BIGSERIAL PRIMARY KEY,
     race_id  TEXT REFERENCES races(id) ON DELETE CASCADE,
     ts       TIMESTAMPTZ NOT NULL DEFAULT now(),
     snapshot JSONB NOT NULL
-  )`);
-  await q(`CREATE INDEX IF NOT EXISTS gap_history_race_ts ON gap_history (race_id, ts)`);
+  )`, 'gap_history');
+  await ddl(`CREATE INDEX IF NOT EXISTS gap_history_race_ts ON gap_history (race_id, ts)`,
+            'gap_history_race_ts');
 
-  await q(`CREATE TABLE IF NOT EXISTS settings (
+  await ddl(`CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
     value JSONB
-  )`);
+  )`, 'settings');
 
   // Spur je Tracker. Keine Fremdschluessel: ein Tracker kann melden,
   // bevor ein Rennen angelegt ist, und ein geloeschtes Rennen darf die
@@ -94,16 +173,32 @@ async function init() {
   // TIMESTAMPTZ - der Server rechnet durchgaengig in Millisekunden,
   // und eine Umrechnung an der Schreibstelle waere eine Fehlerquelle
   // ohne Gegenwert.
-  await q(`CREATE TABLE IF NOT EXISTS track_points (
+  // Erst eine Tabelle im Altformat aus dem Weg raeumen, dann anlegen.
+  // Scheitert die Migration, laeuft der Start trotzdem weiter - die
+  // Spur ist dann kaputt, die Rennen sind es nicht.
+  try {
+    await migrateTrackPoints();
+  } catch (e) {
+    schemaFehler.push('migrate track_points');
+    console.error(`\u274C Migration track_points: ${e.message}`);
+  }
+
+  await ddl(`CREATE TABLE IF NOT EXISTS track_points (
     id         BIGSERIAL PRIMARY KEY,
     tracker_id TEXT   NOT NULL,
     t          BIGINT NOT NULL,
     lat        DOUBLE PRECISION NOT NULL,
     lon        DOUBLE PRECISION NOT NULL
-  )`);
-  await q(`CREATE INDEX IF NOT EXISTS track_points_id_t ON track_points (tracker_id, t)`);
+  )`, 'track_points');
+  await ddl(`CREATE INDEX IF NOT EXISTS track_points_id_t ON track_points (tracker_id, t)`,
+            'track_points_id_t');
 
-  console.log('💾 Datenbank verbunden, Schema geprüft');
+  if (schemaFehler.length) {
+    console.warn(`\u26A0\uFE0F Schema mit ${schemaFehler.length} Fehler(n) geprüft: `
+      + `${schemaFehler.join(', ')} – Start läuft weiter`);
+  } else {
+    console.log('💾 Datenbank verbunden, Schema geprüft');
+  }
   return true;
 }
 
@@ -318,7 +413,7 @@ async function purgeTrackPoints(aelterAlsMs) {
 }
 
 module.exports = {
-  enabled, init,
+  enabled, init, setDegraded, status,
   getSetting, setSetting,
   listEvents, upsertEvent, getEvent, deleteEvent,
   listRaces, upsertRace, updateRaceRiders, setRaceStatus, clearActiveStatus,

@@ -757,8 +757,27 @@ function noteLoginFail(ip) {
 // =======================
 // HEALTH CHECK
 // =======================
+// Bewusst weiterhin Text, damit alte Aufrufer (Uptime-Pings) unveraendert
+// funktionieren. Der Zustand haengt hinten dran: ein Fehlstart wie am
+// 29.08.2026 war vorher nur im Render-Log zu sehen - und dort erst,
+// wenn man wusste, wonach man sucht.
 app.get('/health', (req, res) => {
-  res.send(`\u{1F680} Tracking Server l\u00E4uft \u2013 v${VERSION.version}`);
+  const s = db.status ? db.status() : { enabled: db.enabled, degraded: false };
+  const teile = [
+    `\u{1F680} Tracking Server l\u00E4uft \u2013 v${VERSION.version}`,
+    `DB: ${s.enabled ? (s.degraded ? 'SCHREIBSCHUTZ' : 'ok') : 'aus'}`,
+    `Veranstaltungen: ${Object.keys(events).length}`,
+    `Rennen: ${Object.keys(races).length}`,
+    `aktiv: ${activeRaceId || 'keins'}`
+  ];
+  if (s.schemaFehler && s.schemaFehler.length) {
+    teile.push(`Schemafehler: ${s.schemaFehler.join(', ')}`);
+  }
+  if (s.blockierteSchreibzugriffe) {
+    teile.push(`verworfene Schreibzugriffe: ${s.blockierteSchreibzugriffe}`);
+  }
+  res.set('Cache-Control', 'no-store');
+  res.send(teile.join(' \u2013 '));
 });
 
 // Winzig und ohne Anmeldung: der Service Worker fragt sie beim
@@ -2837,13 +2856,41 @@ const PORT = process.env.PORT || 3000;
 // Erst den Zustand aus der Datenbank holen, dann Requests annehmen.
 // Bewusst in try/catch: ist Neon nicht erreichbar, startet der Server
 // trotzdem - mit leerem Stand, aber er startet.
+// Drei getrennte Stufen statt einem gemeinsamen try/catch. Bis 1.16.0
+// lagen Schema, Zustand und Spur in einem Block: der Fehler einer Stufe
+// verschluckte alle folgenden. Am 29.08.2026 scheiterte ein Index auf
+// der Spur-Tabelle - und der Server startete ohne ein einziges Rennen,
+// obwohl alle in der Datenbank standen.
+//
+// Scheitert Stufe 2, ist der Speicherstand leer, die Datenbank aber
+// voll. Dann darf nichts mehr geschrieben werden, sonst ueberbuegelt
+// der erste Klick die vorhandenen Daten.
 (async () => {
+  let schemaOk = false;
   try {
     await db.init();
-    await loadStateFromDb();
-    await ladeSpurAusDb();
+    schemaOk = true;
   } catch (e) {
-    console.error('❌ DB-Start fehlgeschlagen, laufe ohne Persistenz:', e.message);
+    console.error('❌ Schema-Prüfung fehlgeschlagen:', e.message);
+  }
+
+  if (schemaOk) {
+    try {
+      await loadStateFromDb();
+    } catch (e) {
+      console.error('❌ Zustand laden fehlgeschlagen:', e.message);
+      db.setDegraded(true);
+    }
+    try {
+      await ladeSpurAusDb();
+    } catch (e) {
+      // Die Spur ist Beiwerk: fehlt sie, laeuft das Rennen trotzdem.
+      console.error('❌ Spur laden fehlgeschlagen:', e.message);
+    }
+  } else if (db.enabled) {
+    // Datenbank konfiguriert, aber nicht benutzbar: der Zustand wurde
+    // nie geladen, also darf auch nichts zurueckgeschrieben werden.
+    db.setDegraded(true);
   }
   // Auch ohne Datenbank sinnvoll: der Timer kuerzt den Speicherpuffer.
   starteSpurTimer();
