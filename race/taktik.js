@@ -6,7 +6,8 @@ let lastPosData    = {};   // letzte Antwort von GET /positions
 let displayTexts   = {};   // aktueller Text je Tracker
 let displayAuto    = {};   // Tracker im Automatik-Modus
 let displayPreview = '';   // Text, den die Automatik gerade erzeugen wuerde
-let displayCfg     = { foreignNrs: 2, foreignNrsMaxSize: 6 };
+let displayCfg     = { foreignNrs: 2, foreignNrsMaxSize: 6,
+                       autoTextLeer: '' };
 let displayMaxLen  = 60;   // Zeichenbudget, kommt vom Server
 let taktikGroups   = [];
 let taktikOpen     = false;
@@ -79,9 +80,16 @@ async function saveDisplaySettings() {
     const el = document.querySelector(`.ds-inp[data-key="${key}"]`);
     return el ? parseInt(el.value) : displayCfg[key];
   };
+  // Der Vorgabetext ist keine Zahl - parseInt() daraus waere NaN und
+  // der Server bekaeme sein eigenes Feld nie zu sehen.
+  const readText = key => {
+    const el = document.querySelector(`.ds-inp[data-key="${key}"]`);
+    return el ? el.value : displayCfg[key];
+  };
   const body = {
     foreignNrs:        read('foreignNrs'),
-    foreignNrsMaxSize: read('foreignNrsMaxSize')
+    foreignNrsMaxSize: read('foreignNrsMaxSize'),
+    autoTextLeer:      readText('autoTextLeer')
   };
   try {
     const res = await fetch(`${SERVER}/display-settings`, {

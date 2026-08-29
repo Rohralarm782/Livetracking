@@ -146,7 +146,12 @@ const DISPLAY_MAX = 60;
 //   foreignNrsMaxSize ab dieser Gruppengroesse gar keine Fremdnummern
 //                     mehr - drei von zwanzig Nummern sind keine
 //                     Information. Favoriten sind davon ausgenommen.
-let displaySettings = { foreignNrs: 2, foreignNrsMaxSize: 6 };
+//   autoTextLeer      Was ein Automatik-Tracker sieht, solange sein
+//                     Rennen noch keine Gruppen hat. Leer schaltet ab.
+let displaySettings = {
+  foreignNrs: 2, foreignNrsMaxSize: 6,
+  autoTextLeer: 'Vorwaerts immer, rueckwaerts nimmer'
+};
 
 function sanitizeSettings(s) {
   const clamp = (v, def, max) => {
@@ -155,7 +160,13 @@ function sanitizeSettings(s) {
   };
   return {
     foreignNrs:        clamp(s && s.foreignNrs,        displaySettings.foreignNrs,        5),
-    foreignNrsMaxSize: clamp(s && s.foreignNrsMaxSize, displaySettings.foreignNrsMaxSize, 99)
+    foreignNrsMaxSize: clamp(s && s.foreignNrsMaxSize, displaySettings.foreignNrsMaxSize, 99),
+    // Text statt Zahl, deshalb kein clamp(): durch denselben
+    // ASCII-Filter wie jeder andere Anzeigetext. Ein leeres Feld
+    // schaltet den Spruch ab - dann bleibt das Display leer wie bisher.
+    autoTextLeer: (s && s.autoTextLeer !== undefined)
+      ? sanitizeDisplay(s.autoTextLeer)
+      : displaySettings.autoTextLeer
   };
 }
 
@@ -208,18 +219,21 @@ function sanitizeGroups(list) {
 // Index der Hauptfeld-Gruppe. Vorrang hat die ausdrueckliche Markierung
 // (main: true), sonst gilt wie bisher die letzte Gruppe. Damit bleibt
 // der Text auch fuer alte Rennen ohne Marker richtig.
-function mainGroupIndex() {
-  const i = groups.findIndex(g => g && g.main === true);
-  return i >= 0 ? i : groups.length - 1;
+// Ohne Argument weiterhin die Liste des aktiven Rennens.
+function mainGroupIndex(gruppen) {
+  const gs = Array.isArray(gruppen) ? gruppen : groups;
+  const i = gs.findIndex(g => g && g.main === true);
+  return i >= 0 ? i : gs.length - 1;
 }
 
 // Startnummern der Favoriten des aktiven Rennens.
 // Quelle ist die Startliste - ein Fahrer ohne Startlisten-Eintrag
 // kann kein Favorit sein.
-function favNrs() {
+function favNrs(raceId) {
+  const rid = (raceId === undefined) ? activeRaceId : raceId;
   const s = new Set();
-  if (!activeRaceId || !races[activeRaceId]) return s;
-  for (const r of races[activeRaceId].riders) {
+  if (!rid || !races[rid]) return s;
+  for (const r of races[rid].riders) {
     if (r && r.fav && r.nr !== undefined && r.nr !== null) s.add(Number(r.nr));
   }
   return s;
@@ -235,13 +249,34 @@ function isOutState(s) { return s === 'dsq' || s === 'dnf'; }
 // aber nicht mehr in die Gruppengroesse und stehen nicht mehr auf dem
 // Garmin. Eine Spitzengruppe als "4x" zu melden, in der einer
 // disqualifiziert ist, waere schlicht falsch.
-function outNrs() {
+function outNrs(raceId) {
+  const rid = (raceId === undefined) ? activeRaceId : raceId;
   const s = new Set();
-  if (!activeRaceId || !races[activeRaceId]) return s;
-  for (const r of races[activeRaceId].riders) {
+  if (!rid || !races[rid]) return s;
+  for (const r of races[rid].riders) {
     if (r && isOutState(r.status) && r.nr !== undefined && r.nr !== null) s.add(Number(r.nr));
   }
   return s;
+}
+
+// Gruppen eines beliebigen Rennens. Fuer das aktive Rennen bewusst die
+// Spiegelvariable und nicht races[...].groups: POST /groups setzt erst
+// groups und spiegelt danach: waehrend eines Durchlaufs koennten die
+// beiden sonst auseinanderliegen.
+function groupsOf(raceId) {
+  if (!raceId) return [];
+  if (raceId === activeRaceId) return groups;
+  const r = races[raceId];
+  return (r && Array.isArray(r.groups)) ? r.groups : [];
+}
+
+// Was steht auf dem Garmin, solange es keine Gruppen gibt? Ein leeres
+// Display liest sich wie ein Fehler, der letzte Stand waere gelogen -
+// deshalb ein fester Text, sobald ein Rennbezug besteht. Ohne Rennen
+// (Leerlauf, Trainingsfahrt) bleibt es leer wie bisher.
+function leerText(raceId) {
+  if (!raceId || !races[raceId]) return '';
+  return sanitizeDisplay(displaySettings.autoTextLeer || '');
 }
 
 // Baut den Anzeigetext aus dem aktuellen Gruppenstand.
@@ -264,19 +299,22 @@ function outNrs() {
 // Reicht das Zeichenbudget nicht, wird gestuft gekuerzt statt hinten
 // abgeschnitten. Reihenfolge: Fremdnummern von hinten nach vorn,
 // dann Favoriten von hinten nach vorn. Die Kopfzeilen bleiben.
-function buildAutoText() {
-  if (!Array.isArray(groups) || groups.length === 0) return '';
+// raceId waehlt das Rennen; ohne Argument das aktive.
+function buildAutoText(raceId) {
+  const rid     = (raceId === undefined) ? activeRaceId : raceId;
+  const gruppen = groupsOf(rid);
+  if (!Array.isArray(gruppen) || gruppen.length === 0) return leerText(rid);
 
-  const mainIdx = mainGroupIndex();
-  const favs    = favNrs();
-  const gone    = outNrs();
+  const mainIdx = mainGroupIndex(gruppen);
+  const favs    = favNrs(rid);
+  const gone    = outNrs(rid);
   const maxFor  = displaySettings.foreignNrs;
   const maxSize = displaySettings.foreignNrsMaxSize;
 
   // Segmente bis einschliesslich Hauptfeld
   const segs = [];
-  for (let i = 0; i <= mainIdx && i < groups.length; i++) {
-    const g = groups[i];
+  for (let i = 0; i <= mainIdx && i < gruppen.length; i++) {
+    const g = gruppen[i];
     if (!g || typeof g !== 'object') continue;
     const riders = (Array.isArray(g.riders) ? g.riders : [])
       .map(r => (r && r.nr !== undefined) ? Number(r.nr) : Number(r))
@@ -286,7 +324,7 @@ function buildAutoText() {
     if (i === mainIdx) {
       head = 'HF';
     } else {
-      const next = groups[i + 1];
+      const next = gruppen[i + 1];
       const gap  = next && next.gap ? String(next.gap).trim() : '';
       head = String(riders.length) + 'x' + (gap.length > 0 ? ' ' + gap : '');
     }
@@ -345,9 +383,15 @@ function buildAutoText() {
 // Taktik-Klick Funkverkehr auf allen Trackern.
 function pushAutoDisplays() {
   if (!mqttClient || !mqttClient.connected) return;
-  const text = buildAutoText();
+  // Je Rennen einmal bauen, nicht je Tracker: buildAutoText() laeuft
+  // ueber die komplette Gruppenliste und wird bei jedem Taktik-Klick
+  // gerufen. Der Schluessel '' steht fuer "kein Rennbezug".
+  const texte = Object.create(null);
   for (const id of Object.keys(autoDisplay)) {
     if (!autoDisplay[id]) continue;
+    const rid = raceOfTracker(id) || '';
+    if (texte[rid] === undefined) texte[rid] = buildAutoText(rid || null);
+    const text = texte[rid];
     if (displayTexts[id] === text) continue;
     mqttClient.publish(`livetracking-fq4l/display/${id}`, text, { retain: true, qos: 0 });
     if (text.length > 0) displayTexts[id] = text;
@@ -2711,16 +2755,24 @@ app.post('/display', requireSpolei, (req, res) => {
 // =======================
 // GRUPPEN ENDPOINTS
 // =======================
+// ?race=<id> liest den Taktik-Stand eines anderen Rennens. Ohne den
+// Parameter unveraendert das aktive Rennen - alle bestehenden Aufrufer
+// bleiben damit gueltig. Nur lesend: geschrieben wird weiterhin
+// ausschliesslich im aktiven Rennen.
 app.get('/groups', (req, res) => {
+  const wunsch = req.query && req.query.race ? String(req.query.race) : null;
+  if (wunsch && !races[wunsch]) return res.status(404).json({ error: 'Rennen nicht gefunden' });
+  const rid = wunsch || activeRaceId;
+
   const riderMap = Object.create(null);
-  if (activeRaceId && races[activeRaceId]) {
-    for (const r of races[activeRaceId].riders) {
+  if (rid && races[rid]) {
+    for (const r of races[rid].riders) {
       riderMap[Number(r.nr)] = { name: r.name, team: r.team, fav: !!r.fav, status: r.status || null };
     }
   }
   // Zweiter Riegel: auch ein vor diesem Update gespeicherter kaputter
   // Stand aus der Datenbank darf den Endpoint nicht mehr abschiessen.
-  const enriched = groups.filter(g => g && typeof g === 'object').map(g => ({
+  const enriched = groupsOf(rid).filter(g => g && typeof g === 'object').map(g => ({
     ...g,
     riders: (Array.isArray(g.riders) ? g.riders : []).map(nr => ({ nr, ...(riderMap[Number(nr)] || {}) }))
   }));

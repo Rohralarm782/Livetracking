@@ -72,12 +72,21 @@ function renderDisplayPanel() {
     <span style="font-size:11px;color:#888;flex:1;min-width:130px">Keine Fremdnummern ab Gruppengr\u00F6\u00DFe</span>
     <input type="number" class="ds-inp" data-key="foreignNrsMaxSize" min="0" max="99" value="${displayCfg.foreignNrsMaxSize}"
       style="width:56px;padding:5px 6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center">
+  </div>
+  <div style="padding:9px 14px 4px">
+    <div style="font-size:11px;color:#888;margin-bottom:5px">Text ohne Gruppen</div>
+    <input type="text" class="ds-inp" data-key="autoTextLeer" maxlength="${displayMaxLen}"
+      value="${escH(displayCfg.autoTextLeer || '')}" placeholder="leer lassen f\u00FCr keine Anzeige"
+      style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:monospace">
   </div>`;
 
   h += `<div style="padding:8px 14px;font-size:11px;color:#aaa;line-height:1.5;border-top:1px solid #f0f0f0">
     Max. ${displayMaxLen} Zeichen. <b>;</b> neue Zeile, <b>~</b> neue Zeile die bei wenig Platz entf\u00E4llt.
     Leeres Feld senden l\u00F6scht die Anzeige. Favoriten \u2605 bleiben stehen,
     wenn der Platz knapp wird, und ignorieren die Gruppengr\u00F6\u00DFe.<br>
+    <b>Text ohne Gruppen</b> steht auf den Automatik-Ger\u00E4ten, solange im
+    Rennen noch keine Gruppe eingetragen ist. Nur ASCII \u2013 Umlaute
+    kommen auf dem Garmin nicht an.<br>
     Automatik sendet: <span style="font-family:monospace;color:#777">${escH(displayPreview || '\u2013')}</span>
     <span style="color:${tight ? '#e65100' : '#bbb'}">(${used}/${displayMaxLen})</span>
   </div></div>`;
