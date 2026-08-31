@@ -320,7 +320,11 @@ const MK_ARTEN = [
   { typ: 'berg',        icon: '\u26F0\uFE0F', label: 'Berg',     zone: false },
   { typ: 'verpflegung', icon: '\u{1F34C}', label: 'Verpflegung', zone: true  },
   { typ: 'start',       icon: '\u{1F6A9}', label: 'Start',       zone: false },
-  { typ: 'frei',        icon: '\u{1F4CC}', label: 'Frei',        zone: true  }
+  { typ: 'frei',        icon: '\u{1F4CC}', label: 'Frei',        zone: true  },
+  // Ans Ende, nicht dazwischen: mkArt() faellt unten auf MK_ARTEN[4]
+  // zurueck. Ein Einschub weiter oben wuerde jeden unbekannten Typ als
+  // Zwischenzeit anzeigen.
+  { typ: 'zwischenzeit', icon: '\u23F1\uFE0F', label: 'ZZ',       zone: false }
 ];
 
 function mkArt(typ) { return MK_ARTEN.find(a => a.typ === typ) || MK_ARTEN[4]; }

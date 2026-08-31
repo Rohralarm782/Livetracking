@@ -142,7 +142,8 @@ const MARKER_ART = {
   wertung:     { icon: '\u{1F3C5}', label: 'Sprint',       farbe: '#1565c0', zone: false },
   berg:        { icon: '\u26F0\uFE0F', label: 'Bergwertung', farbe: '#6d4c41', zone: false },
   verpflegung: { icon: '\u{1F34C}', label: 'Verpflegung',  farbe: '#ef6c00', zone: true  },
-  frei:        { icon: '\u{1F4CC}', label: 'Punkt',        farbe: '#6a1b9a', zone: true  }
+  frei:        { icon: '\u{1F4CC}', label: 'Punkt',        farbe: '#6a1b9a', zone: true  },
+  zwischenzeit:{ icon: '\u23F1\uFE0F', label: 'ZZ',         farbe: '#00838f', zone: false }
 };
 
 function markerArt(typ) { return MARKER_ART[typ] || MARKER_ART.frei; }

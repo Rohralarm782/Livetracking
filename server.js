@@ -948,7 +948,12 @@ let raceMeta = Object.create(null);
 // "Sprint". Bewusst nur die Beschriftung geaendert: ein Umbenennen des
 // Schluessels wuerde jeden bereits eingetragenen Punkt ungueltig machen
 // und braeuchte eine Migration - fuer ein Wort auf einem Knopf.
-const MARKER_TYPEN    = ['start', 'wertung', 'berg', 'verpflegung', 'frei'];
+// 'zwischenzeit' (Bedienung: "ZZ") kam mit 1.18.0 dazu und markiert
+// beim Zeitfahren den Standort des Zeitnehmers. Bewusst NUR eine
+// Markierung: gemessen wird hier nichts, dafuer muesste jeder Fahrer
+// einen Tracker haben. Deshalb steht der Typ am ENDE der Liste - der
+// Rueckfall in events-ui.js zeigt auf einen festen Index.
+const MARKER_TYPEN    = ['start', 'wertung', 'berg', 'verpflegung', 'frei', 'zwischenzeit'];
 const MARKER_ZONE     = ['verpflegung', 'frei'];
 const MARKER_MAX      = 20;   // Deckel: /active wird alle 20 s gepollt
 const MARKER_NAME_MAX = 30;
