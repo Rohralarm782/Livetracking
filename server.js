@@ -109,12 +109,18 @@ const PENDING_TIMEOUT_MS = 90000;
 const POSITION_MAX_AGE_MS  = 12 * 60 * 60 * 1000;
 const STALE_ON_ACTIVATE_MS = 15 * 60 * 1000;
 
-function sweepPositions(maxAgeMs, reason) {
+// schoneAktive: Positionen von Trackern, die einem noch laufenden
+// Rennen zugeordnet sind, bleiben stehen. Ohne das wuerde das
+// Aktivieren eines zweiten Rennens die Marker des ersten abraeumen -
+// betroffen waere jeder Tracker, der gerade laenger als eine
+// Viertelstunde keinen Fix geliefert hat.
+function sweepPositions(maxAgeMs, reason, schoneAktive) {
   const now = Date.now();
   let n = 0;
   for (const [id, p] of Object.entries(positions)) {
     if (!p || typeof p.timestamp !== 'number') continue;
     if (now - p.timestamp <= maxAgeMs) continue;
+    if (schoneAktive && istAktiv(trackerRace[id])) continue;
     delete positions[id];
     n++;
   }
@@ -415,7 +421,77 @@ const FALLBACK_EVENT = 'archiv';
 
 let events       = Object.create(null);   // id -> Veranstaltung
 let races        = Object.create(null);   // id -> Rennen
-let activeRaceId = null;
+
+// Bis 1.18.0 galt: genau ein Rennen ist aktiv. Bei einer Veranstaltung
+// mit U15w um 09:08 und U15m um 10:24 hiess das, dass das Aktivieren
+// des zweiten Rennens das erste beendet - mitten im Rennen.
+//
+// Ab 1.19.0 haelt activeRaceIds alle laufenden Rennen (hoechstens
+// MAX_AKTIVE_RENNEN). activeRaceId bleibt daneben bestehen und zeigt
+// auf das LEITRENNEN: das zuerst aktivierte, das noch laeuft. Daran
+// haengen weiterhin der gespiegelte Taktik-Stand (groups) und alle
+// Endpunkte ohne race-Parameter.
+//
+// Diese Ableitung ist Absicht. activeRaceId wird an ueber fuenfzig
+// Stellen gelesen; sie alle in einem Zug umzubauen waere genau die Art
+// Grossumbau, die still Funktionen verliert. Umgestellt werden hier
+// nur die Stellen, an denen "ist dieses Rennen aktiv" gemeint ist.
+let activeRaceId  = null;
+const activeRaceIds     = new Set();
+const MAX_AKTIVE_RENNEN = 4;
+
+function istAktiv(id) { return !!id && activeRaceIds.has(id); }
+
+// Einzige Stelle, an der activeRaceId geschrieben wird. Ein Set haelt
+// die Einfuegereihenfolge, das erste Element ist damit das am
+// laengsten laufende Rennen.
+function aktivNeuBerechnen() {
+  const erstes = activeRaceIds.values().next();
+  activeRaceId = erstes.done ? null : erstes.value;
+}
+
+// false, wenn der Deckel erreicht ist. Vier Rennen sind die Grenze der
+// Farbpalette und der Lesbarkeit auf einem Handydisplay, nicht die des
+// Servers.
+function aktivHinzufuegen(id) {
+  if (activeRaceIds.has(id)) return true;
+  if (activeRaceIds.size >= MAX_AKTIVE_RENNEN) return false;
+  activeRaceIds.add(id);
+  aktivNeuBerechnen();
+  return true;
+}
+
+function aktivEntfernen(id) {
+  if (!activeRaceIds.delete(id)) return false;
+  aktivNeuBerechnen();
+  return true;
+}
+
+// Aktive Menge aus einer geladenen Liste setzen - beim Start aus Disk
+// oder Datenbank. Unbekannte Rennen fallen weg, der Deckel gilt auch
+// hier.
+function aktivSetzen(ids) {
+  activeRaceIds.clear();
+  for (const id of (Array.isArray(ids) ? ids : [])) {
+    if (typeof id === 'string' && races[id] && activeRaceIds.size < MAX_AKTIVE_RENNEN) {
+      activeRaceIds.add(id);
+    }
+  }
+  aktivNeuBerechnen();
+}
+
+// Streckenpositionen aller Tracker vergessen, deren Rennen nicht mehr
+// laeuft. Bis 1.18.0 wurde trackerS beim Aktivieren komplett geleert;
+// bei zwei parallelen Rennen wuerde das dem bereits laufenden Rennen
+// die Bezugswerte wegnehmen und der Rundenzaehler meldete beim
+// naechsten Fix einen Rueckwaertssprung.
+function vergissStreckenpositionen(trackerS, trackerRace) {
+  for (const k of Object.keys(trackerS)) {
+    const rz = trackerRace[k];
+    if (rz && istAktiv(rz)) continue;
+    delete trackerS[k];
+  }
+}
 
 function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -473,7 +549,11 @@ function loadRacesFromDisk() {
     const src = raw.races || raw.lists || Object.create(null);
     races = Object.create(null);
     for (const r of Object.values(src)) races[r.id] = normalizeRace(r);
-    activeRaceId = (raw.activeId && races[raw.activeId]) ? raw.activeId : null;
+    // activeIds ist das Format ab 1.19.0. activeId bleibt als
+    // Rueckfallebene stehen, damit ein races.json aus 1.18.0 ohne
+    // Migration weiterlaeuft.
+    aktivSetzen(Array.isArray(raw.activeIds) ? raw.activeIds
+                                             : (raw.activeId ? [raw.activeId] : []));
     console.log(`📋 ${Object.keys(races).length} Rennen von Disk geladen (${file === LEGACY_FILE ? 'Altformat' : 'races.json'})`);
   } catch (e) { console.error('❌ Rennen laden:', e.message); }
 }
@@ -483,7 +563,10 @@ function saveRacesToDisk() {
   if (db.enabled) return;
   try {
     fs.writeFileSync(RACES_FILE,
-      JSON.stringify({ events, races, activeId: activeRaceId }, null, 2));
+      // activeId wird weiter mitgeschrieben: nach einem Rollback auf
+      // 1.18.0 findet der aeltere Server so wenigstens das Leitrennen.
+      JSON.stringify({ events, races, activeId: activeRaceId,
+                       activeIds: [...activeRaceIds] }, null, 2));
   } catch (e) { console.error('❌ Rennen speichern:', e.message); }
 }
 
@@ -559,6 +642,32 @@ function persistRuntime() {
     trackerDisplayNames,
     trackerRace
   }).catch(dbFail('setSetting runtime'));
+}
+
+// Die aktive Menge in die Datenbank schreiben. activeRaceId wandert
+// mit, damit ein Rollback auf 1.18.0 das Leitrennen wiederfindet.
+function persistAktiveRennen() {
+  if (!db.enabled) return;
+  db.setSetting('activeRaceIds', [...activeRaceIds]).catch(dbFail('setSetting activeRaceIds'));
+  db.setSetting('activeRaceId', activeRaceId).catch(dbFail('setSetting activeRaceId'));
+}
+
+// Fuer Logzeilen und /health: "keins" oder die Namen der Rennen.
+function aktivListeText() {
+  if (!activeRaceIds.size) return 'keins';
+  return [...activeRaceIds]
+    .map(id => (races[id] ? races[id].name : id))
+    .join(', ');
+}
+
+// Zaehlt Tracker, die gerade senden, aber keinem Rennen zugeordnet
+// sind. Solange nur ein Rennen lief, war das folgenlos - der Tracker
+// fiel auf dieses zurueck. Bei mehreren laufenden Rennen ist es ein
+// Einrichtungsfehler, der auf der Karte nicht auffaellt: der Marker
+// bekommt die Farbe des Leitrennens und steht damit im falschen
+// Rennen. Deshalb sichtbar in /health.
+function trackerOhneRennen() {
+  return Object.keys(positions).filter(id => !trackerRace[id]).length;
 }
 
 function persistGroups() {
@@ -647,7 +756,10 @@ async function loadStateFromDb() {
       if (r.groups.length > 0) await db.updateRaceGroups(r.id, r.groups);
       if (r.gpx)               await db.updateRaceGpx(r.id, r.gpx);
     }
-    if (activeRaceId) await db.setSetting('activeRaceId', activeRaceId);
+    if (activeRaceIds.size) {
+      await db.setSetting('activeRaceIds', [...activeRaceIds]);
+      await db.setSetting('activeRaceId', activeRaceId);
+    }
     console.log(`📤 ${Object.keys(races).length} Rennen in die Datenbank übernommen`);
     return;
   }
@@ -689,8 +801,16 @@ async function loadStateFromDb() {
   }
   if (Object.values(races).some(r => r.eventId === FALLBACK_EVENT)) ensureFallbackEvent();
 
-  const activeId = await db.getSetting('activeRaceId');
-  activeRaceId = (activeId && races[activeId]) ? activeId : null;
+  // Ab 1.19.0 steht die aktive Menge unter activeRaceIds. Fehlt der
+  // Schluessel - erster Start nach dem Update -, wird der Einzelwert
+  // aus 1.18.0 uebernommen.
+  const activeIds = await db.getSetting('activeRaceIds');
+  if (Array.isArray(activeIds)) {
+    aktivSetzen(activeIds);
+  } else {
+    const activeId = await db.getSetting('activeRaceId');
+    aktivSetzen(activeId ? [activeId] : []);
+  }
   syncGroupsFromRace();
 
   // Das frueher globale GPX wird nicht uebernommen, sondern einmalig
@@ -702,7 +822,7 @@ async function loadStateFromDb() {
   }
 
   const withGpx = Object.values(races).filter(r => r.gpx).length;
-  console.log(`💾 ${evRows.length} Veranstaltung(en), ${rows.length} Rennen geladen, aktiv: ${activeRaceId || 'keins'}, ${groups.length} Gruppe(n), ${withGpx} mit Strecke`);
+  console.log(`💾 ${evRows.length} Veranstaltung(en), ${rows.length} Rennen geladen, aktiv: ${aktivListeText()}, ${groups.length} Gruppe(n), ${withGpx} mit Strecke`);
 }
 
 // =======================
@@ -812,7 +932,8 @@ app.get('/health', (req, res) => {
     `DB: ${s.enabled ? (s.degraded ? 'SCHREIBSCHUTZ' : 'ok') : 'aus'}`,
     `Veranstaltungen: ${Object.keys(events).length}`,
     `Rennen: ${Object.keys(races).length}`,
-    `aktiv: ${activeRaceId || 'keins'}`
+    `aktiv: ${aktivListeText()}`,
+    `Tracker ohne Rennen: ${trackerOhneRennen()}`
   ];
   if (s.schemaFehler && s.schemaFehler.length) {
     teile.push(`Schemafehler: ${s.schemaFehler.join(', ')}`);
@@ -1182,7 +1303,11 @@ const HINT_MAX_AGE_MS = 30 * 1000;
 
 // Ein Zieldurchgang ist ein Sprung von hinten (>80 %) nach vorn (<20 %).
 function pruefeRundendurchgang(id, sNeu) {
-  const rid = activeRaceId;
+  // Bis 1.18.0 stand hier activeRaceId. Bei mehreren laufenden Rennen
+  // waere das falsch: der Zaehler wuerde Geometrie und Start/Ziel-
+  // Versatz des Leitrennens gegen ein s pruefen, das auf einer anderen
+  // Strecke gerechnet wurde.
+  const rid = raceOfTracker(id);
   const r   = rid ? races[rid] : null;
   const g   = rid ? trackGeometry(rid) : null;
   if (!r || !g || !g.L) return;
@@ -1301,13 +1426,11 @@ function verfolgeStrecke(id, lat, lon) {
     return brauchbar ? s : null;
   }
 
-  // Der Rundenzaehler bleibt an das aktive Rennen gebunden. Er
-  // vergleicht s gegen die Geometrie und den Start/Ziel-Versatz von
-  // activeRaceId - fuer einen Tracker, dessen s auf einer anderen
-  // Strecke gerechnet wurde, waere dieser Vergleich sinnlos und wuerde
-  // Durchgaenge erfinden. Solange nur ein Rennen aktiv sein kann, geht
-  // dadurch nichts verloren.
-  if (rid === activeRaceId) {
+  // Der Rundenzaehler laeuft fuer jedes Rennen, das gerade aktiv ist -
+  // gerechnet wird auf der Strecke des Rennens, dem der Tracker
+  // zugeordnet ist. Fuer ein nicht aktives Rennen bleibt er aussen
+  // vor: dort waere jeder gemeldete Durchgang erfunden.
+  if (istAktiv(rid)) {
     pruefeRundendurchgang(id, s);
   } else {
     // Wie im Trainings-Zweig: trackerS trotzdem fuehren. Daran haengt
@@ -1985,7 +2108,7 @@ function raceView(r) {
     // zugeordneten Tracker.
     color:      farbeOf(r.id),
     tracker:    trackerOfRace(r.id),
-    isActive:   r.id === activeRaceId
+    isActive:   istAktiv(r.id)
   };
 }
 
@@ -1998,31 +2121,34 @@ function racesOfEvent(eventId) {
 
 // Genau ein Rennen ist aktiv. Der Wechsel zieht den Taktik-Stand mit:
 // die Gruppen des alten Rennens bleiben dort gespeichert.
+// Rueckgabe false, wenn schon MAX_AKTIVE_RENNEN laufen. Bis 1.18.0
+// wurde hier das vorherige Rennen beendet und seine Tracker
+// freigegeben - genau das Verhalten, das zwei Rennen einer
+// Veranstaltung unmoeglich machte. Es entfaellt ersatzlos: ein Rennen
+// endet nur noch ueber deactivateRace().
 function activateRace(id) {
-  if (activeRaceId && races[activeRaceId] && activeRaceId !== id) {
-    races[activeRaceId].groups = groups;
-    races[activeRaceId].status = 'beendet';
-    persistRace(activeRaceId);
-    // Das alte Rennen ist beendet - seine Tracker werden frei.
-    loeseTrackerZuordnung(activeRaceId);
-  }
-  activeRaceId = id;
+  const leitVorher = activeRaceId;
+  if (!aktivHinzufuegen(id)) return false;
   races[id].status = 'aktiv';
   sichereFarbe(id);
-  // Streckenpositionen vergessen: sonst vergleicht der Rundenzaehler
-  // den ersten Fix im neuen Rennen mit einem s aus dem alten und
-  // meldet einen Rueckwaertssprung.
-  for (const k of Object.keys(trackerS)) delete trackerS[k];
-  // Marker aus dem vorherigen Rennen abraeumen. Wer gerade sendet,
-  // ist juenger als 15 Minuten und bleibt stehen.
-  sweepPositions(STALE_ON_ACTIVATE_MS, 'Rennenwechsel');
-  syncGroupsFromRace();
+  // Streckenpositionen der Tracker vergessen, deren Rennen nicht mehr
+  // laeuft. Die Tracker der weiterhin aktiven Rennen behalten ihre
+  // Bezugswerte - sonst meldete der Rundenzaehler dort beim naechsten
+  // Fix einen Rueckwaertssprung.
+  vergissStreckenpositionen(trackerS, trackerRace);
+  // Marker abraeumen, aber nur von Trackern ohne laufendes Rennen.
+  sweepPositions(STALE_ON_ACTIVATE_MS, 'Rennenwechsel', true);
+  // Nur wenn dieses Rennen das Leitrennen geworden ist, wird der
+  // Gruppenspiegel neu geladen. Bleibt ein frueher aktiviertes Rennen
+  // fuehrend, wuerde ein Nachladen dessen ungespeicherten Taktik-Stand
+  // ueberschreiben.
+  if (activeRaceId !== leitVorher) syncGroupsFromRace();
   saveRacesToDisk();
-  // Verkettet, nicht parallel: clearActiveStatus wuerde sonst je nach
-  // Pool-Reihenfolge den frisch gesetzten Status wieder auf 'beendet'
-  // zuruecksetzen.
+  // Verkettet, nicht parallel: clearActiveStatusExcept wuerde sonst je
+  // nach Pool-Reihenfolge den frisch gesetzten Status wieder auf
+  // 'beendet' zuruecksetzen.
   if (db.enabled) {
-    db.clearActiveStatus()
+    db.clearActiveStatusExcept([...activeRaceIds])
       .then(() => db.upsertRace({
         id:        races[id].id,
         eventId:   races[id].eventId,
@@ -2033,10 +2159,13 @@ function activateRace(id) {
         status:    'aktiv',
         riders:    races[id].riders
       }))
-      .then(() => db.setSetting('activeRaceId', id))
+      .then(() => {
+        persistAktiveRennen();
+      })
       .catch(dbFail('activateRace'));
   }
   pushAutoDisplays();
+  return true;
 }
 
 // Rennen beenden, ohne ein anderes zu aktivieren. Bis hierhin ging das
@@ -2046,23 +2175,32 @@ function activateRace(id) {
 // Der Taktik-Stand bleibt beim Rennen, genau wie beim Wechsel. Der
 // Aufrufer muss vorher pruefen, dass id wirklich das aktive Rennen ist.
 function deactivateRace(id) {
-  syncGroupsToRace();
+  // Der gespiegelte Gruppenstand gehoert dem Leitrennen. Nur wenn
+  // dieses beendet wird, muss er vorher zurueckgeschrieben werden -
+  // sonst wuerde er dem falschen Rennen zugeschlagen.
+  const warLeit = (id === activeRaceId);
+  if (warLeit) syncGroupsToRace();
   races[id].status = 'beendet';
   loeseTrackerZuordnung(id);
-  activeRaceId = null;
-  groups = [];
-  // Wie beim Rennenwechsel: alte Streckenpositionen vergessen, sonst
-  // vergleicht der Rundenzaehler den ersten Fix des naechsten Rennens
-  // mit einem s aus diesem und meldet einen Rueckwaertssprung.
-  for (const k of Object.keys(trackerS)) delete trackerS[k];
+  aktivEntfernen(id);
+  // Nach dem Entfernen zeigt activeRaceId auf das naechste laufende
+  // Rennen. Dessen Taktik-Stand wird zum neuen Spiegel; laeuft keins
+  // mehr, ergibt syncGroupsFromRace() eine leere Liste - wie bisher.
+  if (warLeit) syncGroupsFromRace();
+  // Wie beim Rennenwechsel: Streckenpositionen der beendeten Rennen
+  // vergessen. Die Tracker weiterhin laufender Rennen bleiben
+  // unberuehrt.
+  vergissStreckenpositionen(trackerS, trackerRace);
   saveRacesToDisk();
   // Verkettet, nicht parallel - dieselbe Begruendung wie in
-  // activateRace(): clearActiveStatus() darf erst laufen, wenn die
+  // activateRace(): der Statusabgleich darf erst laufen, wenn die
   // Gruppen des Rennens geschrieben sind.
   if (db.enabled) {
     db.updateRaceGroups(id, races[id].groups || [])
-      .then(() => db.clearActiveStatus())
-      .then(() => db.setSetting('activeRaceId', null))
+      .then(() => db.clearActiveStatusExcept([...activeRaceIds]))
+      .then(() => {
+        persistAktiveRennen();
+      })
       .catch(dbFail('deactivateRace'));
   }
   pushAutoDisplays();
@@ -2073,7 +2211,10 @@ app.get('/events', (req, res) => {
   const list = Object.values(events)
     .sort((a, b) => (b.dateFrom || b.createdAt).localeCompare(a.dateFrom || a.createdAt))
     .map(ev => ({ ...ev, races: racesOfEvent(ev.id) }));
-  res.json({ events: list, activeRaceId });
+  // activeRaceId bleibt im Payload: bestehende Frontend-Stellen lesen
+  // es weiterhin und sehen das Leitrennen. activeRaceIds kommt daneben
+  // dazu, ohne einen davon zu brechen.
+  res.json({ events: list, activeRaceId, activeRaceIds: [...activeRaceIds] });
 });
 
 app.post('/events', requireSpolei, (req, res) => {
@@ -2116,7 +2257,7 @@ app.delete('/events/:id', requireSpolei, (req, res) => {
   const { id } = req.params;
   if (!events[id]) return res.status(404).json({ error: 'Nicht gefunden' });
   const own = Object.values(races).filter(r => r.eventId === id);
-  if (own.some(r => r.id === activeRaceId)) {
+  if (own.some(r => istAktiv(r.id))) {
     return res.status(409).json({ error: 'Aktives Rennen liegt in dieser Veranstaltung' });
   }
   const name = events[id].name;
@@ -2131,7 +2272,7 @@ app.delete('/events/:id', requireSpolei, (req, res) => {
 // --- Rennen ---
 app.get('/races', (req, res) => {
   const list = Object.values(races).map(raceView);
-  res.json({ races: list, activeId: activeRaceId });
+  res.json({ races: list, activeId: activeRaceId, activeIds: [...activeRaceIds] });
 });
 
 app.get('/races/active', (req, res) => {
@@ -2523,9 +2664,14 @@ app.get('/races/:id/gaps', requireAuth, async (req, res) => {
 app.post('/races/:id/activate', requireSpolei, (req, res) => {
   const { id } = req.params;
   if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
-  activateRace(id);
-  console.log(`✅ Aktives Rennen: "${races[id].name}"`);
-  res.json({ ok: true, activeId: activeRaceId });
+  if (!activateRace(id)) {
+    return res.status(409).json({
+      error: `Es laufen bereits ${MAX_AKTIVE_RENNEN} Rennen. Beende zuerst eines davon.`,
+      activeIds: [...activeRaceIds]
+    });
+  }
+  console.log(`✅ Rennen aktiv: "${races[id].name}" – laufend: ${aktivListeText()}`);
+  res.json({ ok: true, activeId: activeRaceId, activeIds: [...activeRaceIds] });
 });
 
 // --- Streckenmarker ---
@@ -2610,11 +2756,11 @@ app.delete('/races/:id/marker/:mid', requireSpolei, (req, res) => {
 app.post('/races/:id/deactivate', requireSpolei, (req, res) => {
   const { id } = req.params;
   if (!races[id])        return res.status(404).json({ error: 'Nicht gefunden' });
-  if (activeRaceId !== id) return res.status(409).json({ error: 'Dieses Rennen ist nicht aktiv' });
+  if (!istAktiv(id)) return res.status(409).json({ error: 'Dieses Rennen ist nicht aktiv' });
   const name = races[id].name;
   deactivateRace(id);
-  console.log(`\u23F9\uFE0F Rennen beendet: "${name}" \u2013 kein Rennen aktiv`);
-  res.json({ ok: true, activeId: null });
+  console.log(`\u23F9\uFE0F Rennen beendet: "${name}" \u2013 laufend: ${aktivListeText()}`);
+  res.json({ ok: true, activeId: activeRaceId, activeIds: [...activeRaceIds] });
 });
 
 app.delete('/races/:id', requireSpolei, (req, res) => {
@@ -2624,12 +2770,14 @@ app.delete('/races/:id', requireSpolei, (req, res) => {
   // Rundendaten weg.
   if (raceMeta[id]) { delete raceMeta[id]; persistRaceMeta(); }
   delete gpxCache[id];
-  const name = races[id].name;
+  const name    = races[id].name;
+  const warLeit = (id === activeRaceId);
   delete races[id];
-  if (activeRaceId === id) {
-    activeRaceId = null;
-    groups = [];
-    if (db.enabled) db.setSetting('activeRaceId', null).catch(dbFail('setSetting activeRaceId'));
+  if (aktivEntfernen(id)) {
+    // War es das Leitrennen, uebernimmt das naechste laufende den
+    // Gruppenspiegel. Lief keins mehr, ergibt das eine leere Liste.
+    if (warLeit) syncGroupsFromRace();
+    persistAktiveRennen();
   }
   saveRacesToDisk();
   if (db.enabled) db.deleteRace(id).catch(dbFail('deleteRace'));
@@ -2648,9 +2796,9 @@ app.get('/startlists', (req, res) => {
     name:       r.name,
     createdAt:  r.createdAt,
     riderCount: r.riders.length,
-    isActive:   r.id === activeRaceId
+    isActive:   istAktiv(r.id)
   }));
-  res.json({ lists: list, activeId: activeRaceId });
+  res.json({ lists: list, activeId: activeRaceId, activeIds: [...activeRaceIds] });
 });
 
 app.get('/startlists/active', (req, res) => {
@@ -2680,12 +2828,12 @@ app.post('/startlists', requireSpolei, (req, res) => {
 app.delete('/startlists/:id', requireSpolei, (req, res) => {
   const { id } = req.params;
   if (!races[id]) return res.status(404).json({ error: 'Nicht gefunden' });
-  const name = races[id].name;
+  const name    = races[id].name;
+  const warLeit = (id === activeRaceId);
   delete races[id];
-  if (activeRaceId === id) {
-    activeRaceId = null;
-    groups = [];
-    if (db.enabled) db.setSetting('activeRaceId', null).catch(dbFail('setSetting activeRaceId'));
+  if (aktivEntfernen(id)) {
+    if (warLeit) syncGroupsFromRace();
+    persistAktiveRennen();
   }
   saveRacesToDisk();
   if (db.enabled) db.deleteRace(id).catch(dbFail('deleteRace'));

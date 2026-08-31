@@ -287,10 +287,27 @@ async function setRaceStatus(raceId, status) {
           [raceId, status]);
 }
 
-// Genau ein Rennen darf 'aktiv' sein. Wird vor dem Aktivieren gerufen,
-// damit ein abgestuerzter Wechsel keine zwei aktiven Rennen hinterlaesst.
+// Alle Rennen ausser den uebergebenen auf 'beendet' setzen. Bis 1.18.0
+// hiess das clearActiveStatus() und kannte keine Ausnahme, weil genau
+// ein Rennen aktiv sein durfte. Seit 1.19.0 koennen bis zu vier Rennen
+// gleichzeitig laufen - ein pauschales UPDATE wuerde die uebrigen in
+// der Datenbank beenden, waehrend sie im Speicher weiterlaufen. Nach
+// einem Neustart waeren sie dann verschwunden.
+async function clearActiveStatusExcept(ids) {
+  const behalten = Array.isArray(ids) ? ids.filter(x => typeof x === 'string' && x) : [];
+  if (behalten.length === 0) {
+    await q(`UPDATE races SET status = 'beendet', updated_at = now() WHERE status = 'aktiv'`);
+    return;
+  }
+  await q(`UPDATE races SET status = 'beendet', updated_at = now()
+           WHERE status = 'aktiv' AND NOT (id = ANY($1::text[]))`, [behalten]);
+}
+
+// Alt-Signatur, unveraendert im Verhalten: beendet jedes aktive Rennen.
+// Bleibt erhalten, damit ein Rollback auf 1.18.0 dieselbe Funktion
+// vorfindet.
 async function clearActiveStatus() {
-  await q(`UPDATE races SET status = 'beendet', updated_at = now() WHERE status = 'aktiv'`);
+  await clearActiveStatusExcept([]);
 }
 
 async function updateRaceGroups(raceId, groups) {
@@ -417,6 +434,7 @@ module.exports = {
   getSetting, setSetting,
   listEvents, upsertEvent, getEvent, deleteEvent,
   listRaces, upsertRace, updateRaceRiders, setRaceStatus, clearActiveStatus,
+  clearActiveStatusExcept,
   updateRaceGroups, updateRaceGpx, deleteRace,
   addGapSnapshot, listGapHistory, listGapHistoryAll,
   addTrackPoints, listTrackPoints, deleteTrackPoints, purgeTrackPoints
