@@ -84,7 +84,12 @@ async function loadTaktikView() {
   await loadGroups();
   await loadDisplays();
   await loadPending();
-  if (authToken) await loadEvents();
+  // Ab 2.5.1 auch ohne Anmeldung. GET /events hat keinen Waechter, die
+  // Liste war also immer schon oeffentlich - sie wurde nur nie geholt.
+  // Ohne sie scheitert findRace() in arbeitsRaceId(), die Rennwahl des
+  // Zuschauers faellt jedes Mal auf das Leitrennen zurueck und
+  // activeRaceId bleibt null. Genau daran hing der Fehler.
+  await loadEvents();
   await loadGapSeries(true);
   if (taktikGroups.length === 0 && authToken) {
     taktikGroups.push({

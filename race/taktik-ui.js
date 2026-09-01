@@ -4,10 +4,15 @@
 const tkBody = document.getElementById('taktikBody');
 
 tkBody.addEventListener('click', function (e) {
-  if (!authToken) return;
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const { action, gid, id, nr } = btn.dataset;
+  // Das eigene Rennen zu waehlen ist reine Ansicht, kein Schreibzugriff:
+  // dieselbe Wahl trifft das lange Tippen in der Rennleiste, und das
+  // ging noch nie ueber eine Anmeldung. Deshalb steht set-race VOR dem
+  // Riegel - alles darunter aendert Renndaten und bleibt gesperrt.
+  if (action === 'set-race') { wechsleArbeitsRennen(btn.dataset.race); return; }
+  if (!authToken) return;
   switch (action) {
     case 'undo':               undoLast();                        break;
     case 'add-group':          addGroup();                        break;
@@ -173,8 +178,13 @@ function renderRennKacheln() {
 }
 
 function renderTaktikBody() {
+  // Ab 2.5.1 steht der Kopf VOR der Anmeldepruefung. Bis 2.5.0 lag er
+  // mit im authToken-Block: ein Zuschauer sah zwar die Gruppen, aber
+  // keine Rennkacheln - und hatte damit keine Moeglichkeit, sein Rennen
+  // zu waehlen. Bei drei gleichzeitig laufenden Rennen zeigte ihm die
+  // Ansicht wortlos immer das Leitrennen.
   let html = '';
-  if (authToken) {
+  {
     const ar = activeRace();
     html += `<div class="sl-panel">
       ${renderRennKacheln()}
@@ -185,12 +195,14 @@ function renderTaktikBody() {
             ar ? escH(raceLabel(ar.id, true)) : 'Kein Rennen aktiv'}</div>
           <div style="font-size:11px;color:#aaa;margin-top:2px">${
             ar ? `${ar.riderCount} Fahrer${ar.category ? ' \u00B7 ' + escH(ar.category) : ''}`
-               : 'Rennen anlegen oder aktivieren'}</div>
+               : (authToken ? 'Rennen anlegen oder aktivieren' : 'Zurzeit l\u00E4uft kein Rennen')}</div>
         </div>
         ${authLevel === 'spolei' ? `<button class="btn" data-action="open-events"
           style="flex:0;padding:5px 10px;font-size:12px">\u{1F3C1} Rennen</button>` : ''}
       </div>
     </div>`;
+  }
+  if (authToken) {
     // Rueckgaengig steht bewusst links aussen und ist schmal: er wird
     // im fahrenden Auto getroffen, aber nicht versehentlich.
     const uLetzt = undoStack.length ? undoStack[undoStack.length - 1].label : null;
