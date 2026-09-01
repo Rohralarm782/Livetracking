@@ -766,3 +766,72 @@
     #favAddRow .row input, #favBody .row input { flex: 1; min-width: 0; margin-bottom: 8px; }
     #favAddRow .error { color: #d32f2f; font-size: 12px; min-height: 0; }
     #favBody .btn { min-width: unset; }
+
+
+    /* ================= ZEITMESSUNG =================
+       Violett als eigene Kennfarbe: Blau, Orange und Gruen sind in der
+       Taktik bereits belegt (Aufteilen, Zusammenfuehren, Hauptfeld). */
+    #timingModal { position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,0.45); display: flex; align-items: flex-start;
+      justify-content: center; padding: 40px 12px; overflow-y: auto; }
+    #timingModal.hidden { display: none; }
+
+    .zmBar { background: #fff; border: 1px solid #b39ddb; border-left: 3px solid #5e35b1;
+      border-radius: 0 10px 10px 0; padding: 10px 12px; margin-bottom: 12px; }
+    .zm-ttl  { font-size: 13px; font-weight: 600; color: #5e35b1; margin-bottom: 3px; }
+    .zm-meta { font-size: 11px; color: #999; margin-bottom: 9px; }
+    .zm-warn { font-size: 11.5px; color: #e65100; margin-bottom: 9px; line-height: 1.45; }
+    .zm-acts { display: flex; gap: 7px; }
+    .zm-acts .btn { flex: 1; min-width: unset; padding: 7px 10px; font-size: 12.5px; }
+    .btn.zm-prim { background: #ede7f6; border-color: #b39ddb; color: #5e35b1; font-weight: 600; }
+
+    .zm-src { font-size: 10px; font-weight: 600; padding: 2px 5px; border-radius: 5px;
+      border: 1px solid; flex-shrink: 0; }
+    .zm-src.auto { background: #ede7f6; color: #5e35b1; border-color: #b39ddb; }
+    .zm-src.hand { background: #fafafa; color: #bbb;    border-color: #eee; }
+
+    /* Bewegungen. Ersetzt das Durchstreichen ausgeschiedener Fahrer:
+       nicht der Zustand zaehlt, sondern was seit dem letzten Blick
+       passiert ist. */
+    .bwBox { background: #fff; border: 1px solid #eee; border-radius: 10px;
+      overflow: hidden; margin-top: 14px; }
+    .bw-hdr { padding: 11px 14px; display: flex; align-items: center; gap: 9px;
+      cursor: pointer; user-select: none; background: #fff; width: 100%;
+      border: none; font-family: inherit; text-align: left; }
+    .bw-hdr b { font-size: 13px; font-weight: 600; flex: 1; }
+    .bw-cnt { font-size: 11px; color: #aaa; flex-shrink: 0; }
+    .bw-neu { font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 9px;
+      background: #ede7f6; color: #5e35b1; border: 1px solid #b39ddb; flex-shrink: 0; }
+    .bw-chev { font-size: 11px; color: #bbb; flex-shrink: 0;
+      transition: transform 0.18s; display: inline-block; }
+    .bwBox.on .bw-chev { transform: rotate(180deg); }
+    .bw-body { display: none; border-top: 1px solid #f0f0f0; }
+    .bwBox.on .bw-body { display: block; }
+    .bw { display: flex; gap: 9px; padding: 8px 14px; border-bottom: 1px solid #f0f0f0;
+      align-items: flex-start; }
+    .bw:last-child { border-bottom: none; }
+    .bw.neu { background: #faf8fe; }
+    .bw-src { font-size: 10px; font-weight: 600; padding: 2px 4px; border-radius: 4px;
+      border: 1px solid; flex-shrink: 0; margin-top: 1px; }
+    .bw-src.auto { background: #ede7f6; color: #5e35b1; border-color: #b39ddb; }
+    .bw-src.hand { background: #fafafa; color: #bbb;    border-color: #eee; }
+    .bw-t { font-size: 11px; color: #aaa; flex-shrink: 0; margin-top: 2px;
+      font-variant-numeric: tabular-nums; min-width: 34px; }
+    .bw-w { font-size: 12.5px; font-weight: 500; color: #333; line-height: 1.4; }
+    .bw-p { font-size: 11.5px; color: #999; margin-top: 1px; line-height: 1.4; }
+    .bw-p i { font-style: normal; color: #666; font-weight: 500; }
+    .bw-leer { padding: 20px 14px; text-align: center; font-size: 12.5px; color: #bbb; }
+    .bw-mehr { padding: 9px 14px; text-align: center; font-size: 12px; color: #1565c0; }
+
+    /* Einrichtungsdialog */
+    .tm-ev { font-size: 14px; font-weight: 600; margin: 10px 0 8px;
+      display: flex; align-items: baseline; gap: 8px; }
+    .tm-ev span { font-size: 11px; font-weight: 400; color: #aaa; }
+    .tm-row { display: flex; align-items: center; gap: 9px; padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .tm-kat { flex: 1; min-width: 130px; }
+    .tm-name { font-size: 13px; font-weight: 500; color: #333; }
+    .tm-merk { font-size: 11px; color: #999; margin-top: 1px; }
+    .tm-sel { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 12.5px; font-family: inherit; max-width: 46vw; }
+    .tm-foot { display: flex; gap: 8px; margin-top: 12px; }

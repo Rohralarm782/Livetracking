@@ -173,6 +173,9 @@ function renderTaktikBody() {
       <button class="btn" data-action="open-favs" style="flex:1"${
         activeRaceId ? '' : ' disabled title="Erst ein Rennen aktivieren"'}>\u2B50 Favoriten</button>
     </div>`;
+    // Zeitmessung: der Vorschlag steht ueber den Gruppen, nicht in
+    // einem Fenster davor. Ohne Vorschlag liefert timingBanner() ''.
+    if (typeof timingBanner === 'function') html += timingBanner();
   }
   if (taktikGroups.length === 0) {
     html += `<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">
@@ -346,6 +349,7 @@ function renderTaktikBody() {
           <div style="display:flex;align-items:center;gap:7px;min-width:0">
             <div class="gc-dot" style="background:${g.color}"></div>
             ${nameHtml}
+            ${typeof timingSrcBadge === 'function' ? timingSrcBadge(g) : ''}
             ${hfHtml}
           </div>
           <div style="flex-shrink:0">${gapHtml}${rateHtml}</div>
@@ -356,5 +360,8 @@ function renderTaktikBody() {
     });
   }
   html += renderDisplayPanel();
+  // Bewegungen ganz unten: die Gruppenkarten sind die Arbeitsflaeche,
+  // die Liste ist Nachschlagewerk. Zugeklappt, mit Zaehler fuer Neues.
+  if (typeof timingBewegungen === 'function') html += timingBewegungen();
   tkBody.innerHTML = html;
 }

@@ -38,6 +38,23 @@
   </div>
 </div>
 
+<!-- ZEITMESSUNG -->
+<div id="timingModal" class="hidden">
+  <div class="aiBox">
+    <h2>&#9201; Zeitmessung</h2>
+    <p>Link der Veranstaltung bei my.raceresult.com einf&#252;gen. Kategorien und
+       Startlisten werden daraus gelesen.</p>
+    <input id="tmLink" type="text" placeholder="https://my.raceresult.com/409896/participants"
+           style="width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:6px;font-size:13px;margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn" data-action="timing-probe">Veranstaltung lesen</button>
+      <button class="btn" data-action="timing-close" style="flex:0;padding:8px 14px">Schlie&#223;en</button>
+    </div>
+    <div id="tmStatus" style="font-size:12.5px;color:#777;min-height:18px"></div>
+    <div id="tmBody"></div>
+  </div>
+</div>
+
 <!-- KI-IMPORT MODAL -->
 <div id="aiImportModal" class="hidden">
   <div class="aiBox">
@@ -271,6 +288,7 @@
 <script src="/race/events.js"></script>
 <script src="/race/favorites.js"></script>
 <script src="/race/startlists.js"></script>
+<script src="/race/timing.js"></script>
 <script src="/race/taktik-ui.js"></script>
 <script src="/race/events-ui.js"></script>
 <script src="/race/displays.js"></script>

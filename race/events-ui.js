@@ -140,6 +140,10 @@ function renderEventsBody() {
           <div class="ev-name">${escH(ev.name)}</div>
           ${meta ? `<div class="ev-meta">${escH(meta)}</div>` : ''}
         </div>
+        <button class="btn" data-action="open-timing" data-id="${ev.id}"
+          style="flex:0;padding:4px 8px;font-size:12px${
+            (timingCfg.ev && timingCfg.ev[ev.id]) ? ';color:#5e35b1;border-color:#b39ddb' : ''}"
+          title="Zeitmessung verbinden">\u23F1</button>
         <button class="btn" data-action="ev-edit" data-id="${ev.id}"
           style="flex:0;padding:4px 8px;font-size:12px">\u270E</button>
         <button class="btn" data-action="ev-del" data-id="${ev.id}"
@@ -753,6 +757,10 @@ evBody.addEventListener('click', function (e) {
 
     case 'rc-import':
       openAiImport(id);
+      break;
+
+    case 'open-timing':
+      openTimingSetup(id);
       break;
 
     case 'rc-gpx':

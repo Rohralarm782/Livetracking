@@ -4,6 +4,7 @@ const mqtt    = require('mqtt');
 const fs      = require('fs');
 const path    = require('path');
 const db      = require('./db');
+const rr      = require('./raceresult');
 
 const app = express();
 
@@ -701,6 +702,18 @@ async function loadStateFromDb() {
     if (n) console.log(`\u{1F501} Rundendaten fuer ${n} Rennen geladen`);
   }
 
+  // Zeitmessung. Die Zuordnung muss einen Cold Start ueberleben - sonst
+  // waere sie nach jedem Render-Neustart mitten am Renntag weg.
+  const tm = await db.getSetting('timing');
+  if (tm && typeof tm === 'object') {
+    timing = {
+      ev: Object.assign(Object.create(null), (tm.ev && typeof tm.ev === 'object') ? tm.ev : {}),
+      rc: Object.assign(Object.create(null), (tm.rc && typeof tm.rc === 'object') ? tm.rc : {})
+    };
+    const nv = Object.keys(timing.ev).length, nr = Object.keys(timing.rc).length;
+    if (nv || nr) console.log(`\u23F1 Zeitmessung geladen: ${nv} Veranstaltungen, ${nr} Rennen`);
+  }
+
   // Tokens zurueckholen, sonst ist nach jedem Cold Start jeder
   // angemeldete Nutzer stillschweigend abgemeldet.
   const tk = await db.getSetting('tokens');
@@ -933,7 +946,8 @@ app.get('/health', (req, res) => {
     `Veranstaltungen: ${Object.keys(events).length}`,
     `Rennen: ${Object.keys(races).length}`,
     `aktiv: ${aktivListeText()}`,
-    `Tracker ohne Rennen: ${trackerOhneRennen()}`
+    `Tracker ohne Rennen: ${trackerOhneRennen()}`,
+    `Zeitmessung: ${timingHealthText()}`
   ];
   if (s.schemaFehler && s.schemaFehler.length) {
     teile.push(`Schemafehler: ${s.schemaFehler.join(', ')}`);
@@ -1118,6 +1132,217 @@ function persistRaceMeta() {
   if (!db.enabled) return;
   db.setSetting('raceMeta', raceMeta).catch(dbFail('setSetting raceMeta'));
 }
+
+// =======================
+// ZEITMESSUNG (my.raceresult.com)
+// =======================
+// Ein Link je Veranstaltung, ein Contest je Rennen - so ist es bei
+// race|result auch geschnitten (eine EventID, mehrere Contests).
+//
+// Abgelegt wird alles im settings-Schluessel 'timing'. Bewusst KEINE
+// neuen Spalten in events/races: eine Schemaaenderung vier Tage vor
+// einem Rennen ist genau das Risiko, das am 29.08.2026 den Start
+// gekostet hat. raceMeta macht es seit 1.11 genauso.
+//
+// timing = {
+//   ev:   { <veranstaltungId>: { eventId, host } },
+//   rc:   { <rennenId>: { contest, an, schwelle } },
+//   stand:{ <rennenId>: { ts, modus, liste, gruppen, hinweis } }   // fluechtig
+// }
+let timing = { ev: Object.create(null), rc: Object.create(null) };
+
+// Zuletzt erkundeter Aufbau je Veranstaltung. Nur im Speicher: er
+// veraltet schnell, und ein Neuaufbau kostet wenige Sekunden.
+let timingErkundung = Object.create(null);
+
+// Was der Poller zuletzt gerechnet hat, je Rennen. Vorschlaege, kein
+// Stand - uebernommen wird ausschliesslich durch den Anwender.
+let timingStand = Object.create(null);
+
+// Betriebszustand. Sichtbar unter /health, damit ein Ausfall nicht
+// erst im Rennen auffaellt.
+let timingLauf = {
+  timer:   null,
+  aktiv:   false,
+  letzter: null,
+  fehler:  0,
+  letzterFehler: null,
+  abgeschaltet: false
+};
+
+const TIMING_TAKT_MS   = 15000;   // Untergrenze; race|result cacht 10-30 s
+const TIMING_MAX_FEHLER = 10;     // danach Ruhe, bis jemand neu startet
+
+function persistTiming() {
+  if (!db.enabled) return;
+  db.setSetting('timing', { ev: timing.ev, rc: timing.rc }).catch(dbFail('setSetting timing'));
+}
+
+function timingEvOf(raceId) {
+  const r = races[raceId];
+  if (!r) return null;
+  const ev = timing.ev[r.eventId];
+  return (ev && ev.eventId) ? ev : null;
+}
+
+function timingRcOf(raceId) {
+  const c = timing.rc[raceId];
+  return (c && c.contest !== undefined && c.contest !== null && c.an !== false) ? c : null;
+}
+
+// Rennen, die gerade laufen UND eine Zuordnung haben.
+function timingRennen() {
+  const out = [];
+  for (const id of activeRaceIds) {
+    if (timingEvOf(id) && timingRcOf(id)) out.push(id);
+  }
+  return out;
+}
+
+// Erkundung holen, hoechstens alle 60 s neu. Der Poller braucht sie in
+// jedem Durchlauf, weil sich Listennamen aendern - am 01.09.2026
+// zweimal innerhalb einer Stunde beobachtet.
+async function timingAufbau(evId, frisch) {
+  const c = timingErkundung[evId];
+  if (!frisch && c && (Date.now() - c.ts) < 60000) return c.daten;
+  const ev = timing.ev[evId];
+  if (!ev || !ev.eventId) return null;
+  const d = await rr.erkunde(ev.eventId);
+  if (d.fehler) return null;
+  timingErkundung[evId] = { ts: Date.now(), daten: d };
+  if (d.host && d.host !== ev.host) { ev.host = d.host; persistTiming(); }
+  return d;
+}
+
+// Ein Rennen abfragen und den Vorschlag ablegen. Schreibt NICHTS in
+// races[].groups - das tut nur applyVorschlag() auf ausdrueckliche
+// Anweisung.
+async function timingRunde(raceId) {
+  const ev = timingEvOf(raceId), rc = timingRcOf(raceId);
+  if (!ev || !rc) return;
+  const aufbau = await timingAufbau(races[raceId].eventId);
+  if (!aufbau) throw new Error('Aufbau nicht lesbar');
+
+  const wahl = rr.waehleListe(aufbau.reiter, rc.contest);
+  if (!wahl) { timingStand[raceId] = { ts: Date.now(), leer: 'keine Ergebnisliste' }; return; }
+
+  const cfg = await rr.holeConfig(ev.eventId, wahl.tab, ev.host);
+  if (cfg.fehler) throw new Error(cfg.fehler);
+  const res = await rr.holeListe(ev.eventId, wahl.tab, cfg.key, wahl.name, rc.contest, ev.host);
+  if (res.fehler) throw new Error(res.fehler);
+
+  const eintraege = rr.alsErgebnis(res);
+  const g = rr.zuGruppen(eintraege, { schwelle: rc.schwelle });
+
+  // Bei fahrerscharfen Zeiten - Einzelzeitfahren, Prolog - entsteht
+  // eine formal richtige, sachlich sinnlose Einteilung. Das gehoert
+  // gesagt, nicht verschwiegen.
+  const hinweis = (g.modus === 'schwelle' && eintraege.length > 20 && g.gruppen.length <= 2)
+    ? 'Zeiten sind fahrerscharf - vermutlich ein Zeitfahren. Gruppen mit Vorsicht.'
+    : null;
+
+  timingStand[raceId] = {
+    ts:      Date.now(),
+    liste:   wahl.name,
+    live:    !!wahl.live,
+    modus:   g.modus,
+    fahrer:  eintraege.length,
+    gruppen: g.gruppen,
+    hinweis
+  };
+}
+
+async function timingZyklus() {
+  const ids = timingRennen();
+  if (ids.length === 0) return;
+  for (const id of ids) {
+    try {
+      await timingRunde(id);
+      timingLauf.fehler = 0;
+      timingLauf.letzterFehler = null;
+    } catch (e) {
+      timingLauf.fehler++;
+      timingLauf.letzterFehler = e.message;
+      if (timingLauf.fehler >= TIMING_MAX_FEHLER) {
+        timingLauf.abgeschaltet = true;
+        stopTimingPoller();
+        console.error(`⏱ Zeitmessung nach ${TIMING_MAX_FEHLER} Fehlversuchen abgeschaltet: ${e.message}`);
+        return;
+      }
+    }
+    // Versetzt statt gleichzeitig: race|result begrenzt auf einen
+    // Aufruf je Sekunde und Adresse, und zwei Rennen einer
+    // Veranstaltung treffen dieselbe.
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  timingLauf.letzter = Date.now();
+}
+
+function startTimingPoller() {
+  if (timingLauf.timer || timingLauf.abgeschaltet) return;
+  if (timingRennen().length === 0) return;
+  timingLauf.aktiv = true;
+  timingLauf.timer = setInterval(() => {
+    timingZyklus().catch(e => console.error('⏱ Zyklus:', e.message));
+  }, TIMING_TAKT_MS);
+  timingLauf.timer.unref?.();
+  timingZyklus().catch(() => {});
+  console.log(`⏱ Zeitmessung gestartet für ${timingRennen().length} Rennen`);
+}
+
+function stopTimingPoller() {
+  if (timingLauf.timer) clearInterval(timingLauf.timer);
+  timingLauf.timer = null;
+  timingLauf.aktiv = false;
+}
+
+// Nach jeder Aenderung an Zuordnung oder aktiven Rennen aufrufen.
+function timingNeuBewerten() {
+  if (timingRennen().length === 0) stopTimingPoller();
+  else                             startTimingPoller();
+}
+
+// Vorschlag uebernehmen. Genau hier - und nur hier - werden Gruppen aus
+// der Zeitmessung geschrieben. Fuer das Leitrennen ueber die
+// Spiegelvariable, fuer jedes andere direkt am Rennen: POST /groups
+// kennt nur das Leitrennen, und diese Datei soll dessen erprobten
+// Schreibweg nicht anfassen.
+function applyVorschlag(raceId, nurGid) {
+  const st = timingStand[raceId];
+  if (!st || !Array.isArray(st.gruppen) || st.gruppen.length === 0) return null;
+  const alt = groupsOf(raceId);
+  const neu = st.gruppen.map((g, i) => {
+    const bestand = alt[i] || null;
+    return {
+      id:      bestand ? bestand.id : newId(),
+      name:    bestand ? bestand.name : (i === 0 ? 'Spitze' : (i === st.gruppen.length - 1 ? 'Feld' : `Gruppe ${i + 1}`)),
+      color:   bestand ? bestand.color : GROUP_FARBEN[i % GROUP_FARBEN.length],
+      gap:     g.gap,
+      gapPrev: bestand ? (bestand.gap || null) : null,
+      main:    bestand ? bestand.main === true : (i === st.gruppen.length - 1),
+      riders:  g.riders
+    };
+  });
+  // Einzelne Gruppe: nur diese ersetzen, der Rest bleibt wie er ist.
+  const ziel = nurGid
+    ? alt.map(g => {
+        if (g.id !== nurGid) return g;
+        const t = neu.find(n => n.id === nurGid);
+        return t || g;
+      })
+    : neu;
+
+  const sauber = sanitizeGroups(ziel);
+  if (raceId === activeRaceId) { groups = sauber; syncGroupsToRace(); }
+  else if (races[raceId])      { races[raceId].groups = sauber; }
+  saveRacesToDisk();
+  persistRace(raceId);
+  pushAutoDisplays();
+  persistGroups();
+  return sauber;
+}
+
+const GROUP_FARBEN = ['#EF9F27', '#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#888780'];
 
 // =======================
 // TRACKER -> RENNEN
@@ -2185,6 +2410,11 @@ function activateRace(id) {
       .catch(dbFail('activateRace'));
   }
   pushAutoDisplays();
+  // Zeitmessung mitziehen: laeuft ein zugeordnetes Rennen, laeuft auch
+  // der Poller. Ohne aktives Rennen wird nicht abgefragt - das spart
+  // auf dem Render-Freikontingent die Stunden, die sonst ein
+  // dauerlaufender Intervall verbraucht.
+  timingNeuBewerten();
   return true;
 }
 
@@ -2224,6 +2454,10 @@ function deactivateRace(id) {
       .catch(dbFail('deactivateRace'));
   }
   pushAutoDisplays();
+  // Vorschlaege des beendeten Rennens verwerfen: ein alter Stand, der
+  // nach dem Zieleinlauf stehenbleibt, liest sich wie ein aktueller.
+  delete timingStand[id];
+  timingNeuBewerten();
 }
 
 // --- Veranstaltungen ---
@@ -2973,6 +3207,169 @@ app.delete('/groups', requireSpolei, (req, res) => {
   persistGroups();
   console.log('🧹 Gruppen gelöscht');
   res.json({ ok: true });
+});
+
+// =======================
+// ZEITMESSUNG
+// =======================
+// Alles unter /timing. Lesend fuer angemeldete Nutzer, schreibend nur
+// fuer den SpoLei - wie ueberall sonst.
+
+function timingHealthText() {
+  if (timingLauf.abgeschaltet) return `abgeschaltet (${timingLauf.letzterFehler || 'Fehler'})`;
+  const n = timingRennen().length;
+  if (!n) return 'keine Zuordnung aktiv';
+  const alt = timingLauf.letzter ? Math.round((Date.now() - timingLauf.letzter) / 1000) : null;
+  return `${n} Rennen` + (alt === null ? ', noch kein Abruf' : `, letzter Abruf vor ${alt}s`)
+       + (timingLauf.fehler ? `, ${timingLauf.fehler} Fehlversuche` : '');
+}
+
+// Link pruefen und Aufbau melden. Bewusst kein Speichern: der Anwender
+// soll erst sehen, was gefunden wurde.
+app.post('/timing/probe', requireSpolei, async (req, res) => {
+  const { link, event } = req.body || {};
+  const evId = event && events[event] ? event : null;
+  const d = await rr.erkunde(link);
+  if (d.fehler) return res.status(400).json({ error: d.fehler });
+
+  // Vorbelegung: Kategorie auf Rennen. Vorschlag, keine Zuordnung.
+  const kandidaten = evId
+    ? Object.values(races).filter(r => r.eventId === evId)
+        .map(r => ({ id: r.id, name: r.name, category: r.category }))
+    : [];
+  const kategorien = Object.entries(d.contests).map(([contest, name]) => {
+    const erg   = rr.waehleListe(d.reiter, contest);
+    const start = rr.waehleStartliste(d.reiter, contest);
+    return {
+      contest, name,
+      fahrer:      start ? start.zeilen : 0,
+      hatErgebnis: !!erg,
+      hatStart:    !!start,
+      vorschlag:   rr.passtZu(name, kandidaten)
+    };
+  });
+  if (evId) timingErkundung[evId] = { ts: Date.now(), daten: d };
+  res.json({ eventId: d.eventId, eventname: d.eventname, host: d.host, kategorien });
+});
+
+// Zuordnung lesen.
+app.get('/timing', requireAuth, (req, res) => {
+  const stand = {};
+  for (const [rid, st] of Object.entries(timingStand)) {
+    stand[rid] = { ts: st.ts, modus: st.modus || null, liste: st.liste || null,
+                   live: !!st.live, fahrer: st.fahrer || 0, hinweis: st.hinweis || null,
+                   gruppen: Array.isArray(st.gruppen) ? st.gruppen.length : 0,
+                   leer: st.leer || null };
+  }
+  res.set('Cache-Control', 'no-store');
+  res.json({ ev: timing.ev, rc: timing.rc, stand, lauf: {
+    aktiv: timingLauf.aktiv, abgeschaltet: timingLauf.abgeschaltet,
+    letzter: timingLauf.letzter, fehler: timingLauf.fehler,
+    letzterFehler: timingLauf.letzterFehler
+  } });
+});
+
+// Zuordnung schreiben. eventId am Veranstaltungsobjekt, contest je
+// Rennen - so ist es bei race|result auch geschnitten.
+app.post('/timing', requireSpolei, (req, res) => {
+  const { event, eventId, host, zuordnung } = req.body || {};
+  if (event) {
+    if (!events[event]) return res.status(404).json({ error: 'Veranstaltung nicht gefunden' });
+    if (eventId === null || eventId === '') delete timing.ev[event];
+    else timing.ev[event] = { eventId: String(eventId), host: host ? String(host) : null };
+  }
+  if (zuordnung && typeof zuordnung === 'object') {
+    for (const [rid, wert] of Object.entries(zuordnung)) {
+      if (!races[rid]) continue;
+      if (wert === null || wert === '' || wert === false) { delete timing.rc[rid]; continue; }
+      const c = (typeof wert === 'object') ? wert : { contest: wert };
+      timing.rc[rid] = {
+        contest:  String(c.contest),
+        an:       c.an !== false,
+        schwelle: (typeof c.schwelle === 'number' && c.schwelle > 0 && c.schwelle <= 120)
+                    ? Math.round(c.schwelle) : 3
+      };
+    }
+  }
+  persistTiming();
+  timingLauf.abgeschaltet = false;   // neue Zuordnung ist ein Neustart
+  timingLauf.fehler = 0;
+  timingNeuBewerten();
+  res.json({ ok: true, ev: timing.ev, rc: timing.rc });
+});
+
+// Startliste einer Kategorie holen. Ohne race: nur liefern, damit die
+// Oberflaeche sie zeigen kann. Mit race: gleich eintragen.
+app.post('/timing/startlist', requireSpolei, async (req, res) => {
+  const { event, contest, race } = req.body || {};
+  if (!events[event])      return res.status(404).json({ error: 'Veranstaltung nicht gefunden' });
+  if (contest === undefined) return res.status(400).json({ error: 'contest erforderlich' });
+  const ev = timing.ev[event];
+  if (!ev) return res.status(400).json({ error: 'Fuer diese Veranstaltung ist kein Link hinterlegt' });
+
+  const aufbau = await timingAufbau(event, true);
+  if (!aufbau) return res.status(502).json({ error: 'Zeitmessung nicht erreichbar' });
+  const wahl = rr.waehleStartliste(aufbau.reiter, contest);
+  if (!wahl) return res.status(404).json({ error: 'Keine Startliste fuer diese Kategorie' });
+
+  const cfg = await rr.holeConfig(ev.eventId, wahl.tab, ev.host);
+  if (cfg.fehler) return res.status(502).json({ error: cfg.fehler });
+  const list = await rr.holeListe(ev.eventId, wahl.tab, cfg.key, wahl.name, contest, ev.host);
+  if (list.fehler) return res.status(502).json({ error: list.fehler });
+
+  const fahrer = rr.alsFahrer(list);
+  if (fahrer.length === 0) return res.status(404).json({ error: 'Liste enthaelt keine Fahrer' });
+
+  if (race) {
+    const r = races[race];
+    if (!r) return res.status(404).json({ error: 'Rennen nicht gefunden' });
+    // Favoriten ueber den Import retten - dieselbe Regel wie in
+    // PUT /races/:id/riders.
+    const prevFav = new Set(r.riders.filter(x => x && x.fav).map(x => Number(x.nr)));
+    r.riders = fahrer.map(x => prevFav.has(Number(x.nr)) ? { ...x, fav: true } : x);
+    saveRacesToDisk();
+    if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders timing'));
+    if (r.id === activeRaceId) pushAutoDisplays();
+    console.log(`\u23F1 Startliste uebernommen: "${r.name}" (${r.riders.length} Fahrer)`);
+  }
+  res.json({ ok: true, liste: wahl.name, riders: fahrer });
+});
+
+// Vorschlag uebernehmen. Ohne group: alle Gruppen des Rennens.
+app.post('/timing/apply', requireSpolei, (req, res) => {
+  const { race, group } = req.body || {};
+  if (!races[race]) return res.status(404).json({ error: 'Rennen nicht gefunden' });
+  const neu = applyVorschlag(race, group || null);
+  if (!neu) return res.status(409).json({ error: 'Kein Vorschlag vorhanden' });
+  res.json({ ok: true, groups: neu });
+});
+
+// Vorschlag verwerfen. Der naechste Abruf meldet sich neu - verworfen
+// wird ein Stand, nicht die Verbindung.
+app.post('/timing/dismiss', requireSpolei, (req, res) => {
+  const { race } = req.body || {};
+  if (race && timingStand[race]) delete timingStand[race];
+  res.json({ ok: true });
+});
+
+// Vollstaendiger Vorschlag eines Rennens, mit Fahrerdaten angereichert.
+app.get('/timing/proposal', requireAuth, (req, res) => {
+  const rid = String(req.query.race || '') || activeRaceId;
+  const st  = rid ? timingStand[rid] : null;
+  res.set('Cache-Control', 'no-store');
+  if (!st) return res.json({ vorhanden: false });
+  const map = Object.create(null);
+  if (races[rid]) for (const r of races[rid].riders) map[Number(r.nr)] = r;
+  res.json({
+    vorhanden: true, race: rid, ts: st.ts, modus: st.modus || null,
+    liste: st.liste || null, live: !!st.live, hinweis: st.hinweis || null,
+    leer: st.leer || null,
+    gruppen: (st.gruppen || []).map(g => ({
+      gap: g.gap,
+      riders: g.riders.map(nr => ({ nr, name: (map[nr] || {}).name || null,
+                                        team: (map[nr] || {}).team || null }))
+    }))
+  });
 });
 
 // =======================

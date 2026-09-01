@@ -24,6 +24,13 @@ loadMode();
 pollGroups();
 setInterval(pollGroups, 5000);
 
+// Zeitmessung. Die Zuordnung aendert sich selten und wird nur beim
+// Start und nach dem Einrichten geholt; der Vorschlag im gleichen Takt
+// wie die Gruppen, damit Balken und Karten zusammenpassen.
+loadTiming();
+pollTiming();
+setInterval(pollTiming, 5000);
+
 // =======================
 // TOAST
 // =======================
