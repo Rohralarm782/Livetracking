@@ -95,24 +95,45 @@ tkBody.addEventListener('keydown', function (e) {
 // Ab 2.1.0 steht deshalb nur noch ein Kopf da, und zwar mit dem Rennen,
 // dessen Taktik der Streifen tatsaechlich zeigt. Bei einem einzigen
 // laufenden Rennen entfaellt er: dann ist nichts zu verwechseln.
+// Ab 2.3.0 beschriftet der Kopf das Rennen, dessen Gruppen wirklich
+// unter ihm stehen: das eigene, wenn dessen Stand geladen ist, sonst
+// weiterhin das Leitrennen. Beim eigenen Rennen kommt ein Schloss
+// dazu - der Stand ist nur Anzeige, Aenderungen in der Vollansicht
+// gelten dem Leitrennen.
 function renderStripReiter() {
   if (typeof laufendeRennen !== 'function' || laufendeRennen() < 2) return '';
-  const id = (typeof activeInfo === 'object' && activeInfo) ? activeInfo.raceId : null;
+  const fremd = (typeof stripFremdStand === 'function') ? stripFremdStand() : null;
+  const id    = fremd
+    || ((typeof activeInfo === 'object' && activeInfo) ? activeInfo.raceId : null);
   if (!id) return '';
   const s     = (typeof steckbriefOf === 'function') ? steckbriefOf(id) : null;
   const farbe = (s && s.farbe) ? s.farbe : '#607d8b';
   const lbl   = (s && s.name) ? s.name : id;
-  return `<div class="stripKopf" style="border-bottom-color:${farbe}"`
-       + ` title="Taktik des Leitrennens">`
+  const leitS = (fremd && typeof steckbriefOf === 'function' && activeInfo)
+    ? steckbriefOf(activeInfo.raceId) : null;
+  const leitN = (leitS && leitS.name) ? leitS.name : (activeInfo ? activeInfo.raceId : '');
+  const titel = fremd
+    ? `Taktik von ${lbl} \u2013 nur Anzeige. Bearbeiten gilt f\u00FCr das Leitrennen ${leitN}.`
+    : 'Taktik des Leitrennens';
+  return `<div class="stripKopf${fremd ? ' fremd' : ''}" style="border-bottom-color:${farbe}"`
+       + ` title="${escH(titel)}">`
        + `<span class="stripKopfP" style="background:${farbe}"></span>`
-       + `${escH(String(lbl).slice(0, 6))}</div>`;
+       + `${escH(String(lbl).slice(0, 6))}`
+       + (fremd ? '<span class="stripKopfL">\u{1F512}</span>' : '')
+       + `</div>`;
 }
 
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
+  // Ab 2.3.0 kann die Quelle eine andere sein als die uebergebene
+  // Liste: liegt der Stand des eigenen Rennens vor, zeigt der Streifen
+  // diesen. taktikGroups bleibt davon unberuehrt - der Aufrufer
+  // uebergibt weiterhin dieselbe Liste wie bisher.
+  const fremd  = (typeof stripFremdStand === 'function') ? stripFremdStand() : null;
+  const quelle = fremd ? stripGroups : grps;
   // filter(Boolean) VOR dem Zaehlen: sonst zeigen die Verbindungslinien
   // auf die Indizes der ungefilterten Liste.
-  const list = Array.isArray(grps) ? grps.filter(Boolean) : [];
+  const list = Array.isArray(quelle) ? quelle.filter(Boolean) : [];
   const reiter = renderStripReiter();
   if (list.length === 0 && !reiter) { strip.classList.add('hidden'); return; }
   strip.classList.remove('hidden');

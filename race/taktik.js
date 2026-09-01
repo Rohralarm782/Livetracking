@@ -22,6 +22,73 @@ let movingRider    = { gid: null, nr: null };
 // alten Abstand aus und der Wert sprang zurueck.
 let groupsWriteLock = 0;
 
+// =======================
+// EIGENE DATENQUELLE DES STREIFENS (ab 2.3.0)
+// =======================
+// Bis 2.2.0 zeigte der Streifen immer die Gruppen des Leitrennens -
+// also des zuerst aktivierten, noch laufenden Rennens. Wer das zweite
+// Rennen begleitet, sah damit dauerhaft die Taktik des ersten.
+//
+// Ab 2.3.0 holt der Streifen die Gruppen des eigenen Rennens
+// (meinRaceId(), langes Tippen in der Rennleiste) ueber
+// GET /groups?race=<id>. Dieser Stand ist ausdruecklich NUR ANZEIGE:
+// taktikGroups bleibt unberuehrt, und damit bleibt auch der einzige
+// Schreibweg (saveGroups -> POST /groups) auf dem Leitrennen. Ein
+// Fremdstand in taktikGroups wuerde beim naechsten Speichern im
+// Leitrennen landen - genau deshalb liegt er in einer eigenen
+// Variablen.
+let stripGroups = null;   // Gruppen des eigenen Rennens, nur lesend
+let stripRaceId = null;   // wessen Gruppen gerade in stripGroups liegen
+
+// Das Rennen, dessen Taktik zusaetzlich geholt werden muss - oder
+// null, wenn das eigene Rennen ohnehin das Leitrennen ist. Dann bleibt
+// alles beim Alten und es faellt kein zweiter Abruf an.
+function stripFremdZiel() {
+  if (typeof meinRaceId !== 'function') return null;
+  const ziel = meinRaceId();
+  const leit = (typeof activeInfo === 'object' && activeInfo) ? activeInfo.raceId : null;
+  if (!ziel || !leit || ziel === leit) return null;
+  return ziel;
+}
+
+// Gueltiger Fremdstand oder null. Bewusst streng: nur wenn die
+// geladenen Gruppen wirklich zum aktuell gewaehlten Rennen gehoeren.
+// Sonst faellt der Streifen auf das Leitrennen zurueck - und der Kopf
+// beschriftet dann auch das Leitrennen. Lieber der andere Name als
+// der falsche Name ueber echten Gruppen.
+function stripFremdStand() {
+  const ziel = stripFremdZiel();
+  if (!ziel || ziel !== stripRaceId || !Array.isArray(stripGroups)) return null;
+  return ziel;
+}
+
+async function loadStripGroups() {
+  const ziel = stripFremdZiel();
+  if (!ziel) { stripGroups = null; stripRaceId = null; return; }
+  try {
+    const res = await fetch(`${SERVER}/groups?race=${encodeURIComponent(ziel)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const next = await res.json();
+    if (!Array.isArray(next)) throw new Error('Format');
+    stripGroups = next;
+    stripRaceId = ziel;
+  } catch (e) {
+    // Einen einzelnen Netzfehler soll der Streifen aushalten: der
+    // letzte Stand desselben Rennens bleibt stehen. Nur ein Stand, der
+    // zu einem ANDEREN Rennen gehoert, wird verworfen.
+    if (stripRaceId !== ziel) { stripGroups = null; stripRaceId = null; }
+  }
+}
+
+// Holen und zeichnen in einem Zug - fuer die Stellen, an denen der
+// Nutzer die Auswahl gerade geaendert hat und nicht fuenf Sekunden auf
+// den naechsten Poll warten soll.
+function aktualisiereStrip() {
+  loadStripGroups().then(() => {
+    if (typeof renderStrip === 'function') renderStrip(taktikGroups);
+  });
+}
+
 function openTaktikView() {
   taktikOpen = true;
   document.getElementById('taktikView').classList.remove('hidden');

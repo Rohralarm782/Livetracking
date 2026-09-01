@@ -1030,7 +1030,10 @@ function setzeMeinRennen(raceId) {
   meinRennen = raceId || null;
   speichereAuswahl();
   renderRennAuswahl();
-  if (typeof renderStrip === 'function') renderStrip(taktikGroups);
+  // Ab 2.3.0 wechselt mit dem eigenen Rennen auch die Datenquelle des
+  // Streifens - deshalb erst holen, dann zeichnen.
+  if (typeof aktualisiereStrip === 'function') aktualisiereStrip();
+  else if (typeof renderStrip === 'function') renderStrip(taktikGroups);
 }
 
 function schalteRennSicht(raceId) {
@@ -1041,7 +1044,10 @@ function schalteRennSicht(raceId) {
   renderRennAuswahl();
   lastActiveKey = null;          // erzwingt Neuzeichnen der Strecken
   fetchGpxTrack();
-  if (typeof renderStrip === 'function') renderStrip(taktikGroups);
+  // Das Ausblenden kann meinRaceId() verschieben (der Rueckfall ist
+  // das erste sichtbare Rennen) - also auch hier neu holen.
+  if (typeof aktualisiereStrip === 'function') aktualisiereStrip();
+  else if (typeof renderStrip === 'function') renderStrip(taktikGroups);
 }
 
 // Aus gpx.js nach dem Setzen eines Streckenpunktes.

@@ -145,6 +145,10 @@ async function pollGroups() {
     }
     lastSaved = kommt;
     taktikGroups = next;
+    // Im selben Takt den Stand des eigenen Rennens nachziehen. Der
+    // Abruf entfaellt von selbst, wenn das eigene Rennen das
+    // Leitrennen ist - dann ist stripFremdZiel() null.
+    await loadStripGroups();
     if (!taktikOpen) { renderStrip(taktikGroups); return; }
     // Offene Taktikansicht mitziehen, damit Aenderungen von einem
     // zweiten Geraet ankommen. Nicht neu zeichnen, solange jemand

@@ -626,6 +626,15 @@
     }
     .stripKopfP { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 
+    /* Ab 2.3.0 kann der Streifen die Taktik des EIGENEN Rennens zeigen,
+       auch wenn das nicht das Leitrennen ist. Dieser Stand ist nur
+       Anzeige: geschrieben wird weiterhin ausschliesslich im
+       Leitrennen. Die gestrichelte Linie und das Schloss sind der
+       einzige Unterschied - wer sie sieht, weiss, dass ein Eingriff
+       hier nicht ankommt. */
+    .stripKopf.fremd { border-bottom-style: dashed; color: #455a64; }
+    .stripKopfL { font-size: 10px; line-height: 1; flex: 0 0 auto; }
+
     /* ZUSAMMENGELEGTER STRECKENPUNKT - ein Symbol, aussen ein
        Ringsegment je Rennen. */
     .lt-mkr { position: relative; width: 32px; height: 32px; }
