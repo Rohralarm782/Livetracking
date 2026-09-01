@@ -160,6 +160,30 @@
     @media (min-width: 768px) {
       #raceClock.rennliste { right: 250px; }
     }
+    /* HANDY-ANSICHT (ab 2.5.2). Bis 2.5.1 spannte die Leiste ueber
+       left:52px/right:8px die ganze Restbreite auf - bei zwei kurzen
+       Kuerzeln war der Kasten zu drei Vierteln leer und verdeckte
+       trotzdem ein Sechstel der Karte. Jetzt ist er nur so breit wie
+       sein Inhalt und insgesamt zurueckhaltender.
+       max-width faengt lange Rennnamen ab, damit nichts unter den
+       rechten Rand laeuft; die Zahlen bleiben untereinander, weil
+       .rcLapBox weiterhin margin-left:auto traegt.
+       Die Rundenknoepfe behalten bewusst ihre 26px: darunter wird das
+       Treffen im fahrenden Auto zur Gluecksache. Ab 768px (Desktop)
+       aendert sich nichts. */
+    @media (max-width: 767px) {
+      #raceClock.rennliste {
+        right: auto; width: max-content; max-width: calc(100vw - 60px);
+        gap: 2px; padding: 3px;
+        font-size: 12px;
+        background: rgba(255,255,255,0.86);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+      }
+      #raceClock.rennliste .rcRow { padding: 2px 5px; gap: 6px; }
+      #raceClock.rennliste .rcRow + .rcRow { border-top-color: #f2f4f5; }
+      #raceClock.rennliste .rcD { width: 8px; height: 8px; }
+      #raceClock.rennliste .rcLapTxt { min-width: 54px; }
+    }
 
     /* Leiste des Streckenmodus. Sitzt oben, weil unten die Bedienleiste
        und die Rennuhr liegen; auf dem Handy bricht sie um. */
