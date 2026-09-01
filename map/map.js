@@ -855,6 +855,17 @@ async function loadPositions() {
 
       if (id === 'TEAMAUTO' && teamCarMarker !== null) return;
 
+      // Tracker eines abgewaehlten Rennens gehoeren nicht auf die
+      // Karte - sonst haette die Auswahl dort kaum Wirkung. Teamauto,
+      // Betreuer und Tracker ohne Rennzuordnung bleiben immer
+      // sichtbar: sie gehoeren keinem Rennen, das man abwaehlen
+      // koennte.
+      if (pos.raceId && abgewaehlt.has(pos.raceId)) {
+        if (markers[id]) { map.removeLayer(markers[id]); delete markers[id]; }
+        if (trails[id])  { map.removeLayer(trails[id]);  delete trails[id]; }
+        return;
+      }
+
       if (!trails[id]) {
         const color = id === 'TEAMAUTO' ? '#e53935'
                     : isBetreuer        ? '#ff9800'
@@ -965,6 +976,117 @@ async function loadPositions() {
 // und laesst sich deshalb guenstig pollen.
 let activeInfo    = { raceId: null };
 let lastActiveKey = null;
+
+// =======================
+// AUSWAHL DER RENNEN
+// =======================
+// Der Teamleiter legt zentral fest, WELCHE Rennen laufen. Was davon
+// auf diesem Geraet zu sehen ist, entscheidet der Nutzer hier - und
+// zwar ausschliesslich hier. Die Auswahl geht nie an den Server: sie
+// gehoert dem Geraet, nicht dem Rennen. Zwei Betreuer am selben
+// Streckenposten koennen dieselbe Veranstaltung unterschiedlich
+// betrachten, ohne sich gegenseitig die Ansicht zu verstellen.
+const LS_SICHTBAR = 'lt.sichtbareRennen';
+const LS_MEIN     = 'lt.meinRennen';
+
+// Steckbriefe aller laufenden Rennen, aus /active. raceId -> Objekt.
+let steckbriefe = Object.create(null);
+// Vom Nutzer abgewaehlte Rennen. Bewusst die Abwahl merken, nicht die
+// Auswahl: startet ein neues Rennen, ist es dadurch von selbst dabei.
+let abgewaehlt  = new Set();
+// Rennen, hinter dem der Nutzer selbst herfaehrt. Steuert den Reiter
+// der Taktik und die Kilometrierung im Streckeneditor.
+let meinRennen  = null;
+
+try {
+  const roh = localStorage.getItem(LS_SICHTBAR);
+  if (roh) abgewaehlt = new Set(JSON.parse(roh) || []);
+  meinRennen = localStorage.getItem(LS_MEIN) || null;
+} catch (e) { /* privater Modus oder voller Speicher - dann eben alles sichtbar */ }
+
+function speichereAuswahl() {
+  try {
+    localStorage.setItem(LS_SICHTBAR, JSON.stringify([...abgewaehlt]));
+    if (meinRennen) localStorage.setItem(LS_MEIN, meinRennen);
+    else localStorage.removeItem(LS_MEIN);
+  } catch (e) { /* nicht schlimm, gilt dann nur fuer diese Sitzung */ }
+}
+
+// Die eine Wahrheit darueber, was auf der Karte liegt. gpx.js fragt
+// hier nach, statt einen eigenen Stand zu halten.
+function sichtbareRennenListe() {
+  return Object.keys(steckbriefe).filter(id => !abgewaehlt.has(id));
+}
+
+function steckbriefOf(raceId) { return steckbriefe[raceId] || null; }
+
+function meinRaceId() {
+  const sicht = sichtbareRennenListe();
+  if (meinRennen && sicht.indexOf(meinRennen) !== -1) return meinRennen;
+  return sicht[0] || null;
+}
+
+function setzeMeinRennen(raceId) {
+  meinRennen = raceId || null;
+  speichereAuswahl();
+  renderRennAuswahl();
+  if (typeof renderStrip === 'function') renderStrip(taktikGroups);
+}
+
+function schalteRennSicht(raceId) {
+  if (abgewaehlt.has(raceId)) abgewaehlt.delete(raceId);
+  else if (sichtbareRennenListe().length > 1) abgewaehlt.add(raceId);
+  else return;   // das letzte sichtbare Rennen bleibt sichtbar
+  speichereAuswahl();
+  renderRennAuswahl();
+  lastActiveKey = null;          // erzwingt Neuzeichnen der Strecken
+  fetchGpxTrack();
+  if (typeof renderStrip === 'function') renderStrip(taktikGroups);
+}
+
+// Aus gpx.js nach dem Setzen eines Streckenpunktes.
+function setzeSteckbriefMarker(raceId, liste) {
+  if (steckbriefe[raceId]) steckbriefe[raceId].marker = liste;
+}
+function setzeSteckbriefOffset(raceId, offset) {
+  if (steckbriefe[raceId]) steckbriefe[raceId].startOffset = offset;
+}
+
+// Die Leiste am oberen Rand: ein Chip je laufendem Rennen. Tippen
+// blendet ein und aus, langes Tippen setzt das eigene Rennen.
+function renderRennAuswahl() {
+  const bar = document.getElementById('rennAuswahl');
+  if (!bar) return;
+  const ids = Object.keys(steckbriefe);
+  // Bei genau einem Rennen gibt es nichts zu waehlen - dann bleibt die
+  // Leiste weg und die Karte sieht aus wie bis 1.19.0.
+  if (ids.length < 2) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+  bar.classList.remove('hidden');
+  const mein = meinRaceId();
+  bar.innerHTML = ids.map(id => {
+    const s   = steckbriefe[id];
+    const an  = !abgewaehlt.has(id);
+    const lbl = (typeof raceLabel === 'function') ? raceLabel(id, true) : (s.name || id);
+    return `<button class="raChip${an ? ' on' : ''}" data-id="${id}" style="color:${s.farbe || '#607d8b'}">`
+         + `<span class="raD" style="background:${s.farbe || '#607d8b'}"></span>`
+         + `<span class="raL">${escH(lbl)}</span>`
+         + (an && id === mein ? '<span class="raMe">\u{1F697}</span>' : '')
+         + '</button>';
+  }).join('');
+  bar.querySelectorAll('.raChip').forEach(b => {
+    let lang = null;
+    const setzen = () => { if (!abgewaehlt.has(b.dataset.id)) setzeMeinRennen(b.dataset.id); };
+    b.addEventListener('click', () => { if (lang === 'fertig') { lang = null; return; }
+                                        schalteRennSicht(b.dataset.id); });
+    b.addEventListener('contextmenu', e => { e.preventDefault(); setzen(); });
+    b.addEventListener('touchstart', () => {
+      lang = setTimeout(() => { lang = 'fertig'; setzen(); }, 550);
+    }, { passive: true });
+    b.addEventListener('touchend', () => {
+      if (lang && lang !== 'fertig') { clearTimeout(lang); lang = null; }
+    });
+  });
+}
 // trackerId -> Meter auf der Strecke. Grundlage fuer "naechster Punkt".
 let streckenPos   = Object.create(null);
 
@@ -974,6 +1096,23 @@ async function loadActiveInfo() {
     const data = await res.json();
     activeInfo = data || { raceId: null };
     pruefeVersion(activeInfo.version);
+    // Ab 2.0 liefert /active zusaetzlich races[] mit einem Steckbrief
+    // je laufendem Rennen. Fehlt das Feld - alter Server, neues
+    // Frontend -, wird der Steckbrief des Leitrennens daraus gebaut,
+    // damit die Karte trotzdem etwas anzeigt.
+    const liste = Array.isArray(activeInfo.races) && activeInfo.races.length
+      ? activeInfo.races
+      : (activeInfo.raceId ? [activeInfo] : []);
+    const vorher = Object.keys(steckbriefe).sort().join(',');
+    steckbriefe = Object.create(null);
+    liste.forEach(s => { if (s && s.raceId) steckbriefe[s.raceId] = s; });
+    // Beendete Rennen aus der Abwahl entfernen, sonst waechst die
+    // Liste ueber Wochen mit Karteileichen.
+    [...abgewaehlt].forEach(id => { if (!steckbriefe[id]) abgewaehlt.delete(id); });
+    if (vorher !== Object.keys(steckbriefe).sort().join(',')) {
+      speichereAuswahl();
+      renderRennAuswahl();
+    }
     // Auch die Strecke selbst kann sich aendern, ohne dass das Rennen
     // wechselt - deshalb gehoert der Streckenname mit in den Schluessel.
     // startOffset gehoert in den Schluessel: verschiebt ein zweites
@@ -981,11 +1120,17 @@ async function loadActiveInfo() {
     // Die Streckenmarker gehoeren mit in den Schluessel: setzt ein
     // zweites Geraet eine Wertung, soll sie hier auftauchen, ohne dass
     // sich Rennen oder Strecke geaendert haben.
-    const mkKey = (activeInfo.marker || [])
-      .map(m => `${m.id}:${m.typ}:${m.s}:${m.sEnde === undefined || m.sEnde === null ? '' : m.sEnde}`)
-      .join(',');
-    const key = `${activeInfo.raceId || ''}|${activeInfo.gpxName || ''}|${activeInfo.gpxPoints || 0}`
-              + `|${activeInfo.startOffset || 0}|${mkKey}`;
+    // Ab 2.0 geht der Schluessel ueber alle sichtbaren Rennen: setzt
+    // ein zweites Geraet eine Wertung im zweiten Rennen, soll sie hier
+    // genauso auftauchen wie im ersten. Die Abwahl gehoert mit hinein,
+    // sonst bleibt eine abgeblendete Strecke liegen.
+    const key = sichtbareRennenListe().map(id => {
+      const s = steckbriefe[id];
+      const mk = (s.marker || [])
+        .map(m => `${m.id}:${m.typ}:${m.s}:${m.sEnde === undefined || m.sEnde === null ? '' : m.sEnde}`)
+        .join(',');
+      return `${id}|${s.gpxName || ''}|${s.gpxPoints || 0}|${s.startOffset || 0}|${mk}`;
+    }).join('||');
     if (key !== lastActiveKey) {
       const erster = lastActiveKey === null;
       lastActiveKey = key;
@@ -1026,18 +1171,29 @@ function feldSchnitt() {
 
 // Handkorrektur des Rundenzaehlers. Die Automatik rechnet danach vom
 // korrigierten Stand weiter.
-async function adjustLap(delta) {
-  if (!activeInfo || !activeInfo.raceId || !authToken) return;
+async function adjustLap(delta, raceId) {
+  // Ab 2.0 wird die Renn-ID mitgegeben: der Knopf gehoert zu genau der
+  // Zeile, in der er steht.
+  const ziel = raceId || (activeInfo && activeInfo.raceId);
+  if (!ziel || !authToken) return;
   try {
-    const res = await fetch(`${SERVER}/races/${activeInfo.raceId}/lap`, {
+    const res = await fetch(`${SERVER}/races/${ziel}/lap`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
       body: JSON.stringify({ delta })
     });
     if (!res.ok) { checkAuth(res); showToast('\u26A0\uFE0F Runde nicht ge\u00E4ndert'); return; }
     const d = await res.json();
-    activeInfo.currentLap = d.currentLap;
-    activeInfo.finalLap   = d.finalLap;
+    // Der Rundenstand gehoert dem Rennen. Bis 1.19.0 gab es nur eines,
+    // deshalb stand er direkt in activeInfo.
+    if (steckbriefe[ziel]) {
+      steckbriefe[ziel].currentLap = d.currentLap;
+      steckbriefe[ziel].finalLap   = d.finalLap;
+    }
+    if (activeInfo && activeInfo.raceId === ziel) {
+      activeInfo.currentLap = d.currentLap;
+      activeInfo.finalLap   = d.finalLap;
+    }
     updateRaceClock();
   } catch (e) { showToast('\u26A0\uFE0F ' + e.message); }
 }
@@ -1092,6 +1248,29 @@ function escNext(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Eine Zeile der Rennleiste: Farbpunkt, Kuerzel, Rundenstand. Die
+// Korrekturknoepfe tragen die Renn-ID mit sich - bei zwei Rennen darf
+// kein Zweifel bestehen, welche Zaehlung ein Tipp verstellt.
+function rennZeile(raceId) {
+  const s = steckbriefe[raceId];
+  if (!s) return '';
+  const lbl = (typeof raceLabel === 'function') ? raceLabel(raceId, true) : (s.name || raceId);
+  let txt;
+  if (!s.currentLap)      txt = '\u2013';
+  else if (s.finalLap)    txt = '\u{1F3C1} Zielrunde';
+  else if (s.laps && s.laps - s.currentLap === 1) txt = 'Noch 1 Runde';
+  else if (s.laps)        txt = `Noch ${s.laps - s.currentLap} Runden`;
+  else                    txt = `Runde ${s.currentLap}`;
+  const darf  = authLevel === 'spolei';
+  const minus = darf ? `<button class="rcLap" data-lap="-1" data-race="${raceId}" title="Runde zur\u00FCck">\u2212</button>` : '';
+  const plus  = darf ? `<button class="rcLap" data-lap="1" data-race="${raceId}" title="Runde weiter">+</button>` : '';
+  return `<span class="rcRow">`
+       + `<span class="rcD" style="background:${s.farbe || '#607d8b'}"></span>`
+       + `<span class="rcN">${escH(lbl)}</span>`
+       + `<span class="rcLapBox${s.finalLap ? ' final' : ''}">${minus}`
+       + `<span class="rcLapTxt">${txt}</span>${plus}</span></span>`;
+}
+
 function updateRaceClock() {
   const el = document.getElementById('raceClock');
   if (!el) return;
@@ -1101,6 +1280,27 @@ function updateRaceClock() {
   const zeit = `${Math.floor(sek / 3600)}:${String(Math.floor(sek / 60) % 60).padStart(2, '0')}`
              + `:${String(sek % 60).padStart(2, '0')}`;
   const avg = feldSchnitt();
+  // Ab 2.0 zeigt die Leiste nur noch die Runde, dafuer je sichtbarem
+  // Rennen eine Zeile. Fahrtzeit und Feldschnitt sind entfallen: die
+  // Uhrzeit steht ohnehin auf dem Geraet, und bei zwei Rennen mit
+  // verschiedenen Startzeiten waere eine gemeinsame Fahrtzeit sinnlos.
+  // Der Rundenzaehler bleibt, weil an ihm die Korrekturknoepfe haengen -
+  // ohne sie liesse sich eine falsch gezaehlte Runde bis zum Rennende
+  // nicht mehr richtigstellen.
+  const sicht = sichtbareRennenListe();
+  if (sicht.length) {
+    el.innerHTML = sicht.map(id => rennZeile(id)).join('');
+    el.querySelectorAll('.rcLap').forEach(b => {
+      b.addEventListener('click', ev => {
+        ev.stopPropagation();
+        adjustLap(Number(b.dataset.lap), b.dataset.race);
+      });
+    });
+    el.classList.remove('hidden', 'geplant');
+    el.classList.toggle('mehrfach', sicht.length > 1);
+    el.title = 'Runde je Rennen \u2013 \u00B1 korrigiert die Z\u00E4hlung';
+    return;
+  }
   // Zielrunde statt "4/4": im Auto zaehlt die Aussage, nicht die Zahl.
   let runde = '';
   if (activeInfo.currentLap) {

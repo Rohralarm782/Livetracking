@@ -572,6 +572,68 @@
     }
 
     #taktikStrip.hidden { display: none; }
+
+    /* RENNAUSWAHL - waagerechte Leiste am oberen Rand.
+       Erscheint erst ab zwei laufenden Rennen; bei einem sieht die
+       Karte aus wie bis 1.19.0. */
+    #rennAuswahl {
+      position: fixed; top: 8px; left: 8px; right: 96px; z-index: 999;
+      display: flex; gap: 6px; align-items: center;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.10); border-radius: 9px;
+      padding: 6px 7px;
+    }
+    #rennAuswahl.hidden { display: none; }
+    #rennAuswahl::-webkit-scrollbar { display: none; }
+    .raChip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 9px 5px 7px; border: 2px solid #cfd8dc; border-radius: 16px;
+      background: #fff; font-size: 12px; font-family: sans-serif;
+      white-space: nowrap; cursor: pointer; flex: 0 0 auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .raChip.on { border-color: currentColor; }
+    .raD { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; opacity: .28; }
+    .raChip.on .raD { opacity: 1; }
+    .raL { color: #263238; }
+    .raMe { font-size: 12px; }
+
+    /* RENNLEISTE - eine Zeile je sichtbarem Rennen. Fahrtzeit und
+       Feldschnitt sind ab 2.0 entfallen, die Runde bleibt: an ihr
+       haengen die Korrekturknoepfe. */
+    #raceClock.mehrfach {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+    }
+    .rcRow { display: flex; align-items: center; gap: 6px; }
+    .rcD { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .rcN { font-weight: 600; }
+
+    /* REITER IM TAKTIK-STREIFEN */
+    .stripTabs { display: flex; width: 100%; border-bottom: 1px solid #eceff1; margin-bottom: 5px; }
+    .stripTab {
+      flex: 1; text-align: center; font-size: 10px; font-weight: 700;
+      padding: 3px 0 5px; cursor: pointer; color: #b0bec5;
+      border-bottom: 2px solid transparent; overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .stripTab.on { color: #263238; }
+
+    /* ZUSAMMENGELEGTER STRECKENPUNKT - ein Symbol, aussen ein
+       Ringsegment je Rennen. */
+    .lt-mkr { position: relative; width: 32px; height: 32px; }
+    .lt-mkr svg { position: absolute; inset: 0; }
+    .lt-mkr-i {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 13px; line-height: 1;
+    }
+    .leaflet-marker-icon.lt-mkr, .lt-mkr { background: none; border: none; }
+
+    /* Tooltip eines zusammengelegten Punktes: eine Zeile je Rennen. */
+    .lt-tt .lt-tt-h { font-weight: 600; margin-bottom: 3px; }
+    .lt-tt .lt-tt-r { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+    .lt-tt .lt-tt-d { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
     .strip-grp   { text-align: center; width: 100%; padding: 4px 6px; }
     .strip-dot   { width: 8px; height: 8px; border-radius: 50%; margin: 0 auto 2px; }
     .strip-name  { font-size: 11px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; }

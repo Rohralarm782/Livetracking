@@ -1982,10 +1982,43 @@ app.post('/api/claude', requireSpolei, express.json({ limit: '20mb' }), async (r
 // ein ganzes Wochenende vorbereiten laesst. Gelesen wird ueber /gpx,
 // das immer die Strecke des aktiven Rennens liefert.
 
+// Ab 2.0 kann die Karte mehrere Strecken gleichzeitig zeichnen. Ohne
+// race-Parameter bleibt es beim Leitrennen - so wie es bis 1.19.0 die
+// einzige Moeglichkeit war.
 app.get('/gpx', (req, res) => {
-  const r = activeRaceId ? races[activeRaceId] : null;
+  const id = (typeof req.query.race === 'string' && req.query.race)
+    ? req.query.race : activeRaceId;
+  const r = id ? races[id] : null;
   res.json((r && r.gpx) || null);
 });
+
+// Der Steckbrief eines Rennens. Bis 1.19.0 stand das direkt in
+// /active; fuer 2.0 wird derselbe Block je aktivem Rennen gebraucht.
+// farbe kommt mit, damit das Frontend Strecke, Marker und Reiter
+// einfaerben kann, ohne /races nachzuladen.
+function raceSteckbrief(r) {
+  const ev = events[r.eventId] || null;
+  const m  = raceMetaOf(r.id);
+  return {
+    raceId:      r.id,
+    name:        r.name,
+    eventName:   ev ? ev.name : null,
+    category:    r.category,
+    farbe:       farbeOf(r.id),
+    startTime:   r.startTime,
+    actualStart: r.actualStart || null,
+    riderCount:  r.riders.length,
+    laps:        m.laps,
+    currentLap:  m.currentLap || 1,
+    finalLap:    istZielrunde(r.id),
+    startOffset: Math.round(m.startOffset || 0),
+    marker:      m.marker,
+    trackLength: (() => { const g = trackGeometry(r.id); return g ? Math.round(g.L) : null; })(),
+    hasGpx:      !!r.gpx,
+    gpxName:     r.gpx ? r.gpx.name : null,
+    gpxPoints:   r.gpx ? r.gpx.coords.length : 0
+  };
+}
 
 // Winziger Steckbrief des aktiven Rennens, ohne Startliste und ohne
 // Streckenpunkte. Zwei Probleme auf einmal:
@@ -1999,27 +2032,14 @@ app.get('/active', (req, res) => {
   // Die Version reist hier mit, weil /active ohnehin alle 20 Sekunden
   // abgefragt wird. Ein Tablet, das seit gestern offen ist, merkt so
   // von selbst, dass ein neuer Stand ausgeliefert wird.
-  if (!r) return res.json({ raceId: null, version: VERSION.version });
-  const ev = events[r.eventId] || null;
-  res.json({
-    version:    VERSION.version,
-    raceId:     r.id,
-    name:       r.name,
-    eventName:  ev ? ev.name : null,
-    category:   r.category,
-    startTime:  r.startTime,
-    actualStart: r.actualStart || null,
-    riderCount: r.riders.length,
-    laps:        raceMetaOf(r.id).laps,
-    currentLap:  raceMetaOf(r.id).currentLap || 1,
-    finalLap:    istZielrunde(r.id),
-    startOffset: Math.round(raceMetaOf(r.id).startOffset || 0),
-    marker:      raceMetaOf(r.id).marker,
-    trackLength: (() => { const g = trackGeometry(r.id); return g ? Math.round(g.L) : null; })(),
-    hasGpx:     !!r.gpx,
-    gpxName:    r.gpx ? r.gpx.name : null,
-    gpxPoints:  r.gpx ? r.gpx.coords.length : 0
-  });
+  // races[] steht auch dann da, wenn kein Rennen laeuft - das Frontend
+  // muss so nicht zwei Faelle unterscheiden.
+  const alle = [...activeRaceIds].filter(id => races[id]).map(id => raceSteckbrief(races[id]));
+  if (!r) return res.json({ raceId: null, version: VERSION.version, races: alle });
+  // Die Felder des Leitrennens bleiben auf oberster Ebene liegen. Ein
+  // Geraet mit altem Stand im Cache liest sie weiter und sieht genau
+  // das, was es bis 1.19.0 gesehen hat.
+  res.json(Object.assign({ version: VERSION.version }, raceSteckbrief(r), { races: alle }));
 });
 
 app.put('/races/:id/gpx', requireSpolei, (req, res) => {

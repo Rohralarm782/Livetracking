@@ -4,39 +4,128 @@
 // Die Strecke gehoert zum Rennen und wird in der Rennverwaltung
 // hochgeladen. /gpx liefert immer die Strecke des AKTIVEN Rennens,
 // deshalb muss die Linie beim Rennenwechsel neu geholt werden.
-let gpxLayer = null;
-// Die Punkte werden fuer den Zielmarker und den Streckenmodus gebraucht:
-// daraus laesst sich jede Position auf der Runde in Grad umrechnen, ohne
-// den Server zu fragen.
-let gpxCoords = [];
+// Bis 1.19.0 lag genau eine Strecke auf der Karte. Ab 2.0 koennen bis
+// zu vier Rennen gleichzeitig laufen, also haelt die Karte eine Strecke
+// je Rennen.
+//
+// gpxCoords bleibt daneben bestehen und zeigt auf die Strecke des
+// FOKUSRENNENS - jenes Rennens, das der Streckenmodus bearbeitet oder
+// das der Nutzer als seines markiert hat. Daran haengen der
+// Streckeneditor und die Kilometrierung, die beide von Natur aus genau
+// ein Rennen meinen.
+let gpxLayerByRace = Object.create(null);   // raceId -> L.polyline
+let gpxByRace      = Object.create(null);   // raceId -> coords[]
+let gpxLayer       = null;                  // Linie des Fokusrennens
+let gpxCoords      = [];                    // Punkte des Fokusrennens
 
+// Welches Rennen der Nutzer sehen will, steht in map.js
+// (sichtbareRennen). gpx.js fragt nur nach - so gibt es genau eine
+// Wahrheit ueber die Auswahl.
+function sichtbareRaceIds() {
+  return (typeof sichtbareRennenListe === 'function') ? sichtbareRennenListe() : [];
+}
+
+function rennFarbe(raceId) {
+  if (typeof steckbriefOf === 'function') {
+    const s = steckbriefOf(raceId);
+    if (s && s.farbe) return s.farbe;
+  }
+  return '#e65100';
+}
+
+// Holt die Strecken aller sichtbaren Rennen. Bis 1.19.0 lieferte /gpx
+// immer die Strecke des Leitrennens; der race-Parameter ist ab 2.0
+// dabei.
 async function fetchGpxTrack() {
+  const ids = sichtbareRaceIds();
   try {
-    const res  = await fetch(`${SERVER}/gpx`);
-    const data = await res.json();
-    if (data && data.coords && data.coords.length > 0) drawGpxLayer(data.coords);
-    else clearGpxLayer();
+    const neu = Object.create(null);
+    for (const id of ids) {
+      const res  = await fetch(`${SERVER}/gpx?race=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (data && data.coords && data.coords.length > 0) neu[id] = data.coords;
+    }
+    gpxByRace = neu;
+    zeichneStrecken();
   } catch (err) { console.error('GPX fetch:', err); }
 }
 
-function drawGpxLayer(coords) {
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-  gpxCoords = coords;
-  gpxLayer = L.polyline(coords, {
-    color: '#e65100', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round'
-  }).addTo(map);
-  // Im Streckenmodus faengt eine unsichtbare, breitere Linie die Tipper:
-  // die 4 px der Streckenlinie waeren im fahrenden Auto nicht zu treffen.
-  gpxLayer.on('click', onTrackClick);
+// Alle sichtbaren Strecken zeichnen. Fahren zwei Rennen denselben
+// Rundkurs - der Normalfall bei U15w und U15m einer Veranstaltung -,
+// liegen die Linien exakt uebereinander und die zuletzt gezeichnete
+// verdeckt alle anderen. Deshalb wird jede weitere Linie um wenige
+// Bildschirmpixel versetzt. Der Versatz wird bewusst NICHT in Metern
+// gerechnet: er soll bei jedem Zoom gleich schmal bleiben.
+function zeichneStrecken() {
+  for (const id of Object.keys(gpxLayerByRace)) {
+    try { map.removeLayer(gpxLayerByRace[id]); } catch (e) { /* schon weg */ }
+  }
+  gpxLayerByRace = Object.create(null);
+  gpxLayer = null;
+
+  const ids = sichtbareRaceIds().filter(id => gpxByRace[id]);
+  // Im Streckenmodus liegt nur die bearbeitete Strecke auf der Karte -
+  // sonst koennte ein Tipp auf der falschen Linie landen und den
+  // Zielstrich eines fremden Rennens verschieben.
+  const zeichnen = (streckenModus && zielRaceId) ? ids.filter(id => id === zielRaceId) : ids;
+
+  const versatzZaehler = Object.create(null);
+  zeichnen.forEach(id => {
+    const coords = gpxByRace[id];
+    // Strecken mit identischem Startpunkt gelten als deckungsgleich.
+    const schl = coords[0][0].toFixed(4) + ',' + coords[0][1].toFixed(4);
+    const stufe = versatzZaehler[schl] = (versatzZaehler[schl] === undefined ? 0 : versatzZaehler[schl] + 1);
+    const linie = L.polyline(coords, {
+      color: (streckenModus && id === zielRaceId) ? '#1565c0' : rennFarbe(id),
+      weight: (streckenModus && id === zielRaceId) ? 8 : 4,
+      opacity: (streckenModus && id === zielRaceId) ? 0.95 : 0.85,
+      lineJoin: 'round', lineCap: 'round'
+    }).addTo(map);
+    if (stufe > 0 && linie._path) {
+      linie._path.style.transform = `translate(${stufe * 3}px, ${stufe * 3}px)`;
+    }
+    linie.on('click', onTrackClick);
+    gpxLayerByRace[id] = linie;
+  });
+
+  // Fokusrennen: im Streckenmodus das bearbeitete, sonst das eigene
+  // Rennen, sonst das erste sichtbare.
+  const fokus = (streckenModus && zielRaceId) ? zielRaceId : fokusRaceId();
+  gpxCoords = (fokus && gpxByRace[fokus]) ? gpxByRace[fokus] : [];
+  gpxLayer  = gpxLayerByRace[fokus] || null;
+
   drawFinishMarker();
   drawRaceMarker();
 }
 
+// Welches Rennen ist gemeint, wenn nur eines gemeint sein kann.
+function fokusRaceId() {
+  if (typeof meinRaceId === 'function') {
+    const m = meinRaceId();
+    if (m && gpxByRace[m]) return m;
+  }
+  const ids = sichtbareRaceIds().filter(id => gpxByRace[id]);
+  return ids[0] || null;
+}
+
 function clearGpxLayer() {
-  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  for (const id of Object.keys(gpxLayerByRace)) {
+    try { map.removeLayer(gpxLayerByRace[id]); } catch (e) { /* schon weg */ }
+  }
+  gpxLayerByRace = Object.create(null);
+  gpxByRace = Object.create(null);
+  gpxLayer  = null;
   gpxCoords = [];
   drawFinishMarker();
   clearRaceMarker();
+}
+
+// Bis 1.19.0 nahm drawGpxLayer die Punkte direkt entgegen. Der Aufruf
+// steht noch im GPX-Import der Rennverwaltung.
+function drawGpxLayer(coords, raceId) {
+  const id = raceId || fokusRaceId() || (typeof activeRaceId !== 'undefined' ? activeRaceId : null);
+  if (id) gpxByRace[id] = coords;
+  zeichneStrecken();
 }
 
 // Abstand zweier Koordinaten in Metern. Gleiche Formel wie im Server,
@@ -50,47 +139,74 @@ function distMeters(aLat, aLon, bLat, bLon) {
 }
 
 // Aufsummierte Distanz je Punkt, gleiche Rechnung wie im Server.
-function gpxCumulative() {
+// Ohne Angabe gilt die Strecke des Fokusrennens - so bleiben die
+// bestehenden Aufrufe gueltig.
+function gpxCumulative(coords) {
+  const c = coords || gpxCoords;
   const cum = [0];
-  for (let i = 1; i < gpxCoords.length; i++) {
-    cum[i] = cum[i - 1] + distMeters(
-      gpxCoords[i - 1][0], gpxCoords[i - 1][1], gpxCoords[i][0], gpxCoords[i][1]);
+  for (let i = 1; i < c.length; i++) {
+    cum[i] = cum[i - 1] + distMeters(c[i - 1][0], c[i - 1][1], c[i][0], c[i][1]);
   }
   return cum;
 }
 
+// Punkte einer bestimmten Strecke, mit Rueckfall auf das Fokusrennen.
+function coordsOf(raceId) {
+  if (raceId && gpxByRace[raceId]) return gpxByRace[raceId];
+  return gpxCoords;
+}
+
 // Position auf der Runde (Meter) -> [lat, lon]
-function gpxPointAt(meter) {
-  if (gpxCoords.length < 2) return null;
-  const cum = gpxCumulative();
+function gpxPointAt(meter, raceId) {
+  const c = coordsOf(raceId);
+  if (c.length < 2) return null;
+  const cum = gpxCumulative(c);
   const L   = cum[cum.length - 1];
   if (!L) return null;
   const s = ((meter % L) + L) % L;
   let i = 1;
   while (i < cum.length && cum[i] < s) i++;
   const f = (s - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1);
-  return [gpxCoords[i - 1][0] + (gpxCoords[i][0] - gpxCoords[i - 1][0]) * f,
-          gpxCoords[i - 1][1] + (gpxCoords[i][1] - gpxCoords[i - 1][1]) * f];
+  return [c[i - 1][0] + (c[i][0] - c[i - 1][0]) * f,
+          c[i - 1][1] + (c[i][1] - c[i - 1][1]) * f];
+}
+
+// Fahrtrichtung an einer Streckenposition, in Grad. Wird zum
+// Zusammenlegen von Punkten gebraucht: auf einem Kurs mit Wendepunkt
+// liegen Hin- und Rueckweg oft nur zehn Meter auseinander, sind aber
+// verschiedene Streckenabschnitte. Ohne Richtungsvergleich wuerde eine
+// Wertung bei km 4 mit einer bei km 12 verschmelzen.
+function gpxBearingAt(meter, raceId) {
+  const a = gpxPointAt(meter - 12, raceId);
+  const b = gpxPointAt(meter + 12, raceId);
+  if (!a || !b) return null;
+  const rad = Math.PI / 180;
+  const dLon = (b[1] - a[1]) * rad;
+  const y = Math.sin(dLon) * Math.cos(b[0] * rad);
+  const x = Math.cos(a[0] * rad) * Math.sin(b[0] * rad)
+          - Math.sin(a[0] * rad) * Math.cos(b[0] * rad) * Math.cos(dLon);
+  return (Math.atan2(y, x) / rad + 360) % 360;
 }
 
 // Streckenabschnitt zwischen zwei Metermarken als Punktliste.
 // Laeuft ueber den Streckenanfang hinweg, wenn s2 kleiner ist als s1 -
 // eine Verpflegungszone kann den Zielstrich einschliessen.
-function gpxSlice(s1, s2) {
-  if (gpxCoords.length < 2) return [];
-  const cum = gpxCumulative();
+function gpxSlice(s1, s2, raceId) {
+  const c = coordsOf(raceId);
+  if (c.length < 2) return [];
+  const cum = gpxCumulative(c);
   const L   = cum[cum.length - 1];
   if (!L) return [];
   const a = ((s1 % L) + L) % L;
   let laenge = (((s2 - s1) % L) + L) % L;
   if (laenge < 1) laenge = 1;          // entartete Zone bleibt sichtbar
   const zwischen = [];
-  for (let i = 0; i < gpxCoords.length; i++) {
+  for (let i = 0; i < c.length; i++) {
     const d = (((cum[i] - a) % L) + L) % L;
-    if (d > 0 && d < laenge) zwischen.push({ d, p: gpxCoords[i] });
+    if (d > 0 && d < laenge) zwischen.push({ d, p: c[i] });
   }
   zwischen.sort((x, y) => x.d - y.d);
-  return [gpxPointAt(a), ...zwischen.map(z => z.p), gpxPointAt(a + laenge)]
+  return [gpxPointAt(a, raceId), ...zwischen.map(z => z.p), gpxPointAt(a + laenge, raceId)]
     .filter(Boolean);
 }
 
@@ -120,7 +236,39 @@ const finishIcon = L.divIcon({
 // Zeichnet Start/Ziel dort, wo der Server es fuehrt. Die Umrechnung von
 // Metern in Grad passiert hier, damit der Marker auch dann steht, wenn
 // gerade keine Position hereinkommt.
+// Ein Zielstrich je sichtbarem Rennen. finishMarker bleibt als Zeiger
+// auf den des Fokusrennens bestehen.
+let finishByRace = Object.create(null);
+
+function clearFinishMarker() {
+  for (const id of Object.keys(finishByRace)) {
+    try { map.removeLayer(finishByRace[id]); } catch (e) { /* schon weg */ }
+  }
+  finishByRace = Object.create(null);
+  if (finishMarker) { try { map.removeLayer(finishMarker); } catch (e) {} finishMarker = null; }
+}
+
 function drawFinishMarker() {
+  clearFinishMarker();
+  const ids = sichtbareRaceIds().filter(id => (gpxByRace[id] || []).length > 1);
+  // Zuschauer direkt nach dem Seitenaufruf: die Steckbriefliste ist
+  // noch nicht da, die Strecke des Leitrennens aber schon.
+  if (!ids.length) return drawFinishMarkerAlt();
+  const zeichnen = (streckenModus && zielRaceId) ? ids.filter(id => id === zielRaceId) : ids;
+  zeichnen.forEach(id => {
+    const s = (typeof steckbriefOf === 'function') ? steckbriefOf(id) : null;
+    const p = gpxPointAt((s && s.startOffset) || 0, id);
+    if (!p) return;
+    const mk = L.marker(p, { icon: finishIcon, interactive: false }).addTo(map);
+    finishByRace[id] = mk;
+    if (id === fokusRaceId()) finishMarker = mk;
+  });
+}
+
+// Alter Pfad: zeichnet den Zielmarker des Leitrennens aus activeInfo.
+// Bleibt fuer den Fall stehen, dass die Steckbriefliste noch nicht
+// geladen ist - etwa bei einem Zuschauer direkt nach dem Seitenaufruf.
+function drawFinishMarkerAlt() {
   if (finishMarker) { map.removeLayer(finishMarker); finishMarker = null; }
   if (!activeInfo || !activeInfo.raceId || gpxCoords.length < 2) return;
   const p = gpxPointAt(activeInfo.startOffset || 0);
@@ -176,31 +324,118 @@ function markerIcon(typ) {
   });
 }
 
-// Zeichnet alle Marker des aktiven Rennens. Zonen zuerst, damit die
+// Ein Punkt, der fuer mehrere Rennen gilt: ein Symbol, aussen ein Ring
+// aus einem Segment je Rennen. Bei genau einem Rennen ergibt das einen
+// einfachen Farbring - die Darstellung bleibt damit fast so, wie sie
+// bis 1.19.0 war.
+function markerIconRing(typ, farben) {
+  const a = markerArt(typ);
+  if (!farben || farben.length < 2) {
+    return L.divIcon({
+      className: '', iconSize: [24, 24], iconAnchor: [12, 12],
+      html: `<div class="lt-mk" style="border-color:${farben && farben[0] ? farben[0] : a.farbe}">${a.icon}</div>`
+    });
+  }
+  const R = 15, C = 16, dick = 4;
+  const u = 2 * Math.PI * R;
+  const seg = farben.map((f, i) => {
+    const teil = u / farben.length;
+    return `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${f}"
+      stroke-width="${dick}" stroke-dasharray="${teil - 1.5} ${u - teil + 1.5}"
+      stroke-dashoffset="${-i * teil}" transform="rotate(-90 ${C} ${C})"/>`;
+  }).join('');
+  return L.divIcon({
+    className: '', iconSize: [32, 32], iconAnchor: [16, 16],
+    html: `<div class="lt-mkr"><svg width="32" height="32" viewBox="0 0 32 32">${seg}</svg>`
+        + `<span class="lt-mkr-i">${a.icon}</span></div>`
+  });
+}
+
+// Punkte verschiedener Rennen, die an derselben Stelle liegen, werden
+// zu einem Symbol zusammengefasst. Drei Bedingungen muessen alle
+// zutreffen:
+//   - gleicher Typ (eine Verpflegung verschmilzt nicht mit einem Sprint)
+//   - hoechstens MK_CLUSTER_M Luftlinie
+//   - Fahrtrichtung weicht um weniger als 60 Grad ab
+// Die Richtungspruefung ist der Grund, warum 100 m tragbar sind: auf
+// einem Kurs mit Wendepunkt liegt die Gegenrichtung oft nur zehn Meter
+// entfernt, gehoert aber zu einem ganz anderen Streckenabschnitt.
+const MK_CLUSTER_M    = 100;
+const MK_CLUSTER_GRAD = 60;
+
+function winkelDiff(a, b) {
+  if (a === null || b === null) return 0;
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+function sammleMarker() {
+  const gruppen = [];
+  sichtbareRaceIds().forEach(rid => {
+    if ((gpxByRace[rid] || []).length < 2) return;
+    const s = (typeof steckbriefOf === 'function') ? steckbriefOf(rid) : null;
+    const liste = (s && Array.isArray(s.marker)) ? s.marker : [];
+    liste.forEach(m => {
+      if (!m || typeof m.s !== 'number') return;
+      const p = gpxPointAt(m.s, rid);
+      if (!p) return;
+      const kurs = gpxBearingAt(m.s, rid);
+      const treffer = gruppen.find(g =>
+        g.typ === m.typ
+        && distMeters(g.lat, g.lon, p[0], p[1]) <= MK_CLUSTER_M
+        && winkelDiff(g.kurs, kurs) < MK_CLUSTER_GRAD);
+      if (treffer) treffer.eintraege.push({ raceId: rid, m });
+      else gruppen.push({ typ: m.typ, lat: p[0], lon: p[1], kurs,
+                          eintraege: [{ raceId: rid, m }] });
+    });
+  });
+  return gruppen;
+}
+
+function clusterText(g) {
+  const a = markerArt(g.typ);
+  const kopf = `${a.icon} ${g.eintraege[0].m.name || a.label}`;
+  const zeilen = g.eintraege.map(e => {
+    const nm = (typeof raceLabel === 'function') ? raceLabel(e.raceId, true) : e.raceId;
+    let z = `<span class="lt-tt-d" style="background:${rennFarbe(e.raceId)}"></span>${nm}`
+          + ` \u00B7 ${kmText(e.m.s)}`;
+    if (e.m.sEnde !== undefined && e.m.sEnde !== null) z += ` \u2013 ${kmText(e.m.sEnde)}`;
+    if (Array.isArray(e.m.runden) && e.m.runden.length) z += ` \u00B7 Runde ${e.m.runden.join(', ')}`;
+    return `<div class="lt-tt-r">${z}</div>`;
+  }).join('');
+  return `<div class="lt-tt-h">${kopf}</div>${zeilen}`;
+}
+
+// Zeichnet die Marker aller sichtbaren Rennen. Zonen zuerst, damit die
 // Symbole darueber liegen und anklickbar bleiben.
 function drawRaceMarker() {
   clearRaceMarker();
-  if (!activeInfo || !activeInfo.raceId || gpxCoords.length < 2) return;
-  const liste = Array.isArray(activeInfo.marker) ? activeInfo.marker : [];
+  const gruppen = sammleMarker();
 
-  liste.forEach(m => {
-    if (!m || typeof m.s !== 'number') return;
-    const a = markerArt(m.typ);
-    const txt = markerBeschriftung(m);
-
-    if (a.zone && m.sEnde !== undefined && m.sEnde !== null) {
-      const pts = gpxSlice(m.s, m.sEnde);
+  // Zonen: jede fuer sich, in der Farbe ihres Rennens. Sie liegen
+  // flaechig auf der Strecke, ein Zusammenlegen wuerde die Grenzen
+  // verwischen.
+  gruppen.forEach(g => {
+    const a = markerArt(g.typ);
+    if (!a.zone) return;
+    g.eintraege.forEach(e => {
+      if (e.m.sEnde === undefined || e.m.sEnde === null) return;
+      const pts = gpxSlice(e.m.s, e.m.sEnde, e.raceId);
       if (pts.length > 1) {
         markerLayer.push(L.polyline(pts, {
-          color: a.farbe, weight: 11, opacity: 0.45, lineCap: 'butt', interactive: false
+          color: rennFarbe(e.raceId), weight: 11, opacity: 0.40,
+          lineCap: 'butt', interactive: false
         }).addTo(map));
       }
-    }
-    const p = gpxPointAt(m.s);
-    if (!p) return;
-    markerLayer.push(L.marker(p, { icon: markerIcon(m.typ), interactive: false })
-      .addTo(map)
-      .bindTooltip(txt, { direction: 'top' }));
+    });
+  });
+
+  gruppen.forEach(g => {
+    const farben = g.eintraege.map(e => rennFarbe(e.raceId));
+    markerLayer.push(
+      L.marker([g.lat, g.lon], { icon: markerIconRing(g.typ, farben), interactive: false })
+        .addTo(map)
+        .bindTooltip(clusterText(g), { direction: 'top', className: 'lt-tt' }));
   });
 }
 
@@ -208,24 +443,50 @@ function drawRaceMarker() {
 // Aenderung das gerade angezeigte Rennen, wandert sie sofort auf die
 // Karte, statt bis zum naechsten /active-Takt zu warten.
 function uebernehmeMarker(raceId, liste) {
-  if (!activeInfo || activeInfo.raceId !== raceId) return;
-  activeInfo.marker = Array.isArray(liste) ? liste : [];
+  // Bis 1.19.0 lag nur das Leitrennen auf der Karte. Ab 2.0 kann die
+  // Aenderung jedes sichtbare Rennen betreffen.
+  if (typeof setzeSteckbriefMarker === 'function') {
+    setzeSteckbriefMarker(raceId, Array.isArray(liste) ? liste : []);
+  }
+  if (activeInfo && activeInfo.raceId === raceId) {
+    activeInfo.marker = Array.isArray(liste) ? liste : [];
+  }
+  if (sichtbareRaceIds().indexOf(raceId) === -1) return;
   drawRaceMarker();
+}
+
+// Der Streckenmodus wird aus dem Renn-Panel gestartet und kann damit
+// auch ein Rennen betreffen, das noch nicht laeuft - dessen Strecke
+// liegt dann nicht im Cache, weil fetchGpxTrack() nur die sichtbaren
+// Rennen holt.
+async function ladeStreckeFuer(raceId) {
+  if (!raceId || gpxByRace[raceId]) return;
+  try {
+    const res  = await fetch(`${SERVER}/gpx?race=${encodeURIComponent(raceId)}`);
+    const data = await res.json();
+    if (data && data.coords && data.coords.length > 0) gpxByRace[raceId] = data.coords;
+  } catch (err) { console.error('GPX fetch:', err); }
 }
 
 function setStreckenModus(an, raceId, markerId) {
   streckenModus = !!an && authLevel === 'spolei';
   zielRaceId = streckenModus
-    ? (raceId || (activeInfo && activeInfo.raceId) || null)
+    ? (raceId || fokusRaceId() || (activeInfo && activeInfo.raceId) || null)
     : null;
+  if (streckenModus && zielRaceId && !gpxByRace[zielRaceId]) {
+    // Nachladen und danach neu zeichnen - der Modus laeuft schon, die
+    // Linie kommt einen Wimpernschlag spaeter.
+    ladeStreckeFuer(zielRaceId).then(() => { if (streckenModus) zeichneStrecken(); });
+  }
   zielMarkerId = streckenModus ? (markerId || null) : null;
   document.getElementById('streckenBar').classList.toggle('hidden', !streckenModus);
   beschrifteStreckenBar();
-  if (gpxLayer) {
-    gpxLayer.setStyle(streckenModus
-      ? { color: '#1565c0', weight: 8, opacity: 0.95 }
-      : { color: '#e65100', weight: 4, opacity: 0.8 });
-  }
+  // Solange der Modus laeuft, liegt nur die bearbeitete Strecke auf der
+  // Karte. Das uebernimmt zeichneStrecken(), das den Modus mit
+  // auswertet - eine Umfaerbung der einen Linie reicht ab 2.0 nicht
+  // mehr, weil sonst drei fremde Linien danebenliegen und ein Fehltipp
+  // den Zielstrich des falschen Rennens verschiebt.
+  zeichneStrecken();
   const el = document.getElementById('map');
   if (el) el.style.cursor = streckenModus ? 'crosshair' : '';
   if (streckenModus) zeigeZielKm();
@@ -289,11 +550,11 @@ function zielOffset() {
 // Tipp auf die Strecke: der Server projiziert die Koordinate mit
 // derselben Rechnung wie eine GPS-Meldung.
 async function onTrackClick(e) {
-  // Auf der Karte liegt die Strecke des AKTIVEN Rennens. Ein Tipp darf
-  // deshalb nie auf ein anderes Rennen gehen, auch wenn zielRaceId aus
-  // irgendeinem Grund noch auf einem alten Wert steht.
-  if (!streckenModus || !activeInfo || !activeInfo.raceId) return;
-  if (zielRaceId && zielRaceId !== activeInfo.raceId) return;
+  // Der Streckenmodus wird ab 2.0 aus dem Renn-Panel heraus gestartet
+  // und traegt die Renn-ID mit sich. Ohne zielRaceId passiert nichts:
+  // ein Tipp ohne eindeutiges Rennen koennte den Zielstrich eines
+  // laufenden Rennens verschieben und dessen Rundenzaehlung verwerfen.
+  if (!streckenModus || !zielRaceId) return;
   L.DomEvent.stop(e);
   // Bewusst zwei getrennte Funktionen statt eines Schalters in
   // sendeZiel(): so gibt es keinen Weg, auf dem ein Markertipp am
@@ -301,7 +562,7 @@ async function onTrackClick(e) {
   if (zielMarkerId) {
     await sendeMarkerPunkt({ atLat: e.latlng.lat, atLon: e.latlng.lng });
   } else {
-    await sendeZiel({ atLat: e.latlng.lat, atLon: e.latlng.lng }, activeInfo.raceId);
+    await sendeZiel({ atLat: e.latlng.lat, atLon: e.latlng.lng }, zielRaceId);
   }
 }
 
@@ -332,12 +593,14 @@ async function sendeZiel(felder, raceId) {
   if (!ziel) { showToast('\u26A0\uFE0F Kein Rennen gew\u00E4hlt'); return null; }
   try {
     const d = await setRaceLaps(ziel, felder);
-    // Marker und Karte nur anfassen, wenn es wirklich das Rennen ist,
-    // das gerade auf der Karte liegt.
-    if (activeInfo && ziel === activeInfo.raceId) {
-      activeInfo.startOffset = d.startOffset;
-      drawFinishMarker();
+    // Der Versatz gehoert dem Rennen, nicht der Karte. Ab 2.0 wird er
+    // im Steckbrief dieses Rennens nachgefuehrt; liegt es auf der
+    // Karte, wandert der Zielstrich sofort mit.
+    if (typeof setzeSteckbriefOffset === 'function') {
+      setzeSteckbriefOffset(ziel, d.startOffset);
     }
+    if (activeInfo && ziel === activeInfo.raceId) activeInfo.startOffset = d.startOffset;
+    if (sichtbareRaceIds().indexOf(ziel) !== -1) drawFinishMarker();
     if (streckenModus) zeigeZielKm();
     showToast(`\u{1F3C1} Start/Ziel bei km ${(d.startOffset / 1000).toFixed(2).replace('.', ',')}`);
     return d;
@@ -364,8 +627,8 @@ document.getElementById('gpxFileInput').addEventListener('change', function () {
       if (!target) throw new Error('Kein Ziel-Rennen');
       const coords = parseGpx(e.target.result);
       await setRaceGpx(target, coords, file.name);
-      // Nur zeichnen, wenn es das aktive Rennen betrifft
-      if (target === activeRaceId) drawGpxLayer(coords);
+      // Nur zeichnen, wenn die Strecke gerade sichtbar ist
+      if (sichtbareRaceIds().indexOf(target) !== -1) drawGpxLayer(coords, target);
       renderEventsBody();
     } catch (err) { alert('\u274C ' + err.message); }
     this.value = '';
@@ -397,5 +660,5 @@ function parseGpx(xmlText) {
 // Aus der Rennverwaltung: Strecke des Rennens entfernen.
 async function removeGpxForRace(raceId) {
   await deleteRaceGpx(raceId);
-  if (raceId === activeRaceId) clearGpxLayer();
+  if (gpxByRace[raceId]) { delete gpxByRace[raceId]; zeichneStrecken(); }
 }

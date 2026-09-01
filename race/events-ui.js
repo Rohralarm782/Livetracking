@@ -650,9 +650,11 @@ evBody.addEventListener('click', function (e) {
     }
 
     case 'mk-karte': {
+      // Wie bei rc-ziel-karte: der Modus kennt sein Rennen, also
+      // reicht die Strecke als Bedingung.
       const rr = findRace(id);
-      if (!rr || !rr.isActive) { showToast('\u26A0\uFE0F Nur beim aktiven Rennen'); break; }
-      if (!gpxCoords.length)   { showToast('\u26A0\uFE0F Strecke noch nicht geladen'); break; }
+      if (!rr)        { showToast('\u26A0\uFE0F Rennen nicht gefunden'); break; }
+      if (!rr.hasGpx) { showToast('\u26A0\uFE0F Rennen hat keine Strecke'); break; }
       zielRaceForm = null;
       mkForm = null;
       closeTaktikView();
@@ -661,10 +663,13 @@ evBody.addEventListener('click', function (e) {
     }
 
     case 'rc-ziel-karte': {
-      // Nur das aktive Rennen: auf der Karte liegt genau dessen Linie.
+      // Ab 2.0 traegt der Modus die Renn-ID mit sich und zeigt nur
+      // dessen Linie - damit ist auch ein noch nicht laufendes Rennen
+      // gefahrlos zu bearbeiten. Vorher ging das nur beim aktiven,
+      // weil auf der Karte immer nur eine Linie lag.
       const rz = findRace(id);
-      if (!rz || !rz.isActive)  { showToast('\u26A0\uFE0F Nur beim aktiven Rennen'); break; }
-      if (!gpxCoords.length)    { showToast('\u26A0\uFE0F Strecke noch nicht geladen'); break; }
+      if (!rz)         { showToast('\u26A0\uFE0F Rennen nicht gefunden'); break; }
+      if (!rz.hasGpx)  { showToast('\u26A0\uFE0F Rennen hat keine Strecke'); break; }
       zielRaceForm = null;
       closeTaktikView();
       setStreckenModus(true, id);

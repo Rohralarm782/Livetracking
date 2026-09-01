@@ -82,14 +82,37 @@ tkBody.addEventListener('keydown', function (e) {
 // =======================
 // TAKTIK RENDER
 // =======================
+// Ab 2.0 koennen mehrere Rennen gleichzeitig laufen. Der Streifen ist
+// 70 px breit und sitzt am rechten Rand - auf einem Handy waere kein
+// Platz fuer zwei davon nebeneinander. Deshalb bleibt es bei einem
+// Streifen mit einem Reiter je Rennen darueber.
+//
+// Der Reiter folgt dem Rennen, hinter dem der Nutzer selbst herfaehrt
+// (meinRaceId). Im Regelfall muss also gar nicht umgeschaltet werden.
+function renderStripReiter() {
+  if (typeof sichtbareRennenListe !== 'function') return '';
+  const ids = sichtbareRennenListe();
+  if (ids.length < 2) return '';
+  const mein = meinRaceId();
+  return '<div class="stripTabs">' + ids.map(id => {
+    const s   = (typeof steckbriefOf === 'function') ? steckbriefOf(id) : null;
+    const lbl = (typeof raceLabel === 'function') ? raceLabel(id, true) : id;
+    const an  = (id === mein);
+    return `<div class="stripTab${an ? ' on' : ''}" data-race="${id}"`
+         + `${an && s && s.farbe ? ` style="border-bottom-color:${s.farbe}"` : ''}>`
+         + `${escH(String(lbl).slice(0, 5))}</div>`;
+  }).join('') + '</div>';
+}
+
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
   // filter(Boolean) VOR dem Zaehlen: sonst zeigen die Verbindungslinien
   // auf die Indizes der ungefilterten Liste.
   const list = Array.isArray(grps) ? grps.filter(Boolean) : [];
-  if (list.length === 0) { strip.classList.add('hidden'); return; }
+  const reiter = renderStripReiter();
+  if (list.length === 0 && !reiter) { strip.classList.add('hidden'); return; }
   strip.classList.remove('hidden');
-  strip.innerHTML = list.map((g, i) => {
+  strip.innerHTML = reiter + list.map((g, i) => {
     // Wie auf dem Garmin: DSQ und DNF zaehlen nicht mehr mit.
     const cnt      = (g.riders||[]).filter(r =>
       !(r && (r.status === 'dsq' || r.status === 'dnf'))).length;
@@ -112,6 +135,14 @@ function renderStrip(grps) {
       <div class="strip-cnt">${cnt}</div>
     </div>${conn}`;
   }).join('');
+  // Ein Tipp auf den Reiter setzt zugleich das eigene Rennen: wer die
+  // Taktik eines Feldes ansieht, faehrt in aller Regel dahinter her.
+  strip.querySelectorAll('.stripTab').forEach(t => {
+    t.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (typeof setzeMeinRennen === 'function') setzeMeinRennen(t.dataset.race);
+    });
+  });
 }
 
 function renderTaktikBody() {
