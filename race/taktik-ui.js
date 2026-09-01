@@ -32,6 +32,7 @@ tkBody.addEventListener('click', function (e) {
     case 'toggle-fav':         toggleFav(parseInt(nr), btn.dataset.on === '1'); break;
     case 'open-favs':          openFavModal();                    break;
     case 'cycle-status':       cycleRiderStatus(parseInt(nr), btn.dataset.state || null); break;
+    case 'set-race':           wechsleArbeitsRennen(btn.dataset.race);           break;
   }
 });
 
@@ -95,45 +96,28 @@ tkBody.addEventListener('keydown', function (e) {
 // Ab 2.1.0 steht deshalb nur noch ein Kopf da, und zwar mit dem Rennen,
 // dessen Taktik der Streifen tatsaechlich zeigt. Bei einem einzigen
 // laufenden Rennen entfaellt er: dann ist nichts zu verwechseln.
-// Ab 2.3.0 beschriftet der Kopf das Rennen, dessen Gruppen wirklich
-// unter ihm stehen: das eigene, wenn dessen Stand geladen ist, sonst
-// weiterhin das Leitrennen. Beim eigenen Rennen kommt ein Schloss
-// dazu - der Stand ist nur Anzeige, Aenderungen in der Vollansicht
-// gelten dem Leitrennen.
+// Ab 2.4.0 steht hier das Arbeitsrennen - dasselbe Rennen, dessen
+// Gruppen darunter stehen und das die Vollansicht bearbeitet. Der
+// Sonderfall aus 2.3.0 (fremder, nur lesbarer Stand) entfaellt.
 function renderStripReiter() {
   if (typeof laufendeRennen !== 'function' || laufendeRennen() < 2) return '';
-  const fremd = (typeof stripFremdStand === 'function') ? stripFremdStand() : null;
-  const id    = fremd
+  const id = activeRaceId
     || ((typeof activeInfo === 'object' && activeInfo) ? activeInfo.raceId : null);
   if (!id) return '';
   const s     = (typeof steckbriefOf === 'function') ? steckbriefOf(id) : null;
   const farbe = (s && s.farbe) ? s.farbe : '#607d8b';
   const lbl   = (s && s.name) ? s.name : id;
-  const leitS = (fremd && typeof steckbriefOf === 'function' && activeInfo)
-    ? steckbriefOf(activeInfo.raceId) : null;
-  const leitN = (leitS && leitS.name) ? leitS.name : (activeInfo ? activeInfo.raceId : '');
-  const titel = fremd
-    ? `Taktik von ${lbl} \u2013 nur Anzeige. Bearbeiten gilt f\u00FCr das Leitrennen ${leitN}.`
-    : 'Taktik des Leitrennens';
-  return `<div class="stripKopf${fremd ? ' fremd' : ''}" style="border-bottom-color:${farbe}"`
-       + ` title="${escH(titel)}">`
+  return `<div class="stripKopf" style="border-bottom-color:${farbe}"`
+       + ` title="${escH('Taktik von ' + lbl)}">`
        + `<span class="stripKopfP" style="background:${farbe}"></span>`
-       + `${escH(String(lbl).slice(0, 6))}`
-       + (fremd ? '<span class="stripKopfL">\u{1F512}</span>' : '')
-       + `</div>`;
+       + `${escH(String(lbl).slice(0, 6))}</div>`;
 }
 
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
-  // Ab 2.3.0 kann die Quelle eine andere sein als die uebergebene
-  // Liste: liegt der Stand des eigenen Rennens vor, zeigt der Streifen
-  // diesen. taktikGroups bleibt davon unberuehrt - der Aufrufer
-  // uebergibt weiterhin dieselbe Liste wie bisher.
-  const fremd  = (typeof stripFremdStand === 'function') ? stripFremdStand() : null;
-  const quelle = fremd ? stripGroups : grps;
   // filter(Boolean) VOR dem Zaehlen: sonst zeigen die Verbindungslinien
   // auf die Indizes der ungefilterten Liste.
-  const list = Array.isArray(quelle) ? quelle.filter(Boolean) : [];
+  const list = Array.isArray(grps) ? grps.filter(Boolean) : [];
   const reiter = renderStripReiter();
   if (list.length === 0 && !reiter) { strip.classList.add('hidden'); return; }
   strip.classList.remove('hidden');
@@ -165,11 +149,35 @@ function renderStrip(grps) {
   // Rennen wird ueber die Rennleiste oben gesetzt.
 }
 
+// Eine Kachel je laufendem Rennen. Bei genau einem Rennen entfaellt
+// die Reihe - dann gibt es nichts zu wechseln. Gezeigt werden auch
+// ausgeblendete Rennen: die Kachel ist der Weg, sie zurueckzuholen.
+function renderRennKacheln() {
+  if (typeof steckbriefe !== 'object' || !steckbriefe) return '';
+  const ids = Object.keys(steckbriefe);
+  if (ids.length < 2) return '';
+  return `<div class="tkRenn">` + ids.map(id => {
+    const s     = steckbriefe[id] || {};
+    const farbe = /^#[0-9a-f]{6}$/i.test(s.farbe || '') ? s.farbe : '#607d8b';
+    const an    = (id === activeRaceId);
+    const nm    = s.name || id;
+    return `<button class="btn tkRennK${an ? ' an' : ''}" data-action="set-race"`
+         + ` data-race="${escH(id)}"`
+         + (an ? ` style="border-color:${farbe};background:${farbe}14"` : '')
+         + ` title="${escH(nm + (an ? ' \u2013 wird bearbeitet' : ' bearbeiten'))}">`
+         + `<span class="tkRennD" style="background:${farbe}"></span>`
+         + `<span class="tkRennN">${escH(nm)}</span>`
+         + (an ? '<span class="tkRennA">bearbeitet</span>' : '')
+         + `</button>`;
+  }).join('') + `</div>`;
+}
+
 function renderTaktikBody() {
   let html = '';
   if (authToken) {
     const ar = activeRace();
     html += `<div class="sl-panel">
+      ${renderRennKacheln()}
       <div class="sl-item" style="border-bottom:none">
         <div class="sl-dot" style="background:${ar ? '#4caf50' : '#ddd'}"></div>
         <div style="flex:1;min-width:0">

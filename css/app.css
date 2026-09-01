@@ -626,14 +626,24 @@
     }
     .stripKopfP { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 
-    /* Ab 2.3.0 kann der Streifen die Taktik des EIGENEN Rennens zeigen,
-       auch wenn das nicht das Leitrennen ist. Dieser Stand ist nur
-       Anzeige: geschrieben wird weiterhin ausschliesslich im
-       Leitrennen. Die gestrichelte Linie und das Schloss sind der
-       einzige Unterschied - wer sie sieht, weiss, dass ein Eingriff
-       hier nicht ankommt. */
-    .stripKopf.fremd { border-bottom-style: dashed; color: #455a64; }
-    .stripKopfL { font-size: 10px; line-height: 1; flex: 0 0 auto; }
+    /* 2.3.0 kennzeichnete hier einen nur lesbaren Fremdstand. Ab 2.4.0
+       wird das gezeigte Rennen auch bearbeitet - die Kennzeichnung
+       entfaellt ersatzlos. */
+
+    /* RENNKACHELN im Kopf der Taktik. Nur sichtbar, wenn mehr als ein
+       Rennen laeuft. Ein Tipp wechselt das Arbeitsrennen; die Farbe
+       ist dieselbe wie in der Rennleiste und auf der Karte. */
+    .tkRenn { display: flex; gap: 6px; padding: 9px 10px 0; }
+    .tkRennK {
+      flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+      padding: 7px 9px; font-size: 12px; line-height: 1.2;
+      border: 1px solid #e0e0e0; border-radius: 7px; background: #fff;
+      color: #666; cursor: pointer; overflow: hidden;
+    }
+    .tkRennK.an { font-weight: 600; color: #263238; }
+    .tkRennD { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .tkRennN { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tkRennA { margin-left: auto; font-size: 10px; font-weight: 400; color: #78909c; flex: 0 0 auto; }
 
     /* ZUSAMMENGELEGTER STRECKENPUNKT - ein Symbol, aussen ein
        Ringsegment je Rennen. */

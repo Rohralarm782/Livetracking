@@ -23,70 +23,43 @@ let movingRider    = { gid: null, nr: null };
 let groupsWriteLock = 0;
 
 // =======================
-// EIGENE DATENQUELLE DES STREIFENS (ab 2.3.0)
+// ARBEITSRENNEN WECHSELN (ab 2.4.0)
 // =======================
-// Bis 2.2.0 zeigte der Streifen immer die Gruppen des Leitrennens -
-// also des zuerst aktivierten, noch laufenden Rennens. Wer das zweite
-// Rennen begleitet, sah damit dauerhaft die Taktik des ersten.
+// 2.3.0 gab dem Streifen eine zweite, nur lesende Datenquelle
+// (stripGroups), weil geschrieben nur im Leitrennen werden konnte.
+// Seit POST /groups?race= existiert, ist dieser Umweg ueberfluessig:
+// die ganze Ansicht arbeitet am selben Rennen, das auch die Karte
+// zeigt. Der Sonderweg samt Schlosssymbol entfaellt deshalb wieder.
 //
-// Ab 2.3.0 holt der Streifen die Gruppen des eigenen Rennens
-// (meinRaceId(), langes Tippen in der Rennleiste) ueber
-// GET /groups?race=<id>. Dieser Stand ist ausdruecklich NUR ANZEIGE:
-// taktikGroups bleibt unberuehrt, und damit bleibt auch der einzige
-// Schreibweg (saveGroups -> POST /groups) auf dem Leitrennen. Ein
-// Fremdstand in taktikGroups wuerde beim naechsten Speichern im
-// Leitrennen landen - genau deshalb liegt er in einer eigenen
-// Variablen.
-let stripGroups = null;   // Gruppen des eigenen Rennens, nur lesend
-let stripRaceId = null;   // wessen Gruppen gerade in stripGroups liegen
-
-// Das Rennen, dessen Taktik zusaetzlich geholt werden muss - oder
-// null, wenn das eigene Rennen ohnehin das Leitrennen ist. Dann bleibt
-// alles beim Alten und es faellt kein zweiter Abruf an.
-function stripFremdZiel() {
-  if (typeof meinRaceId !== 'function') return null;
-  const ziel = meinRaceId();
-  const leit = (typeof activeInfo === 'object' && activeInfo) ? activeInfo.raceId : null;
-  if (!ziel || !leit || ziel === leit) return null;
-  return ziel;
+// Gewechselt wird ueber setzeMeinRennen() - dieselbe Wahl wie das
+// lange Tippen in der Rennleiste. Von dort laeuft der Weg ueber
+// arbeitsRennenPruefen() zurueck hierher.
+function wechsleArbeitsRennen(raceId) {
+  if (!raceId || raceId === activeRaceId) return;
+  if (typeof setzeMeinRennen === 'function') { setzeMeinRennen(raceId); return; }
+  if (typeof arbeitsRennenPruefen === 'function') arbeitsRennenPruefen();
 }
 
-// Gueltiger Fremdstand oder null. Bewusst streng: nur wenn die
-// geladenen Gruppen wirklich zum aktuell gewaehlten Rennen gehoeren.
-// Sonst faellt der Streifen auf das Leitrennen zurueck - und der Kopf
-// beschriftet dann auch das Leitrennen. Lieber der andere Name als
-// der falsche Name ueber echten Gruppen.
-function stripFremdStand() {
-  const ziel = stripFremdZiel();
-  if (!ziel || ziel !== stripRaceId || !Array.isArray(stripGroups)) return null;
-  return ziel;
-}
-
-async function loadStripGroups() {
-  const ziel = stripFremdZiel();
-  if (!ziel) { stripGroups = null; stripRaceId = null; return; }
-  try {
-    const res = await fetch(`${SERVER}/groups?race=${encodeURIComponent(ziel)}`);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const next = await res.json();
-    if (!Array.isArray(next)) throw new Error('Format');
-    stripGroups = next;
-    stripRaceId = ziel;
-  } catch (e) {
-    // Einen einzelnen Netzfehler soll der Streifen aushalten: der
-    // letzte Stand desselben Rennens bleibt stehen. Nur ein Stand, der
-    // zu einem ANDEREN Rennen gehoert, wird verworfen.
-    if (stripRaceId !== ziel) { stripGroups = null; stripRaceId = null; }
-  }
-}
-
-// Holen und zeichnen in einem Zug - fuer die Stellen, an denen der
-// Nutzer die Auswahl gerade geaendert hat und nicht fuenf Sekunden auf
-// den naechsten Poll warten soll.
-function aktualisiereStrip() {
-  loadStripGroups().then(() => {
-    if (typeof renderStrip === 'function') renderStrip(taktikGroups);
-  });
+// Kompletter Wechsel des Taktik-Standes. Alles, was zum alten Rennen
+// gehoert, wird verworfen: ein Undo ueber die Rennengrenze hinweg
+// wuerde die Gruppen des einen Rennens in das andere schreiben, und
+// ein halb begonnenes Aufteilen zeigt auf Gruppen-IDs, die es hier
+// nicht gibt.
+async function arbeitsRennenNachladen() {
+  taktikGroups    = [];
+  undoStack       = [];
+  lastSaved       = null;
+  groupsWriteLock = 0;
+  splittingGid    = null;
+  mergingGid      = null;
+  movingRider     = { gid: null, nr: null };
+  splitNrs.clear();
+  await loadGroups();
+  if (typeof loadDisplays      === 'function') await loadDisplays();
+  if (typeof loadGapSeries     === 'function') await loadGapSeries(true);
+  if (typeof loadTimingProposal === 'function') await loadTimingProposal();
+  if (typeof renderTaktikBody  === 'function') renderTaktikBody();
+  if (typeof renderStrip       === 'function') renderStrip(taktikGroups);
 }
 
 function openTaktikView() {
@@ -185,10 +158,23 @@ async function toggleAuto(id) {
   } catch (err) { alert('\u274C Fehler: ' + err.message); }
 }
 
+// Ab 2.4.0 mit Rennbezug: geladen wird der Stand des Arbeitsrennens.
+// Ohne Rennen bleibt es beim alten Aufruf - der Server antwortet dann
+// mit dem Leitrennen.
+function groupsUrl() {
+  return activeRaceId
+    ? `${SERVER}/groups?race=${encodeURIComponent(activeRaceId)}`
+    : `${SERVER}/groups`;
+}
+
 async function loadGroups() {
   try {
-    const res  = await fetch(`${SERVER}/groups`);
-    taktikGroups = await res.json();
+    const res  = await fetch(groupsUrl());
+    const next = await res.json();
+    // Ein geloeschtes oder beendetes Rennen antwortet mit 404 und einem
+    // Objekt. Ohne die Pruefung stuende in taktikGroups eine
+    // Fehlermeldung und renderTaktikBody() wuerde daran haengen.
+    taktikGroups = Array.isArray(next) ? next : [];
   } catch (e) { console.error('Groups:', e); }
 }
 
@@ -329,7 +315,7 @@ async function saveGroups() {
   // Rennen und ohne jeden Hinweis.
   let ok = false;
   try {
-    const res = await fetch(`${SERVER}/groups`, {
+    const res = await fetch(groupsUrl(), {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
       body:    JSON.stringify({ groups: payload })

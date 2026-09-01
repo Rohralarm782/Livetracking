@@ -129,7 +129,7 @@ async function pollGroups() {
   // getippten Abstand.
   if (Date.now() < groupsWriteLock) return;
   try {
-    const res  = await fetch(`${SERVER}/groups`);
+    const res  = await fetch(typeof groupsUrl === 'function' ? groupsUrl() : `${SERVER}/groups`);
     const next = await res.json();
     if (!Array.isArray(next)) return;
     // Zweite Pruefung: waehrend der Request lief, kann gespeichert
@@ -145,10 +145,6 @@ async function pollGroups() {
     }
     lastSaved = kommt;
     taktikGroups = next;
-    // Im selben Takt den Stand des eigenen Rennens nachziehen. Der
-    // Abruf entfaellt von selbst, wenn das eigene Rennen das
-    // Leitrennen ist - dann ist stripFremdZiel() null.
-    await loadStripGroups();
     if (!taktikOpen) { renderStrip(taktikGroups); return; }
     // Offene Taktikansicht mitziehen, damit Aenderungen von einem
     // zweiten Geraet ankommen. Nicht neu zeichnen, solange jemand

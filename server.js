@@ -671,10 +671,20 @@ function trackerOhneRennen() {
   return Object.keys(positions).filter(id => !trackerRace[id]).length;
 }
 
-function persistGroups() {
-  if (!db.enabled || !activeRaceId) return;
-  db.updateRaceGroups(activeRaceId, groups).catch(dbFail('updateRaceGroups'));
-  db.addGapSnapshot(activeRaceId, groups).catch(dbFail('addGapSnapshot'));
+// Ab 2.4.0 mit Rennbezug. Ohne Argument unveraendert das Leitrennen -
+// alle bestehenden Aufrufer bleiben gueltig.
+//
+// Bis 2.3.0 schrieb diese Funktion IMMER activeRaceId. Gruppen, die
+// ueber /timing/apply in ein nicht fuehrendes Rennen gingen, landeten
+// damit nur auf der Disk: nach einem Neustart der Render-Instanz waren
+// sie weg, und der Abstandsverlauf wurde dem falschen Rennen
+// zugeschrieben.
+function persistGroups(raceId) {
+  const rid = (raceId === undefined) ? activeRaceId : raceId;
+  if (!db.enabled || !rid) return;
+  const gs = groupsOf(rid);
+  db.updateRaceGroups(rid, gs).catch(dbFail('updateRaceGroups'));
+  db.addGapSnapshot(rid, gs).catch(dbFail('addGapSnapshot'));
 }
 
 // GPX gehoert zum Rennen. Eigener Schreibpfad, weil upsertRace die
@@ -1338,7 +1348,7 @@ function applyVorschlag(raceId, nurGid) {
   saveRacesToDisk();
   persistRace(raceId);
   pushAutoDisplays();
-  persistGroups();
+  persistGroups(raceId);
   return sauber;
 }
 
@@ -2529,9 +2539,14 @@ app.get('/races', (req, res) => {
   res.json({ races: list, activeId: activeRaceId, activeIds: [...activeRaceIds] });
 });
 
+// Ab 2.4.0 mit ?race=<id>: der Favoriten- und Startlisteneditor zeigt
+// die Fahrer des Rennens, an dem das Geraet gerade arbeitet. Ohne den
+// Parameter unveraendert das Leitrennen.
 app.get('/races/active', (req, res) => {
-  if (!activeRaceId || !races[activeRaceId]) return res.json([]);
-  res.json(races[activeRaceId].riders);
+  const wunsch = req.query && req.query.race ? String(req.query.race) : null;
+  const rid    = wunsch || activeRaceId;
+  if (!rid || !races[rid]) return res.json([]);
+  res.json(races[rid].riders);
 });
 
 app.post('/races', requireSpolei, (req, res) => {
@@ -2765,13 +2780,18 @@ app.delete('/races/:id/rider/:nr', requireSpolei, (req, res) => {
   const before = r.riders.length;
   r.riders = r.riders.filter(x => !(x && Number(x.nr) === nr));
   if (r.riders.length === before) return res.status(404).json({ error: 'Fahrer nicht in der Startliste' });
-  if (r.id === activeRaceId) {
-    for (const g of groups) {
-      if (!g || !Array.isArray(g.riders)) continue;
-      g.riders = g.riders.filter(x => Number(x) !== nr);
-    }
-    syncGroupsToRace(); persistGroups(); pushAutoDisplays();
+  // Bis 2.3.0 nur fuer das Leitrennen. Seit die Taktik jedes laufenden
+  // Rennens bearbeitet werden kann, muss der Fahrer auch dort aus
+  // seiner Gruppe verschwinden - sonst bleibt eine Nummer ohne
+  // Startlisteneintrag stehen.
+  const gsDel = groupsOf(r.id);
+  for (const g of gsDel) {
+    if (!g || !Array.isArray(g.riders)) continue;
+    g.riders = g.riders.filter(x => Number(x) !== nr);
   }
+  if (r.id === activeRaceId) syncGroupsToRace();
+  else if (races[r.id])      races[r.id].groups = gsDel;
+  persistGroups(r.id); pushAutoDisplays();
   saveRacesToDisk();
   if (db.enabled) db.updateRaceRiders(r.id, r.riders).catch(dbFail('updateRaceRiders del'));
   console.log(`\u{1F5D1} Fahrer entfernt: Nr. ${nr} aus "${r.name}"`);
@@ -3186,26 +3206,53 @@ app.get('/groups', (req, res) => {
   res.json(enriched);
 });
 
+// Ab 2.4.0 mit ?race=<id>: der Betreuer kann die Taktik des Rennens
+// fuehren, hinter dem er selbst herfaehrt, auch wenn das nicht das
+// Leitrennen ist. Ohne den Parameter unveraendert das Leitrennen.
+// Das Muster - Spiegel fuer das Leitrennen, sonst direkt ans Rennen -
+// stammt aus applyVorschlag() und laeuft dort seit 2.2.0.
 app.post('/groups', requireSpolei, (req, res) => {
   const { groups: g } = req.body;
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
+  const wunsch = req.query && req.query.race ? String(req.query.race) : null;
+  if (wunsch && !races[wunsch]) return res.status(404).json({ error: 'Rennen nicht gefunden' });
+  const rid = wunsch || activeRaceId;
   // sanitizeGroups() erledigt Typpruefung UND die Regel "genau eine
   // Gruppe ist das Hauptfeld" an einer Stelle.
-  groups = sanitizeGroups(g);
-  syncGroupsToRace();          // Stand haengt am Rennen, nicht am Server
+  const sauber = sanitizeGroups(g);
+  if (!rid || rid === activeRaceId) {
+    groups = sauber;
+    syncGroupsToRace();        // Stand haengt am Rennen, nicht am Server
+  } else {
+    races[rid].groups = sauber;
+  }
   saveRacesToDisk();
   pushAutoDisplays();          // Automatik-Tracker sofort nachziehen
-  persistGroups();             // Stand + Abstandsverlauf sichern
+  persistGroups(rid);          // Stand + Abstandsverlauf sichern
   res.json({ ok: true });
 });
 
+// Loeschen ist die einzige Stelle ohne Rueckweg. Solange mehr als ein
+// Rennen laeuft, ist der race-Parameter deshalb PFLICHT: ein Aufrufer,
+// der ihn vergisst, wuerde sonst die Taktik des Leitrennens loeschen,
+// waehrend der Nutzer ein anderes Rennen vor sich hat.
 app.delete('/groups', requireSpolei, (req, res) => {
-  groups = [];
-  syncGroupsToRace();
+  const wunsch = req.query && req.query.race ? String(req.query.race) : null;
+  if (!wunsch && activeRaceIds.size > 1) {
+    return res.status(400).json({ error: 'race-Parameter erforderlich, solange mehrere Rennen laufen' });
+  }
+  if (wunsch && !races[wunsch]) return res.status(404).json({ error: 'Rennen nicht gefunden' });
+  const rid = wunsch || activeRaceId;
+  if (!rid || rid === activeRaceId) {
+    groups = [];
+    syncGroupsToRace();
+  } else {
+    races[rid].groups = [];
+  }
   saveRacesToDisk();
   pushAutoDisplays();
-  persistGroups();
-  console.log('🧹 Gruppen gelöscht');
+  persistGroups(rid);
+  console.log(`🧹 Gruppen gelöscht${rid ? ' (' + rid + ')' : ''}`);
   res.json({ ok: true });
 });
 

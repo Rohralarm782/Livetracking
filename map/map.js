@@ -1028,11 +1028,14 @@ function meinRaceId() {
 
 function setzeMeinRennen(raceId) {
   meinRennen = raceId || null;
+  // Das eigene Rennen ist ab 2.4.0 auch das Rennen, das bearbeitet
+  // wird. Ein ausgeblendetes Rennen zu bearbeiten waere widersinnig -
+  // die Wahl blendet es deshalb wieder ein.
+  if (raceId) abgewaehlt.delete(raceId);
   speichereAuswahl();
   renderRennAuswahl();
-  // Ab 2.3.0 wechselt mit dem eigenen Rennen auch die Datenquelle des
-  // Streifens - deshalb erst holen, dann zeichnen.
-  if (typeof aktualisiereStrip === 'function') aktualisiereStrip();
+  lastActiveKey = null;          // erzwingt Neuzeichnen der Strecken
+  if (typeof arbeitsRennenPruefen === 'function') arbeitsRennenPruefen();
   else if (typeof renderStrip === 'function') renderStrip(taktikGroups);
 }
 
@@ -1045,8 +1048,9 @@ function schalteRennSicht(raceId) {
   lastActiveKey = null;          // erzwingt Neuzeichnen der Strecken
   fetchGpxTrack();
   // Das Ausblenden kann meinRaceId() verschieben (der Rueckfall ist
-  // das erste sichtbare Rennen) - also auch hier neu holen.
-  if (typeof aktualisiereStrip === 'function') aktualisiereStrip();
+  // das erste sichtbare Rennen) - dann wechselt auch das
+  // Arbeitsrennen.
+  if (typeof arbeitsRennenPruefen === 'function') arbeitsRennenPruefen();
   else if (typeof renderStrip === 'function') renderStrip(taktikGroups);
 }
 
@@ -1100,6 +1104,9 @@ async function loadActiveInfo() {
     if (vorher !== Object.keys(steckbriefe).sort().join(',')) {
       speichereAuswahl();
       renderRennAuswahl();
+      // Startet oder endet ein Rennen, kann meinRaceId() auf ein
+      // anderes zeigen - das Arbeitsrennen zieht mit.
+      if (typeof arbeitsRennenPruefen === 'function') arbeitsRennenPruefen();
     }
     // Auch die Strecke selbst kann sich aendern, ohne dass das Rennen
     // wechselt - deshalb gehoert der Streckenname mit in den Schluessel.

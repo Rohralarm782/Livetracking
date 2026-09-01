@@ -8,7 +8,17 @@
 // Ladereihenfolge: muss VOR events-ui.js und taktik-ui.js stehen.
 
 let eventList    = [];     // [{id,name,ort,dateFrom,dateTo,races:[...]}]
+// Ab 2.4.0 heisst activeRaceId "das Rennen, an dem DIESES GERAET
+// arbeitet" - nicht mehr zwangslaeufig das Leitrennen des Servers.
+// Die Bedeutung wandert bewusst in die bestehende Variable: an ihr
+// haengen Favoriten, Fahrerstatus, Abstandsverlauf, Zeitmessung und
+// Bewegungen. Ein zweiter Name daneben haette jede dieser Stellen
+// einzeln umgebaut werden muessen - und race/favorites.js bleibt so
+// unberuehrt.
 let activeRaceId = null;
+// Das Leitrennen des Servers. Reine Rueckfallebene: laeuft nur ein
+// Rennen oder ist noch keins gewaehlt, ist es das Arbeitsrennen.
+let leitRaceId   = null;
 
 // Flache Sicht ueber alle Rennen - fuer Lookups per id.
 function allRaces() {
@@ -21,6 +31,28 @@ function findRace(id) {
 
 function activeRace() {
   return activeRaceId ? findRace(activeRaceId) : null;
+}
+
+// Welches Rennen soll dieses Geraet bearbeiten? Dieselbe Wahl wie auf
+// der Karte: das eigene Rennen aus der Rennleiste, sonst das
+// Leitrennen. Damit zeigen Karte, Streifen und Taktik immer dasselbe.
+function arbeitsRaceId() {
+  const eigen = (typeof meinRaceId === 'function') ? meinRaceId() : null;
+  if (eigen && findRace(eigen)) return eigen;
+  return leitRaceId;
+}
+
+// Nach jeder Aenderung an Rennliste oder Auswahl aufrufen. Wechselt das
+// Arbeitsrennen, wird der komplette Taktik-Stand neu geholt - der alte
+// gehoert einem anderen Rennen und darf nicht stehenbleiben.
+function arbeitsRennenPruefen() {
+  const soll = arbeitsRaceId();
+  if (soll === activeRaceId) {
+    if (typeof renderStrip === 'function') renderStrip(taktikGroups);
+    return;
+  }
+  activeRaceId = soll;
+  if (typeof arbeitsRennenNachladen === 'function') arbeitsRennenNachladen();
 }
 
 function eventOfRace(id) {
@@ -65,7 +97,8 @@ async function loadEvents() {
     const res  = await fetch(`${SERVER}/events`);
     const data = await res.json();
     eventList    = data.events       || [];
-    activeRaceId = data.activeRaceId || null;
+    leitRaceId   = data.activeRaceId || null;
+    arbeitsRennenPruefen();
   } catch (e) { console.error('Events:', e); }
 }
 
@@ -203,9 +236,13 @@ async function loadRaceGaps(id, minutes) {
 }
 
 // Fahrer des aktiven Rennens - fuer den Startlisten-Editor.
-async function loadActiveRiders() {
+// raceId waehlt das Rennen; ohne Argument das Arbeitsrennen. Der
+// Favoriteneditor ruft ohne Argument - und bekommt damit die Fahrer
+// des Rennens, das er auch bearbeitet.
+async function loadActiveRiders(raceId) {
+  const id = raceId || activeRaceId;
   try {
-    const res = await fetch(`${SERVER}/races/active`);
+    const res = await fetch(`${SERVER}/races/active${id ? `?race=${encodeURIComponent(id)}` : ''}`);
     return await res.json();
   } catch (e) { console.error('Active riders:', e); return []; }
 }
