@@ -602,6 +602,80 @@
       border: 1px solid #ddd; border-radius: 5px; background: white; color: #333;
     }
 
+    /* TYP-SCHALTER IM MARKER-MENUE.
+       Zwei Werte, deshalb ein Schalter statt eines Aufklappmenues: der
+       Zustand muss im fahrenden Auto ohne Tippen ablesbar sein.
+       .markerMenu button setzt display:block und width:100% - beides
+       wuerde die zwei Knoepfe untereinander stellen. Der Selektor
+       .markerMenu .typWahl button ist eine Klasse spezifischer und
+       gewinnt damit unabhaengig von der Reihenfolge im Stylesheet. */
+    .markerMenu .typWahl { display: flex; margin: 0 10px 8px; }
+    .markerMenu .typWahl button {
+      display: block; flex: 1; width: auto; padding: 7px 4px;
+      font-size: 12px; text-align: center; color: #78909c;
+      border: 1px solid #ddd; background: white;
+    }
+    .markerMenu .typWahl button:first-child { border-radius: 5px 0 0 5px; }
+    .markerMenu .typWahl button:last-child  { border-radius: 0 5px 5px 0; border-left: none; }
+    .markerMenu .typWahl button.an {
+      background: #eceff1; color: #263238; font-weight: 600; border-color: #b0bec5;
+    }
+
+    /* TRACKERVERWALTUNG IN DER RENNVERWALTUNG */
+    .tk-panel {
+      background: #fcfcfc; border-top: 1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .tk-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-bottom: 1px solid #f0f0f0;
+    }
+    .tk-hdr .t { font-size: 13px; font-weight: 500; color: #333; }
+    .tk-hdr .n { font-size: 12px; color: #999; }
+    .tk-leer   { padding: 14px; text-align: center; color: #bbb; font-size: 13px; }
+    .tk-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 9px 14px; border-bottom: 1px solid #f0f0f0;
+    }
+    .tk-row:last-of-type { border-bottom: none; }
+    .tk-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.12);
+    }
+    .tk-name {
+      font-size: 13px; color: #333; flex: 1 1 110px; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tk-name small { display: block; font-size: 10px; color: #b0bec5; }
+    .tk-state { font-size: 11px; flex: 0 0 auto; }
+    .tk-on    { color: #2e7d32; }
+    .tk-off   { color: #b0bec5; }
+    .tk-sel {
+      padding: 6px 7px; font-size: 12px; font-family: sans-serif;
+      border: 1px solid #ddd; border-radius: 5px; background: white; color: #333;
+      flex: 0 1 150px; max-width: 170px; min-width: 110px;
+    }
+    .tk-typ { display: flex; flex: 0 0 auto; }
+    .tk-typ button {
+      padding: 6px 10px; font-size: 13px; line-height: 1;
+      border: 1px solid #ddd; background: white; color: #90a4ae;
+      cursor: pointer; font-family: sans-serif;
+    }
+    .tk-typ button:first-child { border-radius: 5px 0 0 5px; }
+    .tk-typ button:last-child  { border-radius: 0 5px 5px 0; border-left: none; }
+    .tk-typ button.an { background: #eceff1; color: #263238; border-color: #b0bec5; }
+    .tk-neu {
+      display: flex; gap: 8px; padding: 10px 14px; flex-wrap: wrap;
+      border-top: 1px solid #f0f0f0;
+    }
+    .tk-neu input {
+      flex: 1 1 150px; min-width: 0; padding: 7px 9px; font-size: 12px;
+      font-family: sans-serif; border: 1px solid #ddd; border-radius: 5px;
+    }
+    .tk-hint {
+      padding: 0 14px 11px; font-size: 11px; color: #aaa; line-height: 1.5;
+    }
+
     /* Farbiger Pin. Der Standard-divIcon von Leaflet bringt einen
        weissen Kasten mit - der muss weg, sonst steht das SVG in einem
        Rahmen. */

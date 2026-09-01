@@ -19,6 +19,11 @@ let activeRaceId = null;
 // Das Leitrennen des Servers. Reine Rueckfallebene: laeuft nur ein
 // Rennen oder ist noch keins gewaehlt, ist es das Arbeitsrennen.
 let leitRaceId   = null;
+// Alle dem Server bekannten Tracker - auch solche, die gerade nichts
+// senden. Wird nur beim Oeffnen der Trackerverwaltung geholt, nicht im
+// Poll: die Karte braucht sie nicht, sie liest aus /positions.
+// [{ id, displayName, raceId, raceName, role, timestamp, online }]
+let trackerList  = [];
 
 // Flache Sicht ueber alle Rennen - fuer Lookups per id.
 function allRaces() {
@@ -100,6 +105,38 @@ async function loadEvents() {
     leitRaceId   = data.activeRaceId || null;
     arbeitsRennenPruefen();
   } catch (e) { console.error('Events:', e); }
+}
+
+// =======================
+// TRACKER
+// =======================
+// Rennzuordnung und Rolle stehen serverseitig unabhaengig davon fest,
+// ob der Tracker schon einmal gesendet hat. Deshalb laesst sich ein
+// ganzes Wochenende am Vorabend vorbereiten.
+async function loadTrackers() {
+  try {
+    const data = await apiSend('/trackers', 'GET');
+    trackerList = (data && data.trackers) || [];
+  } catch (e) { console.error('Tracker:', e); trackerList = []; }
+}
+
+async function setTrackerRace(trackerId, raceId) {
+  await apiSend('/tracker-race', 'POST', { trackerId, raceId: raceId || null });
+  await loadTrackers();
+}
+
+async function setTrackerRole(trackerId, role) {
+  await apiSend('/tracker-role', 'POST', { trackerId, role: role || null });
+  await loadTrackers();
+}
+
+// Eine ID bekannt machen, die der Server noch nie gesehen hat - etwa
+// ein frisch eingerichtetes Handy. Legt nur den Namenseintrag an;
+// dafuer gibt es mit /rename-tracker bereits einen Endpoint, ein
+// eigener waere doppelt.
+async function addTrackerId(trackerId) {
+  await apiSend('/rename-tracker', 'POST', { trackerId, newName: trackerId });
+  await loadTrackers();
 }
 
 // =======================

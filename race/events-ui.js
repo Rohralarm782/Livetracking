@@ -16,12 +16,13 @@ let evEditId     = null;    // Veranstaltung im Bearbeiten-Modus
 let raceFormEvId = null;    // Veranstaltung, in der ein Rennen angelegt wird
 let raceEditId   = null;    // Rennen im Bearbeiten-Modus
 let zielRaceForm = null;    // Rennen, dessen Start/Ziel gerade gesetzt wird
+let trackerEvId  = null;    // Veranstaltung, deren Trackerliste offen ist
 // Formular fuer einen Streckenpunkt. id === null heisst: neu anlegen.
 let mkForm = null;          // { raceId, id, typ }
 
 function resetEventForms() {
   evFormOpen = false; evEditId = null; raceFormEvId = null; raceEditId = null;
-  zielRaceForm = null; mkForm = null;
+  zielRaceForm = null; mkForm = null; trackerEvId = null;
 }
 
 async function openEventsPanel() {
@@ -149,6 +150,10 @@ function renderEventsBody() {
           style="flex:0;padding:4px 8px;font-size:12px${
             (timingCfg.ev && timingCfg.ev[ev.id]) ? ';color:#5e35b1;border-color:#b39ddb' : ''}"
           title="Zeitmessung verbinden">\u23F1</button>
+        <button class="btn" data-action="ev-tracker" data-id="${ev.id}"
+          style="flex:0;padding:4px 8px;font-size:12px${
+            trackerEvId === ev.id ? ';color:#1565c0;border-color:#90caf9' : ''}"
+          title="Tracker zuordnen">\u{1F4E1}</button>
         <button class="btn" data-action="ev-edit" data-id="${ev.id}"
           style="flex:0;padding:4px 8px;font-size:12px">\u270E</button>
         <button class="btn" data-action="ev-del" data-id="${ev.id}"
@@ -230,9 +235,13 @@ function renderEventsBody() {
       // weg. Zugeordnet wird auf der Karte per Rechtsklick bzw. langem
       // Druck auf den Marker.
       if (Array.isArray(r.tracker) && r.tracker.length) {
+        // "3 Tracker" liest sich wie drei Fahrer im Feld. Die Autos
+        // stehen deshalb daneben, nicht darin.
+        const autos = r.trackerAutos || 0;
         html += `<div class="ev-tracker">
           <span class="tPunkt" style="background:${r.color || '#90a4ae'}"></span>
-          ${r.tracker.length} Tracker: ${escH(r.tracker.join(', '))}
+          ${r.tracker.length} Tracker: ${escH(r.tracker.join(', '))}${
+            autos ? ` \u00B7 davon ${autos} Auto${autos > 1 ? 's' : ''}` : ''}
         </div>`;
       }
 
@@ -264,6 +273,8 @@ function renderEventsBody() {
         </div>`;
       }
     });
+
+    if (trackerEvId === ev.id) html += trackerPanelHtml(ev);
 
     if (raceFormEvId === ev.id) {
       html += `<div class="ev-form">
@@ -310,13 +321,82 @@ function renderEventsBody() {
     importieren, Strecke \u{1F5FA} laden, dann das Rennen aktiv schalten.
     Startliste, Strecke und Taktik-Stand geh\u00F6ren zum Rennen \u2013 beim
     Wechsel bleiben sie beim alten Rennen gespeichert.<br><br>
-    Tracker werden auf der Karte zugeordnet: langer Druck bzw. Rechtsklick
-    auf den Marker. Ein zugeordneter Tracker tr\u00E4gt die Farbe seines
-    Rennens und rechnet auf dessen Strecke. Beim Beenden eines Rennens
-    werden seine Tracker wieder frei.
+    Tracker werden \u00FCber \u{1F4E1} in der Kopfzeile der Veranstaltung
+    zugeordnet \u2013 auch bevor sie senden \u2013 oder auf der Karte per
+    langem Druck bzw. Rechtsklick auf den Marker. Ein zugeordneter Tracker
+    tr\u00E4gt die Farbe seines Rennens und rechnet auf dessen Strecke.
+    Ein Teamauto z\u00E4hlt keine Runden und geht nicht in die
+    Gruppenbildung ein. Beim Beenden eines Rennens werden seine Tracker
+    wieder frei; der Typ bleibt.
   </div>`;
 
   evBody.innerHTML = html;
+}
+
+// =======================
+// TRACKERVERWALTUNG
+// =======================
+// Je Veranstaltung, nicht global: die Auswahlliste zeigt genau die
+// Rennen dieser Veranstaltung. Wer am Sonntagmorgen die Tracker fuer
+// das Kriterium verteilt, soll nicht durch die Rennen des Vortages
+// scrollen muessen.
+function trackerPanelHtml(ev) {
+  const races = ev.races || [];
+  const n     = trackerList.length;
+  const on    = trackerList.filter(t => t.online).length;
+
+  let h = `<div class="tk-panel">
+    <div class="tk-hdr">
+      <span class="t">\u{1F4E1} Tracker</span>
+      <span class="n">${n} bekannt \u00B7 ${on} online</span>
+    </div>`;
+
+  if (n === 0) {
+    h += `<div class="tk-leer">Noch kein Tracker bekannt \u2013 unten die ID eintragen.</div>`;
+  }
+
+  trackerList.forEach(t => {
+    const eigen = races.find(r => r.id === t.raceId) || null;
+    const fremd = t.raceId && !eigen;
+    const farbe = eigen ? (eigen.color || '#90a4ae') : '#cfd8dc';
+    const auto  = t.role === 'teamauto';
+
+    // Ein Rennen einer anderen Veranstaltung darf nicht stillschweigend
+    // verschwinden: es steht als eigene Zeile mit im Aufklappmenue.
+    let opts = `<option value="">Keinem Rennen</option>`;
+    if (fremd) {
+      opts += `<option value="${escH(t.raceId)}" selected>${
+        escH(t.raceName || t.raceId)} (andere Veranstaltung)</option>`;
+    }
+    races.forEach(r => {
+      opts += `<option value="${escH(r.id)}"${r.id === t.raceId ? ' selected' : ''}>${
+        escH(r.name)}</option>`;
+    });
+
+    h += `<div class="tk-row">
+      <span class="tk-dot" style="background:${farbe}"></span>
+      <span class="tk-name">${escH(t.displayName)}${
+        t.displayName === t.id ? '' : `<small>${escH(t.id)}</small>`}</span>
+      <span class="tk-state ${t.online ? 'tk-on' : 'tk-off'}">${t.online ? 'aktiv' : 'offline'}</span>
+      <select class="tk-sel" data-action="tk-race" data-tid="${escH(t.id)}">${opts}</select>
+      <span class="tk-typ">
+        <button class="${auto ? '' : 'an'}" data-action="tk-role"
+          data-tid="${escH(t.id)}" data-role="sportler">\u{1F6B4}</button>
+        <button class="${auto ? 'an' : ''}" data-action="tk-role"
+          data-tid="${escH(t.id)}" data-role="teamauto">\u{1F697}</button>
+      </span>
+    </div>`;
+  });
+
+  h += `<div class="tk-neu">
+      <input type="text" id="tkNeuId" maxlength="40" placeholder="Tracker-ID von Hand eintragen\u2026">
+      <button class="btn" data-action="tk-add" style="flex:0;padding:7px 12px;font-size:12px">\uFF0B Aufnehmen</button>
+    </div>
+    <div class="tk-hint">Ein Teamauto z\u00E4hlt keine Runden und geht nicht in die
+      Gruppenbildung ein. Der Typ bleibt \u00FCber das Rennende hinaus, die
+      Rennzuordnung wird dabei gel\u00F6st.</div>
+  </div>`;
+  return h;
 }
 
 // =======================
@@ -454,6 +534,31 @@ evBody.addEventListener('click', function (e) {
     case 'ev-edit':
       resetEventForms(); evEditId = id; renderEventsBody();
       break;
+
+    case 'ev-tracker': {
+      // Auf/zu wie das Start/Ziel-Panel. Beim Oeffnen wird die Liste
+      // frisch geholt: sie steht nicht im Poll und waere sonst so alt
+      // wie die letzte Sitzung.
+      const offen = trackerEvId === id;
+      resetEventForms();
+      if (offen) { renderEventsBody(); break; }
+      trackerEvId = id;
+      guard(async () => { await loadTrackers(); });
+      break;
+    }
+
+    case 'tk-role': {
+      const tid = btn.dataset.tid;
+      guard(async () => { await setTrackerRole(tid, btn.dataset.role); });
+      break;
+    }
+
+    case 'tk-add': {
+      const neu = val('#tkNeuId');
+      if (!neu) { const el = evBody.querySelector('#tkNeuId'); if (el) el.focus(); return; }
+      guard(async () => { await addTrackerId(neu); });
+      break;
+    }
 
     case 'ev-edit-save': {
       const name = val('#evEditName');
@@ -794,6 +899,22 @@ evBody.addEventListener('click', function (e) {
       break;
     }
   }
+});
+
+// Eigener Listener: ein <select> meldet sich mit 'change', nicht mit
+// 'click'. Alles andere in dieser Ansicht sind Knoepfe.
+evBody.addEventListener('change', function (e) {
+  if (!authToken) return;
+  const sel = e.target.closest('select[data-action="tk-race"]');
+  if (!sel) return;
+  const tid  = sel.dataset.tid;
+  const wert = sel.value || null;
+  guard(async () => {
+    await setTrackerRace(tid, wert);
+    // Die Rennzeile zeigt die Namen der zugeordneten Tracker - die
+    // steht in der Rennliste und muss mitkommen.
+    await loadEvents();
+  });
 });
 
 evBody.addEventListener('keydown', function (e) {

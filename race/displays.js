@@ -6,8 +6,13 @@
 function renderDisplayPanel() {
   if (!authToken || authLevel !== 'spolei') return '';
 
+  // Teamautos bleiben aussen vor: sie haben kein Display, das man
+  // beschriften koennte, und wuerden die Liste im Rennen nur laenger
+  // machen.
   const posIds = Object.keys(lastPosData)
-    .filter(id => id !== 'TEAMAUTO' && lastPosData[id].type !== 'betreuer');
+    .filter(id => id !== 'TEAMAUTO'
+              && lastPosData[id].type !== 'betreuer'
+              && lastPosData[id].role !== 'teamauto');
 
   // Tracker ohne Fix mitnehmen: sie sind online und adressierbar,
   // es fehlt nur die Position. Genau dafuer ist das hier da.

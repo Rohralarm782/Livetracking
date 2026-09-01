@@ -138,6 +138,10 @@ const markers       = {};
 // Marker-ID -> zuletzt gesetzte Rennfarbe (null = keine Zuordnung).
 // Ohne diesen Merker muesste bei jedem Poll das Icon neu gebaut werden.
 const markerRace    = {};
+// Marker-ID -> zuletzt gesetzte Rolle ('teamauto' oder null). Zweiter
+// Merker neben markerRace, weil sich Farbe und Rolle unabhaengig
+// voneinander aendern koennen und beide das Symbol bestimmen.
+const markerRolle   = {};
 const lastPositions = {};
 const trails        = {};
 let currentMarkerMenu = null;
@@ -390,13 +394,46 @@ function rennPin(farbe) {
   });
 }
 
+// Symbol fuer ein Teamauto. Quadrat statt Tropfen, damit sich der
+// Wagen auf einen Blick vom Feld unterscheidet - und weil die Flaeche
+// fast doppelt so gross ist wie beim Pin: die Rennfarbe bleibt auch
+// bei Sonne und flachem Blickwinkel im Auto erkennbar. Der Wagen ist
+// nur als Umriss eingezeichnet, damit er die Farbe nicht auffrisst.
+// Ankerpunkt in der Mitte, nicht unten: ein Quadrat hat keine Spitze.
+function autoPin(farbe) {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">' +
+    '<rect x="2" y="2" width="26" height="26" rx="7" fill="' + farbe + '" ' +
+    'stroke="#ffffff" stroke-width="2.4"/>' +
+    '<path d="M8 18.5h14M9.5 18.5v2M20.5 18.5v2M9 18.5l1.6-4.4a1.4 1.4 0 0 1 1.3-.9h6.2' +
+    'a1.4 1.4 0 0 1 1.3.9l1.6 4.4" fill="none" stroke="#ffffff" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return L.divIcon({
+    className: 'rennPin', html: svg,
+    iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15]
+  });
+}
+
+// Ein Ort fuer die Wahl des Symbols. Ohne Rennfarbe bekommt das
+// Teamauto ein gedecktes Grau statt des blauen Standardbildes - sonst
+// waere ein nicht zugeordneter Wagen von einem Fahrer nicht zu
+// unterscheiden.
+function trackerIcon(farbe, rolle) {
+  if (rolle === 'teamauto') return autoPin(farbe || '#546e7a');
+  return farbe ? rennPin(farbe) : standardPin();
+}
+
 // Marker und Spur auf die Rennfarbe setzen. Faerbt beides, damit ein
 // Tracker im Rennen als Ganzes erkennbar ist und nicht nur sein Kopf.
-function setzeRennFarbe(id, farbe) {
-  const neu = farbe || null;
-  if (markerRace[id] === neu) return;
-  markerRace[id] = neu;
-  if (markers[id]) markers[id].setIcon(neu ? rennPin(neu) : standardPin());
+// Die Rolle laeuft mit: sie kann sich waehrend des Rennens aendern,
+// und das Symbol haengt an beidem.
+function setzeRennFarbe(id, farbe, rolle) {
+  const neu  = farbe || null;
+  const neuR = rolle || null;
+  if (markerRace[id] === neu && markerRolle[id] === neuR) return;
+  markerRace[id]  = neu;
+  markerRolle[id] = neuR;
+  if (markers[id]) markers[id].setIcon(trackerIcon(neu, neuR));
   if (trails[id])  trails[id].setStyle({ color: neu || '#3388ff' });
 }
 
@@ -412,6 +449,7 @@ async function deleteTracker(markerId) {
     if (markers[markerId]) { map.removeLayer(markers[markerId]); delete markers[markerId]; }
     if (trails[markerId])  { map.removeLayer(trails[markerId]);  delete trails[markerId];  }
     delete markerRace[markerId];
+    delete markerRolle[markerId];
     delete lastPositions[markerId];
     delete spurDaten[markerId];
     showToast('\u{1F5D1} Marker entfernt');
@@ -429,6 +467,46 @@ function showMarkerMenu(e, markerId) {
 
   const input = document.createElement('input');
   input.type = 'text'; input.placeholder = 'Neuer Name\u2026'; input.value = markerId;
+
+  // Rolle. Steht ueber der Rennauswahl, weil beides zur Vorbereitung
+  // gehoert - und weil die Rolle bestimmt, ob das Geraet ueberhaupt
+  // Runden zaehlt. Zwei Werte, deshalb ein Schalter und kein Aufklapp-
+  // menue: der Zustand muss im Auto ohne Tippen ablesbar sein.
+  const rolleTitel = document.createElement('div');
+  rolleTitel.className   = 'markerZuTitel';
+  rolleTitel.textContent = '\u{1F697} Typ';
+
+  const rolleBox = document.createElement('div');
+  rolleBox.className = 'typWahl';
+  const istAuto0 = !!(lastPosData[markerId] && lastPosData[markerId].role === 'teamauto');
+
+  const mkRolleBtn = (wert, label, an) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (an) b.className = 'an';
+    b.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${SERVER}/tracker-role`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ trackerId: markerId, role: wert })
+        });
+        if (!res.ok) { checkAuth(res); showToast('\u26A0\uFE0F Typ nicht gesetzt'); return; }
+        const data = await res.json();
+        if (lastPosData[markerId]) {
+          if (data.role) lastPosData[markerId].role = data.role;
+          else           delete lastPosData[markerId].role;
+        }
+        setzeRennFarbe(markerId, markerRace[markerId], data.role || null);
+        showToast(data.role ? '\u{1F697} Teamauto' : '\u{1F6B4} Sportler');
+        container.remove();
+      } catch (err) { showToast('\u26A0\uFE0F ' + err.message); }
+    });
+    return b;
+  };
+
+  rolleBox.appendChild(mkRolleBtn('sportler', '\u{1F6B4} Sportler', !istAuto0));
+  rolleBox.appendChild(mkRolleBtn('teamauto', '\u{1F697} Teamauto',  istAuto0));
 
   const renameBtn = document.createElement('button');
   renameBtn.textContent = '\u270F\uFE0F Umbenennen';
@@ -503,6 +581,8 @@ function showMarkerMenu(e, markerId) {
 
   container.appendChild(input);
   container.appendChild(renameBtn);
+  container.appendChild(rolleTitel);
+  container.appendChild(rolleBox);
   container.appendChild(zuTitel);
   container.appendChild(sel);
   container.appendChild(delBtn);
@@ -829,6 +909,7 @@ async function loadPositions() {
       map.removeLayer(markers[id]);
       delete markers[id];
       delete markerRace[id];
+      delete markerRolle[id];
       if (trails[id]) { map.removeLayer(trails[id]); delete trails[id]; }
       delete lastPositions[id];
       delete historyData[id];
@@ -863,6 +944,9 @@ async function loadPositions() {
       const bat         = pos.bat;
       const displayName = pos.displayName || id;
       const isBetreuer  = pos.type === 'betreuer';
+      // Ein Teamauto faehrt nicht mit: es gehoert weder in eine
+      // Fahrergruppe noch in die Abstandsrechnung.
+      const istAuto     = pos.role === 'teamauto';
       const anz         = anzeigePosition(id, pos, zielT, isBetreuer);
       const latlng      = [anz.lat, anz.lon];
       const age         = pos.timestamp ? now - pos.timestamp : 0;
@@ -895,8 +979,11 @@ async function loadPositions() {
       if (!markers[id]) {
         const icon = id === 'TEAMAUTO' ? teamCarIcon
                    : isBetreuer        ? betreuerIcon
-                   : (pos.raceColor ? rennPin(pos.raceColor) : standardPin());
-        if (!isBetreuer && id !== 'TEAMAUTO') markerRace[id] = pos.raceColor || null;
+                   : trackerIcon(pos.raceColor || null, istAuto ? 'teamauto' : null);
+        if (!isBetreuer && id !== 'TEAMAUTO') {
+          markerRace[id]  = pos.raceColor || null;
+          markerRolle[id] = istAuto ? 'teamauto' : null;
+        }
 
         const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age, pos.avgKmh);
 
@@ -909,7 +996,7 @@ async function loadPositions() {
         }
 
         markers[id] = marker;
-        if (!isBetreuer && id !== 'TEAMAUTO') {
+        if (!isBetreuer && !istAuto && id !== 'TEAMAUTO') {
           gruppenKandidaten.push({ id, name: displayName, lat: anz.lat, lon: anz.lon, s: anz.s });
         }
         lastPositions[id] = latlng;
@@ -940,7 +1027,7 @@ async function loadPositions() {
         lastPositions[id].stale       = stale;
         lastPositions[id].betreuer    = isBetreuer;
 
-        if (!isBetreuer && id !== 'TEAMAUTO') {
+        if (!isBetreuer && !istAuto && id !== 'TEAMAUTO') {
           gruppenKandidaten.push({ id, name: displayName, lat: anz.lat, lon: anz.lon, s: anz.s });
         }
         // Unsicher heisst: fuer diesen Zeitpunkt lag kein Punkt vor,
@@ -957,7 +1044,9 @@ async function loadPositions() {
         // Zuordnung kann sich waehrend des Rennens aendern - auch von
         // einem anderen Geraet aus. Der Vergleich in setzeRennFarbe()
         // sorgt dafuer, dass hier im Regelfall nichts passiert.
-        if (!isBetreuer && id !== 'TEAMAUTO') setzeRennFarbe(id, pos.raceColor || null);
+        if (!isBetreuer && id !== 'TEAMAUTO') {
+          setzeRennFarbe(id, pos.raceColor || null, istAuto ? 'teamauto' : null);
+        }
       }
     });
 

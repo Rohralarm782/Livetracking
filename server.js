@@ -91,6 +91,22 @@ const trackerDisplayNames = Object.create(null);
 // Die Zuordnungen eines Rennens fallen weg, sobald es beendet wird.
 const trackerRace = Object.create(null);
 
+// Hardware-ID -> Rolle. Einziger Wert ist 'teamauto'; kein Eintrag
+// heisst Sportler. Damit ist ein Stand ohne jede Rolle identisch zum
+// Verhalten vor 2.6.0.
+//
+// Absichtlich NICHT 'auto' genannt: autoDisplay{} steht im selben
+// Modul und meint "automatischer Anzeigetext". Zwei Bedeutungen
+// desselben Wortes nebeneinander waeren eine Falle.
+//
+// Die Rolle gehoert zum Geraet, nicht zum Rennen: sie ueberlebt das
+// Rennende, waehrend loeseTrackerZuordnung() die Rennzuordnung loest.
+const trackerRolle = Object.create(null);
+
+function istTeamauto(id) {
+  return trackerRolle[id] === 'teamauto';
+}
+
 // Tracker, die sich gemeldet haben, aber noch keinen GPS-Fix haben.
 // id -> { since, timestamp, sats }
 //   since     = erste Meldung DIESER Suchphase (fuer die Laufzeit-Anzeige)
@@ -641,7 +657,10 @@ function persistRuntime() {
     autoDisplay:         Object.keys(autoDisplay).filter(id => autoDisplay[id]),
     currentMode,
     trackerDisplayNames,
-    trackerRace
+    trackerRace,
+    // Als Liste statt als Objekt: es gibt genau eine Rolle, und eine
+    // Liste von IDs liest sich in der Datenbank wie autoDisplay.
+    teamautos: Object.keys(trackerRolle).filter(id => trackerRolle[id] === 'teamauto')
   }).catch(dbFail('setSetting runtime'));
 }
 
@@ -760,7 +779,13 @@ async function loadStateFromDb() {
         if (typeof rid === 'string' && rid) trackerRace[id] = rid;
       }
     }
-    console.log(`\u267B\uFE0F Laufzeit-Zustand geladen: Modus ${currentMode}, ${Object.keys(autoDisplay).length} Auto-Tracker, ${Object.keys(trackerDisplayNames).length} Namen, ${Object.keys(trackerRace).length} Renn-Zuordnung(en)`);
+    // Fehlt der Schluessel - etwa nach einem Rollback auf 2.5.x und
+    // zurueck -, bleibt jeder Tracker Sportler. Das ist der Zustand
+    // vor 2.6.0 und damit die sichere Vorgabe.
+    if (Array.isArray(rt.teamautos)) {
+      for (const id of rt.teamautos) trackerRolle[String(id)] = 'teamauto';
+    }
+    console.log(`\u267B\uFE0F Laufzeit-Zustand geladen: Modus ${currentMode}, ${Object.keys(autoDisplay).length} Auto-Tracker, ${Object.keys(trackerDisplayNames).length} Namen, ${Object.keys(trackerRace).length} Renn-Zuordnung(en), ${Object.keys(trackerRolle).length} Teamauto(s)`);
   }
 
   const rows = await db.listRaces();
@@ -1379,6 +1404,14 @@ function trackerOfRace(raceId) {
     .sort((a, b) => a.localeCompare(b));
 }
 
+// Wie viele davon sind Teamautos? Getrennt ausgewiesen, weil sich
+// "3 Tracker" sonst wie drei Fahrer im Feld liest.
+function autosOfRace(raceId) {
+  return Object.keys(trackerRace)
+    .filter(t => trackerRace[t] === raceId && istTeamauto(t))
+    .length;
+}
+
 // Zuordnungen loesen. Wird aufgerufen, sobald ein Rennen auf 'beendet'
 // geht - danach faellt der Tracker auf das dann aktive Rennen zurueck
 // und kann neu vergeben werden.
@@ -1670,7 +1703,12 @@ function verfolgeStrecke(id, lat, lon) {
   // gerechnet wird auf der Strecke des Rennens, dem der Tracker
   // zugeordnet ist. Fuer ein nicht aktives Rennen bleibt er aussen
   // vor: dort waere jeder gemeldete Durchgang erfunden.
-  if (istAktiv(rid)) {
+  // Ein Teamauto zaehlt keine Runden. Es faehrt zurueck, kuerzt ab und
+  // steht am Start - jeder dieser Wege sieht fuer die Rundenlogik wie
+  // ein Zieldurchgang aus und wuerde den Zaehler des ganzen Rennens
+  // heben. Die Rundenlogik selbst ist unveraendert; sie wird nur nicht
+  // mehr betreten.
+  if (istAktiv(rid) && !istTeamauto(id)) {
     pruefeRundendurchgang(id, s);
   } else {
     // Wie im Trainings-Zweig: trackerS trotzdem fuehren. Daran haengt
@@ -1968,6 +2006,10 @@ app.get('/positions', (req, res) => {
       const st  = trackerStats[id];
       const avg = avgKmhFor(id);
       enriched[id] = { ...pos, displayName: trackerDisplayNames[id] || id };
+      // Nur setzen, wenn es ein Teamauto ist. Ein fehlendes Feld
+      // bedeutet Sportler - so bleibt die Antwort fuer jeden Stand
+      // ohne Rollen byte-gleich zu 2.5.x.
+      if (istTeamauto(id)) enriched[id].role = 'teamauto';
       if (st)          enriched[id].distM  = Math.round(st.dist);
       if (avg !== null) enriched[id].avgKmh = avg;
       // Streckenposition in Metern. Der Server rechnet sie ohnehin bei
@@ -2184,6 +2226,69 @@ app.post('/tracker-race', requireSpolei, (req, res) => {
   res.json({ ok: true, raceId, color });
 });
 
+// Rolle eines Trackers setzen: 'teamauto' oder null (= Sportler).
+// Eigener Endpoint statt eines Zusatzfeldes an /tracker-race: so
+// bleibt die Zuordnung unberuehrt, und ein Rollback trifft genau eine
+// Route. Wie dort wird nicht geprueft, ob der Tracker je gesendet hat -
+// die Rolle darf vor dem ersten Lebenszeichen feststehen.
+app.post('/tracker-role', requireSpolei, (req, res) => {
+  const { trackerId, role } = req.body || {};
+  if (!trackerId) return res.status(400).json({ error: 'trackerId required' });
+  const key = String(trackerId).slice(0, 40);
+
+  if (role === 'teamauto') {
+    trackerRolle[key] = 'teamauto';
+    persistRuntime();
+    console.log(`\u{1F697} Tracker ${key} ist ein Teamauto`);
+    return res.json({ ok: true, role: 'teamauto' });
+  }
+
+  if (role === null || role === undefined || role === '' || role === 'sportler') {
+    delete trackerRolle[key];
+    persistRuntime();
+    console.log(`\u{1F6B4} Tracker ${key} ist ein Sportler`);
+    return res.json({ ok: true, role: null });
+  }
+
+  res.status(400).json({ error: 'role muss "teamauto", "sportler" oder null sein' });
+});
+
+// Alle bekannten Tracker - fuer die Trackerverwaltung im Rennen-Tab.
+// Bewusst aus vier Quellen zusammengesetzt, damit auch ein Geraet
+// auftaucht, das gerade nichts sendet: nur so laesst sich am Vorabend
+// zuordnen. Betreuer-Marker und das Teamauto des Handys bleiben
+// aussen vor - beide sind keine Tracker im Sinne dieser Liste.
+app.get('/trackers', requireSpolei, (req, res) => {
+  const ids = new Set();
+  for (const id of Object.keys(positions))           ids.add(id);
+  for (const id of Object.keys(pending))             ids.add(id);
+  for (const id of Object.keys(trackerDisplayNames)) ids.add(id);
+  for (const id of Object.keys(trackerRace))         ids.add(id);
+  for (const id of Object.keys(trackerRolle))        ids.add(id);
+  ids.delete('TEAMAUTO');
+
+  const now = Date.now();
+  const out = [];
+  for (const id of ids) {
+    if (String(id).startsWith('betreuer-')) continue;
+    const pos = positions[id];
+    const pnd = pending[id];
+    const ts  = Math.max((pos && pos.timestamp) || 0, (pnd && pnd.timestamp) || 0) || null;
+    const rid = trackerRace[id] && races[trackerRace[id]] ? trackerRace[id] : null;
+    out.push({
+      id,
+      displayName: trackerDisplayNames[id] || id,
+      raceId:      rid,
+      raceName:    rid ? races[rid].name : null,
+      role:        istTeamauto(id) ? 'teamauto' : null,
+      timestamp:   ts,
+      online:      ts !== null && now - ts < 60000
+    });
+  }
+  out.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  res.json({ trackers: out });
+});
+
 // =======================
 // CLAUDE API PROXY
 // API-Key bleibt server-seitig, Browser-CORS-Problem umgangen
@@ -2368,6 +2473,7 @@ function raceView(r) {
     // zugeordneten Tracker.
     color:      farbeOf(r.id),
     tracker:    trackerOfRace(r.id),
+    trackerAutos: autosOfRace(r.id),
     isActive:   istAktiv(r.id)
   };
 }
