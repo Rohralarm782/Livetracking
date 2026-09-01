@@ -77,7 +77,9 @@
     #optionsBtn {
       position: absolute;
       bottom: calc(10px + env(safe-area-inset-bottom, 0px)); left: 10px; right: calc(50% + 5px);
-      z-index: 999; padding: 10px 14px; background: white;
+      /* Ueber der Rennleiste (999) und der Leaflet-Zoomleiste (1000):
+         die Bedienknoepfe sind das Letzte, was verdeckt werden darf. */
+      z-index: 1002; padding: 10px 14px; background: white;
       border: 1px solid #ccc; border-radius: 6px;
       cursor: pointer; font-size: 13px; font-family: sans-serif;
       transition: all 0.2s; width: auto;
@@ -140,6 +142,24 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
     }
     #raceClock.hidden { display: none; }
+
+    /* RENNLEISTE - eine Zeile je laufendem Rennen, ab 2.1.0 zugleich
+       die Rennauswahl. Sie beginnt rechts neben der Leaflet-Zoomleiste
+       und endet auf dem Desktop vor der Knopfreihe: die Chipleiste aus
+       2.0.0 lag genau ueber dem Optionen-Knopf und machte ihn
+       unbedienbar.
+       pointer-events liegt nur auf den Zeilen selbst - eine kuenftige
+       Ueberdeckung kann damit keinen Knopf mehr lahmlegen. */
+    #raceClock.rennliste {
+      top: 8px; left: 52px; right: 8px; transform: none;
+      max-width: none; text-align: left; white-space: normal;
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 4px; border-radius: 8px;
+      font-size: 13px; font-weight: 400;
+    }
+    @media (min-width: 768px) {
+      #raceClock.rennliste { right: 250px; }
+    }
 
     /* Leiste des Streckenmodus. Sitzt oben, weil unten die Bedienleiste
        und die Rennuhr liegen; auf dem Handy bricht sie um. */
@@ -325,7 +345,9 @@
     /* TAKTIK BUTTON */
     #taktikBtn {
       position: absolute; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); right: 10px; left: calc(50% + 5px);
-      z-index: 999; padding: 10px 14px; background: white;
+      /* Wie beim Optionen-Knopf: ueber der Rennleiste und der
+         Leaflet-Zoomleiste. */
+      z-index: 1002; padding: 10px 14px; background: white;
       border: 1px solid #ccc; border-radius: 6px;
       cursor: pointer; font-size: 13px; font-family: sans-serif;
       transition: all 0.2s; width: auto;
@@ -573,51 +595,36 @@
 
     #taktikStrip.hidden { display: none; }
 
-    /* RENNAUSWAHL - waagerechte Leiste am oberen Rand.
-       Erscheint erst ab zwei laufenden Rennen; bei einem sieht die
-       Karte aus wie bis 1.19.0. */
-    #rennAuswahl {
-      position: fixed; top: 8px; left: 8px; right: 96px; z-index: 999;
-      display: flex; gap: 6px; align-items: center;
-      overflow-x: auto; -webkit-overflow-scrolling: touch;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(0,0,0,0.10); border-radius: 9px;
-      padding: 6px 7px;
+    /* ZEILE DER RENNLEISTE. Fahrtzeit und Feldschnitt sind seit 2.0
+       entfallen, die Runde bleibt: an ihr haengen die
+       Korrekturknoepfe. */
+    .rcRow {
+      display: flex; align-items: center; gap: 7px;
+      padding: 3px 5px; border-radius: 6px; pointer-events: auto;
     }
-    #rennAuswahl.hidden { display: none; }
-    #rennAuswahl::-webkit-scrollbar { display: none; }
-    .raChip {
-      display: flex; align-items: center; gap: 5px;
-      padding: 5px 9px 5px 7px; border: 2px solid #cfd8dc; border-radius: 16px;
-      background: #fff; font-size: 12px; font-family: sans-serif;
-      white-space: nowrap; cursor: pointer; flex: 0 0 auto;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .raChip.on { border-color: currentColor; }
-    .raD { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; opacity: .28; }
-    .raChip.on .raD { opacity: 1; }
-    .raL { color: #263238; }
-    .raMe { font-size: 12px; }
-
-    /* RENNLEISTE - eine Zeile je sichtbarem Rennen. Fahrtzeit und
-       Feldschnitt sind ab 2.0 entfallen, die Runde bleibt: an ihr
-       haengen die Korrekturknoepfe. */
-    #raceClock.mehrfach {
-      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-    }
-    .rcRow { display: flex; align-items: center; gap: 6px; }
-    .rcD { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .rcRow + .rcRow { border-top: 1px solid #eceff1; }
+    .rcRow.waehlbar { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .rcRow.aus { opacity: .42; }
+    .rcD { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
     .rcN { font-weight: 600; }
+    .rcMe { font-size: 12px; }
+    .rcAus { margin-left: auto; font-size: 11px; color: #78909c; }
+    /* Der Rundenstand rueckt an den rechten Rand, damit die Zahlen
+       untereinander stehen. */
+    #raceClock.rennliste .rcLapBox { margin-left: auto; }
 
-    /* REITER IM TAKTIK-STREIFEN */
-    .stripTabs { display: flex; width: 100%; border-bottom: 1px solid #eceff1; margin-bottom: 5px; }
-    .stripTab {
-      flex: 1; text-align: center; font-size: 10px; font-weight: 700;
-      padding: 3px 0 5px; cursor: pointer; color: #b0bec5;
-      border-bottom: 2px solid transparent; overflow: hidden;
-      -webkit-tap-highlight-color: transparent;
+    /* KOPF DES TAKTIK-STREIFENS. Bis 2.0.0 stand hier ein Reiter je
+       Rennen. Der Reiter schaltete aber nur die Beschriftung um, nicht
+       die Datenquelle: groups gibt es im Server genau einmal und
+       gehoert dem Leitrennen. Ab 2.1.0 steht deshalb nur noch da,
+       wessen Taktik der Streifen zeigt. */
+    .stripKopf {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      font-size: 11px; font-weight: 700; color: #263238;
+      padding: 0 0 5px; margin: 0 6px 5px;
+      border-bottom: 2px solid #cfd8dc; overflow: hidden;
     }
-    .stripTab.on { color: #263238; }
+    .stripKopfP { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 
     /* ZUSAMMENGELEGTER STRECKENPUNKT - ein Symbol, aussen ein
        Ringsegment je Rennen. */

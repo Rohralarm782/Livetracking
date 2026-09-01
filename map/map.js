@@ -1052,40 +1052,22 @@ function setzeSteckbriefOffset(raceId, offset) {
   if (steckbriefe[raceId]) steckbriefe[raceId].startOffset = offset;
 }
 
-// Die Leiste am oberen Rand: ein Chip je laufendem Rennen. Tippen
-// blendet ein und aus, langes Tippen setzt das eigene Rennen.
+// Wie viele Rennen gerade laufen - unabhaengig davon, was auf diesem
+// Geraet ausgewaehlt ist. Der Taktik-Streifen braucht die Zahl, um zu
+// entscheiden, ob er ueberhaupt sagen muss, wessen Taktik er zeigt.
+function laufendeRennen() { return Object.keys(steckbriefe).length; }
+
+// Bis 2.0.0 lagen oben zwei Kaesten uebereinander: die Chipleiste
+// (#rennAuswahl) und der Rundenkasten (#raceClock). Beide trugen
+// Farbe und Kuerzel desselben Rennens, und die Chipleiste verdeckte
+// auf dem Desktop den Optionen-Knopf - sie war breiter als der Platz
+// links davon.
+//
+// Ab 2.1.0 gibt es nur noch die Rennleiste in #raceClock. Diese
+// Funktion behaelt ihren Namen, damit alle Aufrufer unveraendert
+// bleiben, und zeichnet die Leiste neu.
 function renderRennAuswahl() {
-  const bar = document.getElementById('rennAuswahl');
-  if (!bar) return;
-  const ids = Object.keys(steckbriefe);
-  // Bei genau einem Rennen gibt es nichts zu waehlen - dann bleibt die
-  // Leiste weg und die Karte sieht aus wie bis 1.19.0.
-  if (ids.length < 2) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
-  bar.classList.remove('hidden');
-  const mein = meinRaceId();
-  bar.innerHTML = ids.map(id => {
-    const s   = steckbriefe[id];
-    const an  = !abgewaehlt.has(id);
-    const lbl = (typeof raceLabel === 'function') ? raceLabel(id, true) : (s.name || id);
-    return `<button class="raChip${an ? ' on' : ''}" data-id="${id}" style="color:${s.farbe || '#607d8b'}">`
-         + `<span class="raD" style="background:${s.farbe || '#607d8b'}"></span>`
-         + `<span class="raL">${escH(lbl)}</span>`
-         + (an && id === mein ? '<span class="raMe">\u{1F697}</span>' : '')
-         + '</button>';
-  }).join('');
-  bar.querySelectorAll('.raChip').forEach(b => {
-    let lang = null;
-    const setzen = () => { if (!abgewaehlt.has(b.dataset.id)) setzeMeinRennen(b.dataset.id); };
-    b.addEventListener('click', () => { if (lang === 'fertig') { lang = null; return; }
-                                        schalteRennSicht(b.dataset.id); });
-    b.addEventListener('contextmenu', e => { e.preventDefault(); setzen(); });
-    b.addEventListener('touchstart', () => {
-      lang = setTimeout(() => { lang = 'fertig'; setzen(); }, 550);
-    }, { passive: true });
-    b.addEventListener('touchend', () => {
-      if (lang && lang !== 'fertig') { clearTimeout(lang); lang = null; }
-    });
-  });
+  if (typeof updateRaceClock === 'function') updateRaceClock();
 }
 // trackerId -> Meter auf der Strecke. Grundlage fuer "naechster Punkt".
 let streckenPos   = Object.create(null);
@@ -1248,59 +1230,119 @@ function escNext(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Eine Zeile der Rennleiste: Farbpunkt, Kuerzel, Rundenstand. Die
-// Korrekturknoepfe tragen die Renn-ID mit sich - bei zwei Rennen darf
-// kein Zweifel bestehen, welche Zaehlung ein Tipp verstellt.
-function rennZeile(raceId) {
+// Eine Zeile der Rennleiste: Farbpunkt, Kuerzel, Rundenstand und die
+// Korrekturknoepfe. Die Knoepfe tragen die Renn-ID mit sich - bei zwei
+// Rennen darf kein Zweifel bestehen, welche Zaehlung ein Tipp
+// verstellt.
+//
+// Ab 2.1.0 ist die Zeile zugleich die Auswahl: tippen blendet das
+// Rennen aus und wieder ein, langes Tippen setzt das eigene Rennen.
+// Ein abgewaehltes Rennen behaelt seine Zeile - sonst gaebe es keinen
+// Weg zurueck.
+//
+// mehrere: erst ab zwei laufenden Rennen gibt es etwas zu waehlen. Bei
+// einem bleibt die Zeile ein reiner Rundenstand, wie bis 2.0.0.
+function rennZeile(raceId, mehrere) {
   const s = steckbriefe[raceId];
   if (!s) return '';
-  const lbl = (typeof raceLabel === 'function') ? raceLabel(raceId, true) : (s.name || raceId);
+  // Ohne Veranstaltungsnamen: der ist bei allen gleichzeitig laufenden
+  // Rennen derselbe und kostet auf einem Handydisplay die halbe Zeile.
+  const lbl = s.name || raceId;
+  const an  = !abgewaehlt.has(raceId);
+  const ich = mehrere && an && raceId === meinRaceId();
   let txt;
   if (!s.currentLap)      txt = '\u2013';
   else if (s.finalLap)    txt = '\u{1F3C1} Zielrunde';
   else if (s.laps && s.laps - s.currentLap === 1) txt = 'Noch 1 Runde';
   else if (s.laps)        txt = `Noch ${s.laps - s.currentLap} Runden`;
   else                    txt = `Runde ${s.currentLap}`;
-  const darf  = authLevel === 'spolei';
+  // Kein Rundenzaehler fuer ein ausgeblendetes Rennen: die Zeile ist
+  // dann nur noch der Weg zurueck, kein Bedienelement.
+  const darf  = an && authLevel === 'spolei';
   const minus = darf ? `<button class="rcLap" data-lap="-1" data-race="${raceId}" title="Runde zur\u00FCck">\u2212</button>` : '';
   const plus  = darf ? `<button class="rcLap" data-lap="1" data-race="${raceId}" title="Runde weiter">+</button>` : '';
-  return `<span class="rcRow">`
+  const rechts = an
+    ? `<span class="rcLapBox${s.finalLap ? ' final' : ''}">${minus}`
+      + `<span class="rcLapTxt">${txt}</span>${plus}</span>`
+    : '<span class="rcAus">ausgeblendet</span>';
+  return `<span class="rcRow${an ? '' : ' aus'}${mehrere ? ' waehlbar' : ''}" data-race="${raceId}">`
        + `<span class="rcD" style="background:${s.farbe || '#607d8b'}"></span>`
        + `<span class="rcN">${escH(lbl)}</span>`
-       + `<span class="rcLapBox${s.finalLap ? ' final' : ''}">${minus}`
-       + `<span class="rcLapTxt">${txt}</span>${plus}</span></span>`;
+       + (ich ? '<span class="rcMe">\u{1F697}</span>' : '')
+       + rechts + '</span>';
 }
+
+// Die Knoepfe der Rennleiste anschliessen. Der Tipp auf einen
+// Rundenknopf darf nicht bis zur Zeile durchschlagen - sonst wuerde
+// eine Rundenkorrektur das Rennen gleich mit ausblenden.
+function bindeRennLeiste(el, mehrere) {
+  el.querySelectorAll('.rcLap').forEach(b => {
+    b.addEventListener('click', ev => {
+      ev.stopPropagation();
+      adjustLap(Number(b.dataset.lap), b.dataset.race);
+    });
+  });
+  if (!mehrere) return;
+  el.querySelectorAll('.rcRow.waehlbar').forEach(row => {
+    let lang = null;
+    const setzen = () => {
+      if (!abgewaehlt.has(row.dataset.race)) setzeMeinRennen(row.dataset.race);
+    };
+    row.addEventListener('click', () => {
+      if (lang === 'fertig') { lang = null; return; }
+      schalteRennSicht(row.dataset.race);
+    });
+    row.addEventListener('contextmenu', e => { e.preventDefault(); setzen(); });
+    row.addEventListener('touchstart', () => {
+      lang = setTimeout(() => { lang = 'fertig'; setzen(); }, 550);
+    }, { passive: true });
+    row.addEventListener('touchend', () => {
+      if (lang && lang !== 'fertig') { clearTimeout(lang); lang = null; }
+    });
+  });
+}
+
+// Zuletzt gezeichnete Leiste. updateRaceClock() laeuft im
+// Sekundentakt; ein Neuaufbau mitten im langen Tippen wuerde das
+// Element samt Timer wegwerfen und die Auswahl des eigenen Rennens
+// waere Gluecksache.
+let letzteLeiste = null;
 
 function updateRaceClock() {
   const el = document.getElementById('raceClock');
   if (!el) return;
+  // Ab 2.1.0 steht die Rennleiste VOR der Startzeitpruefung. Bis 2.0.0
+  // hing sie an raceStartMsClient(): ein Rennen ohne bestaetigten oder
+  // geplanten Start hatte keine Leiste - und damit auch keine
+  // Rennauswahl, obwohl die Rennen liefen.
+  //
+  // Gezeigt werden ALLE laufenden Rennen, auch die abgewaehlten: die
+  // Zeile ist der einzige Weg, ein ausgeblendetes Rennen
+  // zurueckzuholen.
+  const ids = Object.keys(steckbriefe);
+  if (ids.length) {
+    const mehrere = ids.length > 1;
+    const html = ids.map(id => rennZeile(id, mehrere)).join('');
+    if (html !== letzteLeiste) {
+      letzteLeiste = html;
+      el.innerHTML = html;
+      bindeRennLeiste(el, mehrere);
+    }
+    el.classList.remove('hidden', 'geplant');
+    el.classList.add('rennliste');
+    el.title = mehrere
+      ? 'Tippen blendet ein und aus \u2013 langes Tippen setzt das eigene Rennen'
+      : 'Runde \u2013 \u00B1 korrigiert die Z\u00E4hlung';
+    return;
+  }
+  letzteLeiste = null;
+  el.classList.remove('rennliste');
   const s = raceStartMsClient();
   if (!s) { el.classList.add('hidden'); return; }
   const sek = Math.max(0, Math.floor((Date.now() - s.ms) / 1000));
   const zeit = `${Math.floor(sek / 3600)}:${String(Math.floor(sek / 60) % 60).padStart(2, '0')}`
              + `:${String(sek % 60).padStart(2, '0')}`;
   const avg = feldSchnitt();
-  // Ab 2.0 zeigt die Leiste nur noch die Runde, dafuer je sichtbarem
-  // Rennen eine Zeile. Fahrtzeit und Feldschnitt sind entfallen: die
-  // Uhrzeit steht ohnehin auf dem Geraet, und bei zwei Rennen mit
-  // verschiedenen Startzeiten waere eine gemeinsame Fahrtzeit sinnlos.
-  // Der Rundenzaehler bleibt, weil an ihm die Korrekturknoepfe haengen -
-  // ohne sie liesse sich eine falsch gezaehlte Runde bis zum Rennende
-  // nicht mehr richtigstellen.
-  const sicht = sichtbareRennenListe();
-  if (sicht.length) {
-    el.innerHTML = sicht.map(id => rennZeile(id)).join('');
-    el.querySelectorAll('.rcLap').forEach(b => {
-      b.addEventListener('click', ev => {
-        ev.stopPropagation();
-        adjustLap(Number(b.dataset.lap), b.dataset.race);
-      });
-    });
-    el.classList.remove('hidden', 'geplant');
-    el.classList.toggle('mehrfach', sicht.length > 1);
-    el.title = 'Runde je Rennen \u2013 \u00B1 korrigiert die Z\u00E4hlung';
-    return;
-  }
   // Zielrunde statt "4/4": im Auto zaehlt die Aussage, nicht die Zahl.
   let runde = '';
   if (activeInfo.currentLap) {

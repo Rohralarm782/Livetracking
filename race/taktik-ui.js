@@ -84,24 +84,28 @@ tkBody.addEventListener('keydown', function (e) {
 // =======================
 // Ab 2.0 koennen mehrere Rennen gleichzeitig laufen. Der Streifen ist
 // 70 px breit und sitzt am rechten Rand - auf einem Handy waere kein
-// Platz fuer zwei davon nebeneinander. Deshalb bleibt es bei einem
-// Streifen mit einem Reiter je Rennen darueber.
+// Platz fuer zwei davon nebeneinander.
 //
-// Der Reiter folgt dem Rennen, hinter dem der Nutzer selbst herfaehrt
-// (meinRaceId). Im Regelfall muss also gar nicht umgeschaltet werden.
+// Bis 2.0.0 stand darueber ein Reiter je Rennen. Das war irrefuehrend:
+// der Reiter schaltete nur die Beschriftung um, nicht die Datenquelle.
+// groups gibt es im Server genau einmal und gehoert dem Leitrennen -
+// ein fremdes Kuerzel ueber echten Gruppendaten waere im Rennen die
+// gefaehrlichere Variante.
+//
+// Ab 2.1.0 steht deshalb nur noch ein Kopf da, und zwar mit dem Rennen,
+// dessen Taktik der Streifen tatsaechlich zeigt. Bei einem einzigen
+// laufenden Rennen entfaellt er: dann ist nichts zu verwechseln.
 function renderStripReiter() {
-  if (typeof sichtbareRennenListe !== 'function') return '';
-  const ids = sichtbareRennenListe();
-  if (ids.length < 2) return '';
-  const mein = meinRaceId();
-  return '<div class="stripTabs">' + ids.map(id => {
-    const s   = (typeof steckbriefOf === 'function') ? steckbriefOf(id) : null;
-    const lbl = (typeof raceLabel === 'function') ? raceLabel(id, true) : id;
-    const an  = (id === mein);
-    return `<div class="stripTab${an ? ' on' : ''}" data-race="${id}"`
-         + `${an && s && s.farbe ? ` style="border-bottom-color:${s.farbe}"` : ''}>`
-         + `${escH(String(lbl).slice(0, 5))}</div>`;
-  }).join('') + '</div>';
+  if (typeof laufendeRennen !== 'function' || laufendeRennen() < 2) return '';
+  const id = (typeof activeInfo === 'object' && activeInfo) ? activeInfo.raceId : null;
+  if (!id) return '';
+  const s     = (typeof steckbriefOf === 'function') ? steckbriefOf(id) : null;
+  const farbe = (s && s.farbe) ? s.farbe : '#607d8b';
+  const lbl   = (s && s.name) ? s.name : id;
+  return `<div class="stripKopf" style="border-bottom-color:${farbe}"`
+       + ` title="Taktik des Leitrennens">`
+       + `<span class="stripKopfP" style="background:${farbe}"></span>`
+       + `${escH(String(lbl).slice(0, 6))}</div>`;
 }
 
 function renderStrip(grps) {
@@ -135,14 +139,9 @@ function renderStrip(grps) {
       <div class="strip-cnt">${cnt}</div>
     </div>${conn}`;
   }).join('');
-  // Ein Tipp auf den Reiter setzt zugleich das eigene Rennen: wer die
-  // Taktik eines Feldes ansieht, faehrt in aller Regel dahinter her.
-  strip.querySelectorAll('.stripTab').forEach(t => {
-    t.addEventListener('click', ev => {
-      ev.stopPropagation();
-      if (typeof setzeMeinRennen === 'function') setzeMeinRennen(t.dataset.race);
-    });
-  });
+  // Der Kopf ist reine Beschriftung und faengt nichts ab: ein Tipp auf
+  // den Streifen soll die Taktik oeffnen, egal wo er landet. Das eigene
+  // Rennen wird ueber die Rennleiste oben gesetzt.
 }
 
 function renderTaktikBody() {
