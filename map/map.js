@@ -1,7 +1,15 @@
 // =======================
 // MAP
 // =======================
-const map = L.map('map').setView([52.52, 13.405], 13);
+// Startausschnitt: bis 2.3.0 stand die Karte beim Laden fest auf
+// Berlin, Zoom 13 - eine Vorgabe aus der ersten Fassung, die mit dem
+// Rennort nur zufaellig zu tun hat. Jetzt beginnt sie mit ganz
+// Deutschland; liegt eine Strecke vor, holt startAusschnitt() sie
+// gleich darauf ins Bild.
+// fitBounds statt fester Zoomstufe: der Ausschnitt soll auf dem Handy
+// hochkant dasselbe zeigen wie auf dem Laptop.
+const DEUTSCHLAND_BOUNDS = [[47.2, 5.8], [55.1, 15.1]];
+const map = L.map('map').fitBounds(DEUTSCHLAND_BOUNDS);
 
 // Zwei Kartenstile zur Auswahl. Voyager ist die Vorgabe: entsaettigt,
 // wenig Beschriftung, kaum Symbole - die orange Streckenlinie und die
@@ -136,6 +144,13 @@ let currentMarkerMenu = null;
 let firstDevice  = true;
 let lastDataTime = null;
 let autoZoom     = true;
+// Wurde der Startausschnitt schon gesetzt - entweder von
+// startAusschnitt() auf die Strecken oder vom Sprung auf den ersten
+// Tracker? Beide kommen aus verschiedenen Abfragen und damit in
+// unvorhersehbarer Reihenfolge; wer zuerst da ist, gewinnt. Ohne
+// diesen gemeinsamen Merker springt die Karte sichtbar zurueck, wenn
+// die Strecke nach der ersten Position eintrifft.
+let startAusschnittGesetzt = false;
 
 // Zeitabgleich und Gruppen. Muss hier oben stehen, nicht erst bei den
 // Hilfsfunktionen weiter unten: die Bedienelemente werden schon beim
@@ -902,7 +917,10 @@ async function loadPositions() {
         lastPositions[id].trackerMode = pos.trackerMode || null;
         lastPositions[id].stale       = stale;
         lastPositions[id].betreuer    = isBetreuer;
-        if (firstDevice && !isBetreuer && !stale) { map.setView(latlng, 15); firstDevice = false; }
+        if (firstDevice && !isBetreuer && !stale) {
+          if (!startAusschnittGesetzt) { map.setView(latlng, 15); startAusschnittGesetzt = true; }
+          firstDevice = false;
+        }
 
       } else {
         if (isBetreuer) {
@@ -1082,6 +1100,33 @@ function renderRennAuswahl() {
 // trackerId -> Meter auf der Strecke. Grundlage fuer "naechster Punkt".
 let streckenPos   = Object.create(null);
 
+// Einmalig beim Seitenstart alle sichtbaren Strecken ins Bild holen.
+// Ohne Strecke passiert nichts und der Deutschland-Ausschnitt bleibt
+// stehen.
+//
+// Bewusst nur beim ersten Lauf von loadActiveInfo(): laedt der SpoLei
+// spaeter eine Strecke hoch, darf die Karte nicht wegspringen,
+// waehrend jemand gerade eine andere Stelle betrachtet.
+//
+// Nicht angetastet ist der Auto-Zoom: sobald zwei frische Tracker
+// melden, rahmt er im Sekundentakt das Feld ein und ueberschreibt
+// diesen Ausschnitt. So war es bisher, und im Rennen ist das richtig.
+function startAusschnitt() {
+  if (startAusschnittGesetzt) return;
+  const punkte = [];
+  sichtbareRennenListe().forEach(id => {
+    const coords = (typeof gpxByRace !== 'undefined') ? gpxByRace[id] : null;
+    if (Array.isArray(coords)) coords.forEach(p => punkte.push(p));
+  });
+  if (punkte.length === 0) return;
+  startAusschnittGesetzt = true;
+  // Der einmalige Sprung auf den ersten Tracker entfaellt damit: die
+  // Strecke umfasst ihn ohnehin, und ein Zoom 15 auf einen einzelnen
+  // Fahrer nimmt kurz nach dem Laden die Uebersicht.
+  firstDevice = false;
+  map.fitBounds(punkte, { padding: [40, 40] });
+}
+
 async function loadActiveInfo() {
   try {
     const res  = await fetch(`${SERVER}/active`);
@@ -1134,6 +1179,7 @@ async function loadActiveInfo() {
       // Wechsel muss er neu gesetzt werden.
       drawFinishMarker();
       drawRaceMarker();
+      if (erster) startAusschnitt();
       if (!erster) showToast('\u{1F5FA} Strecke aktualisiert');
     }
   } catch (err) { console.error('Active:', err); }
