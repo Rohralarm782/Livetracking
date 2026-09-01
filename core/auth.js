@@ -9,6 +9,7 @@ let currentMode = 'race';
 
 function showAdminElements() {
   document.getElementById('advRaceGroup').classList.remove('hidden');
+  document.getElementById('eventsBtn').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
   document.getElementById('teamCarToggle').classList.remove('hidden');
   document.getElementById('loginBtnTop').classList.add('hidden');
@@ -21,6 +22,8 @@ function showBetreuerElements() {
   document.getElementById('loginBtnTop').classList.add('hidden');
   document.getElementById('advRaceGroup').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
+  document.getElementById('eventsBtn').classList.add('hidden');
+  beendeRennverwaltung();
   beendeStreckenModus();
 }
 
@@ -32,12 +35,22 @@ function beendeStreckenModus() {
   if (typeof setStreckenModus === 'function') setStreckenModus(false);
 }
 
+// Gleicher Grund wie oben: loadToken() laeuft, bevor race/events-ui.js
+// geladen ist. Ohne den typeof-Riegel wuerde ein angemeldeter Betreuer
+// beim Seitenaufbau in einen ReferenceError laufen.
+function beendeRennverwaltung() {
+  if (typeof eventsOpen === 'boolean' && eventsOpen
+      && typeof closeEventsPanel === 'function') closeEventsPanel();
+}
+
 function hideAdminElements() {
   document.getElementById('advRaceGroup').classList.add('hidden');
   closeAdvanced();
   document.getElementById('logoutBtn').classList.add('hidden');
   document.getElementById('teamCarToggle').classList.add('hidden');
   document.getElementById('betreuerBtn').classList.add('hidden');
+  document.getElementById('eventsBtn').classList.add('hidden');
+  beendeRennverwaltung();
   beendeStreckenModus();
   document.getElementById('loginBtnTop').classList.remove('hidden');
 }
@@ -89,13 +102,32 @@ function logout() {
 // Speichern lief still ins Leere. checkAuth() wird jetzt von allen
 // schreibenden Aufrufen durchgereicht.
 //
-// Rueckgabe: true = Antwort ist brauchbar, false = Sitzung ist hin.
+// Ab 2.5.0 werden 401 und 403 getrennt behandelt. Mit zwei Rollen sind
+// das zwei verschiedene Lagen:
+//   401 = der Token gilt nicht mehr  -> abmelden, neu anmelden lassen
+//   403 = angemeldet, aber nicht befugt -> Sitzung bleibt, nur Hinweis
+// Bis 2.4.1 loeste beides eine Abmeldung aus. Ein Betreuer, der einmal
+// auf einen SpoLei-Knopf tippt, flog damit mitten im Rennen aus der
+// Sitzung - genau der Fehlgriff, gegen den diese Version gebaut ist.
+//
+// Rueckgabe: true = Antwort ist brauchbar, false = Aufruf ist gescheitert.
 let authWarned = false;
+let rechtWarned = false;
 
 function checkAuth(res) {
   if (!res || (res.status !== 401 && res.status !== 403)) return true;
   // Nicht angemeldet zu sein ist kein Sitzungsabbruch.
   if (!authToken) return false;
+  if (res.status === 403) {
+    if (!rechtWarned) {
+      rechtWarned = true;
+      if (typeof showToast === 'function') {
+        showToast('\u{1F512} Daf\u00FCr fehlt die Berechtigung');
+      }
+      setTimeout(() => { rechtWarned = false; }, 3000);
+    }
+    return false;
+  }
   authToken = null;
   authLevel = null;
   localStorage.removeItem('authToken');

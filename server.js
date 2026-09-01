@@ -852,7 +852,12 @@ async function loadStateFromDb() {
 // AUTH
 // Login-Level:
 //   'spolei'   → Vollzugriff (SpoLei / Admin)
-//   'betreuer' → Basis-Zugriff (nur eigenen Standort teilen)
+//   'betreuer' → Rennbegleitung: eigenen Standort teilen, Taktik des
+//                selbst gewaehlten Rennens fuehren (Gruppen, Runden,
+//                Zeitmessungsvorschlag annehmen oder verwerfen).
+//                Ab 2.5.0. Nicht dabei: alles, was ein Rennen als
+//                solches anlegt, aendert oder beendet - Startlisten,
+//                Strecke, Marker, Tracker, Anzeigetexte, Sollrunden.
 // =======================
 const ADMIN_PASSWORD    = process.env.ADMIN_PASSWORD    || 'admin123';
 const BETREUER_PASSWORD = process.env.BETREUER_PASSWORD || 'betreuer123';
@@ -2648,7 +2653,11 @@ app.post('/races/:id/start', requireSpolei, (req, res) => {
 // Rundenzaehler von Hand setzen. Die Automatik rechnet danach vom
 // korrigierten Stand weiter - deshalb wird lastLapTs mitgesetzt, sonst
 // koennte der naechste Durchgang sofort erneut hochschalten.
-app.post('/races/:id/lap', requireSpolei, (req, res) => {
+// Ab 2.5.0 auch fuer Betreuer: der Rennbezug steht im Pfad, ein
+// Betreuer korrigiert damit ausschliesslich die Zaehlung des Rennens,
+// dessen Zeile er antippt. Die Sollrundenzahl und der Start/Ziel-
+// Versatz bleiben in PATCH /races/:id/laps beim SpoLei.
+app.post('/races/:id/lap', requireAuth, (req, res) => {
   const r = races[req.params.id];
   if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
   const m = raceMetaOf(r.id);
@@ -3211,7 +3220,11 @@ app.get('/groups', (req, res) => {
 // Leitrennen ist. Ohne den Parameter unveraendert das Leitrennen.
 // Das Muster - Spiegel fuer das Leitrennen, sonst direkt ans Rennen -
 // stammt aus applyVorschlag() und laeuft dort seit 2.2.0.
-app.post('/groups', requireSpolei, (req, res) => {
+// Ab 2.5.0 requireAuth statt requireSpolei: Gruppen bilden und
+// aufloesen ist die Kernarbeit des Betreuers. Gefahrlos wurde das erst
+// mit dem race-Parameter oben - vorher waere jeder Schreibzugriff im
+// Leitrennen gelandet, egal welches Rennen der Betreuer begleitet.
+app.post('/groups', requireAuth, (req, res) => {
   const { groups: g } = req.body;
   if (!Array.isArray(g)) return res.status(400).json({ error: 'groups[] erforderlich' });
   const wunsch = req.query && req.query.race ? String(req.query.race) : null;
@@ -3383,7 +3396,11 @@ app.post('/timing/startlist', requireSpolei, async (req, res) => {
 });
 
 // Vorschlag uebernehmen. Ohne group: alle Gruppen des Rennens.
-app.post('/timing/apply', requireSpolei, (req, res) => {
+// Ab 2.5.0 auch fuer Betreuer: das Uebernehmen schreibt Gruppen des in
+// race genannten Rennens - inhaltlich dieselbe Arbeit wie POST /groups
+// und ebenso rennbezogen. Das Einrichten der Zeitmessung (POST /timing,
+// /timing/probe, /timing/startlist) bleibt beim SpoLei.
+app.post('/timing/apply', requireAuth, (req, res) => {
   const { race, group } = req.body || {};
   if (!races[race]) return res.status(404).json({ error: 'Rennen nicht gefunden' });
   const neu = applyVorschlag(race, group || null);
@@ -3393,7 +3410,7 @@ app.post('/timing/apply', requireSpolei, (req, res) => {
 
 // Vorschlag verwerfen. Der naechste Abruf meldet sich neu - verworfen
 // wird ein Stand, nicht die Verbindung.
-app.post('/timing/dismiss', requireSpolei, (req, res) => {
+app.post('/timing/dismiss', requireAuth, (req, res) => {
   const { race } = req.body || {};
   if (race && timingStand[race]) delete timingStand[race];
   res.json({ ok: true });

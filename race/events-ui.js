@@ -25,6 +25,11 @@ function resetEventForms() {
 }
 
 async function openEventsPanel() {
+  // Ab 2.5.0 ist die Rennverwaltung SpoLei-Sache. Der Knopf ist fuer
+  // andere Rollen ausgeblendet; dieser Riegel faengt jeden Weg ab, der
+  // nicht ueber den Knopf laeuft. Der Server weist die Aufrufe ohnehin
+  // ab - hier geht es darum, dass die Ansicht gar nicht erst aufgeht.
+  if (authLevel !== 'spolei') return;
   eventsOpen = true;
   resetEventForms();
   document.getElementById('taktikBody').classList.add('hidden');

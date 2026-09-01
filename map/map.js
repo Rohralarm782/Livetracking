@@ -1317,7 +1317,9 @@ function rennZeile(raceId, mehrere) {
   else                    txt = `Runde ${s.currentLap}`;
   // Kein Rundenzaehler fuer ein ausgeblendetes Rennen: die Zeile ist
   // dann nur noch der Weg zurueck, kein Bedienelement.
-  const darf  = an && authLevel === 'spolei';
+  // Ab 2.5.0 zaehlt auch der Betreuer Runden. Der Knopf traegt die
+  // Renn-ID seiner Zeile, geaendert wird also genau dieses Rennen.
+  const darf  = an && !!authToken;
   const minus = darf ? `<button class="rcLap" data-lap="-1" data-race="${raceId}" title="Runde zur\u00FCck">\u2212</button>` : '';
   const plus  = darf ? `<button class="rcLap" data-lap="1" data-race="${raceId}" title="Runde weiter">+</button>` : '';
   const rechts = an
@@ -1413,7 +1415,7 @@ function updateRaceClock() {
     else if (activeInfo.laps)     txt = `Noch ${activeInfo.laps - activeInfo.currentLap} Runden`;
     else                          txt = `Runde ${activeInfo.currentLap}`;
     if (activeInfo.laps && activeInfo.laps - activeInfo.currentLap === 1) txt = 'Noch 1 Runde';
-    const darf   = authLevel === 'spolei';
+    const darf   = !!authToken;
     const minus  = darf ? '<button class="rcLap" data-lap="-1" title="Runde zur\u00FCck">\u2212</button>' : '';
     const plus   = darf ? '<button class="rcLap" data-lap="1" title="Runde weiter">+</button>' : '';
     runde = `<span class="rcLapBox${activeInfo.finalLap ? ' final' : ''}">`

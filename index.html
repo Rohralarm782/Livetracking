@@ -246,7 +246,9 @@
   <div class="tk-header">
     <span id="tkTitle" style="font-size:16px;font-weight:500">&#128202; Taktik</span>
     <div style="display:flex;gap:6px">
-      <button id="eventsBtn" class="btn" style="padding:6px 12px">&#127937; Rennen</button>
+      <!-- Ab 2.5.0 versteckt im Grundzustand: die Rennverwaltung ist
+           SpoLei-Sache. showAdminElements() blendet sie ein. -->
+      <button id="eventsBtn" class="btn hidden" style="padding:6px 12px">&#127937; Rennen</button>
       <button id="closeTaktikBtn" class="btn" style="padding:6px 12px">&#10005; Karte</button>
     </div>
   </div>
