@@ -282,15 +282,21 @@ function versetzteCoords(coords, px) {
 map.on('zoomend', zeichneStrecken);
 
 // Breite der Aussparung unter einem Marker, in Bildschirmpixeln. Der
-// zusammengefasste Ring misst 32 Pixel, das einzelne Symbol 24; zwei
-// Pixel Luft auf jeder Seite lassen den Rand frei stehen.
-const LUECKE_RING_PX  = 36;
-const LUECKE_PUNKT_PX = 28;
+// zusammengefasste Ring misst 32 Pixel, das einzelne Symbol 24. Die
+// Luecke ist bewusst deutlich breiter als das Symbol: sie soll den
+// Marker frei stellen, nicht nur knapp umschliessen - sonst kleben die
+// Linien an seinem Rand und das Symbol geht im Band unter.
+const LUECKE_RING_PX  = 56;
+const LUECKE_PUNKT_PX = 46;
 
-// ... aber nie mehr als so viele Meter Strecke. In der Uebersicht
-// entsprechen 36 Pixel schnell einige hundert Meter; ohne Deckel
-// verschluckte eine Wertung dort eine ganze Kurve.
-const LUECKE_MAX_M = 250;
+// Deckel, damit im weit herausgezoomten Bild nicht ein halber Rundkurs
+// verschwindet: hoechstens zwei Prozent der Streckenlaenge, bei einem
+// 100-km-Rennen also zwei Kilometer. In den Zoomstufen, in denen im
+// Auto gearbeitet wird, greift der Deckel nie - dort sind 56 Pixel
+// einige hundert Meter. Der Mindestwert haelt die Luecke auch bei
+// einem kurzen Rundkurs brauchbar.
+const LUECKE_MAX_ANTEIL = 0.02;
+const LUECKE_MIN_M      = 250;
 
 // Wie nah ein Rennen an einem Marker vorbeikommen muss, damit seine
 // Spur ausgespart wird. Faehrt es weiter weg, deckt der Ring seine
@@ -349,11 +355,17 @@ function lueckenPlan(ids, cum, gruppen) {
   const mpp = meterProPixel();
   gruppen.forEach(g => {
     const gross = g.eintraege.length > 1;
-    const halb  = Math.min((gross ? LUECKE_RING_PX : LUECKE_PUNKT_PX) / 2 * mpp,
-                           LUECKE_MAX_M / 2);
+    const roh = (gross ? LUECKE_RING_PX : LUECKE_PUNKT_PX) / 2 * mpp;
     ids.forEach(id => {
       const t = sNaechst(g.lat, g.lon, gpxByRace[id] || [], cum[id] || []);
       if (!t || t.dist > LUECKE_NAH_M) return;
+      // Der Deckel haengt an der Laenge DIESER Strecke: zwei Rennen mit
+      // sehr verschiedener Distanz sollen im selben Bild nicht
+      // unterschiedlich stark ausgespart werden, solange beide weit
+      // genug sind.
+      const c   = cum[id];
+      const max = Math.max(LUECKE_MIN_M, (c[c.length - 1] || 0) * LUECKE_MAX_ANTEIL);
+      const halb = Math.min(roh, max / 2);
       plan.ring[id].push([t.s - halb, t.s + halb]);
     });
     // Zonen stehen in denselben Gruppen - so wird die Markerliste nur
