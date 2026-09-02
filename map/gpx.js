@@ -18,12 +18,14 @@ let gpxByRace      = Object.create(null);   // raceId -> coords[]
 let gpxLayer       = null;                  // Linie des Fokusrennens
 let gpxCoords      = [];                    // Punkte des Fokusrennens
 
-// Duenne durchgezogene Grundlinie unter der gestrichelten Farblinie,
-// sobald mehr als eine Strecke auf der Karte liegt. Ohne sie saehe ein
-// Abschnitt, auf dem nur ein Rennen faehrt, zerrissen aus. Getrennt
-// gefuehrt, damit sie beim Aufraeumen mitgeht - eine vergessene
-// Grundlinie bliebe als blasser Strich stehen.
-let gpxGrundlinie  = Object.create(null);   // raceId -> L.polyline
+// Weisse Kontur unter jeder Spur, sobald mehr als eine Strecke auf der
+// Karte liegt. Sie trennt benachbarte Spuren auf hellem Kartengrund.
+// Getrennt gefuehrt, damit sie beim Aufraeumen mitgeht - eine
+// vergessene Kontur bliebe als weisser Strich stehen.
+let gpxKontur      = Object.create(null);   // raceId -> L.polyline
+// raceId -> Versatz in Bildschirmpixeln. Wird beim Zeichnen gesetzt
+// und beim Zoomwechsel wieder gebraucht.
+let gpxVersatz     = Object.create(null);
 
 // Welches Rennen der Nutzer sehen will, steht in map.js
 // (sichtbareRennen). gpx.js fragt nur nach - so gibt es genau eine
@@ -60,33 +62,36 @@ async function fetchGpxTrack() {
 // Alle sichtbaren Strecken zeichnen. Fahren mehrere Rennen dieselbe
 // Strasse - der Normalfall bei U15w und U15m einer Veranstaltung -,
 // liegen die Linien exakt uebereinander und die zuletzt gezeichnete
-// verdeckt alle anderen. Ab 2.6.2 tragen sie deshalb dasselbe
-// Strichmuster mit verschobener Phase: auf einem gemeinsamen Abschnitt
-// wechseln sich die Rennfarben ab, jede kommt garantiert dran.
+// verdeckt alle anderen. Ab 2.6.3 laufen sie wie Fahrspuren
+// nebeneinander: jede Strecke wird senkrecht zu ihrer geglaetteten
+// Fahrtrichtung um wenige Bildschirmpixel versetzt.
 //
-// Zwei Anlaeufe davor, beide verworfen:
+// Drei Anlaeufe davor:
 //   2.6.0  fester diagonaler Versatz per CSS. Griff nur bei gleichem
 //          Startpunkt, und auf einer diagonalen Strasse schob er die
 //          Linie an sich selbst entlang statt zur Seite.
-//   2.6.1  echter Parallelversatz senkrecht zur Fahrtrichtung. Sauber
-//          auf glatten Strecken, aber auf einer Aufzeichnung liegen
-//          die Punkte wenige Meter auseinander und tragen Rauschen:
-//          die Richtung schwankte um 13 bis 35 Grad, jeder Punkt wurde
-//          anders verschoben, die Linie franste aus.
+//   2.6.1  Parallelversatz, Richtung aus dem Nachbarpunkt. Auf einer
+//          Aufzeichnung liegen die Punkte wenige Meter auseinander und
+//          tragen Rauschen; die Richtung schwankte um 13 bis 35 Grad
+//          und die Linie franste aus.
+//   2.6.2  Strichmuster mit verschobener Phase. Die Phase zaehlt ab
+//          dem eigenen Streckenanfang, die Strecken sind aber
+//          verschieden lang: auf gemeinsamen Abschnitten trafen
+//          Striche auf Striche statt auf Luecken, und eine Farbe fiel
+//          aus. Verschiedene Strichlaengen halfen nicht, weil bei
+//          jeder Ueberlappung die zuletzt gezeichnete Linie gewinnt.
 //
-// Das Strichmuster verschiebt gar nichts. Die Geometrie bleibt exakt
-// auf der Strasse - fuer den Kartentipp im Streckenmodus, fuer die
-// Kilometrierung und fuer die Lage von Zielflagge und Zonen ist das
-// der entscheidende Unterschied.
+// 2.6.3 ist 2.6.1 mit geglaetteter Richtung (siehe versetzteCoords).
 function zeichneStrecken() {
   for (const id of Object.keys(gpxLayerByRace)) {
     try { map.removeLayer(gpxLayerByRace[id]); } catch (e) { /* schon weg */ }
   }
-  for (const id of Object.keys(gpxGrundlinie)) {
-    try { map.removeLayer(gpxGrundlinie[id]); } catch (e) { /* schon weg */ }
+  for (const id of Object.keys(gpxKontur)) {
+    try { map.removeLayer(gpxKontur[id]); } catch (e) { /* schon weg */ }
   }
   gpxLayerByRace = Object.create(null);
-  gpxGrundlinie  = Object.create(null);
+  gpxKontur      = Object.create(null);
+  gpxVersatz     = Object.create(null);
   gpxLayer = null;
 
   const ids = sichtbareRaceIds().filter(id => gpxByRace[id]);
@@ -95,48 +100,43 @@ function zeichneStrecken() {
   // Zielstrich eines fremden Rennens verschieben.
   const zeichnen = (streckenModus && zielRaceId) ? ids.filter(id => id === zielRaceId) : ids;
 
+  // HARTE REGEL: im Streckenmodus kein Versatz. Der Kartentipp meldet
+  // die Koordinate unter dem Finger; laege die Linie daneben, wanderte
+  // der Zielstrich um den Versatz mit - bei Zoom 14 sind fuenf Pixel
+  // rund dreissig Meter, und daran haengt die Rundenzaehlung.
+  gpxVersatz = (streckenModus && zielRaceId) ? Object.create(null) : versatzPlan(zeichnen);
+
   const mein = (typeof meinRaceId === 'function') ? meinRaceId() : null;
-  // Das eigene Rennen zuletzt und eine Spur staerker: liegen drei
-  // Linien uebereinander, darf ausgerechnet die eigene nicht unten
-  // liegen.
+  // Das eigene Rennen zuletzt und eine Spur staerker: bei drei Spuren
+  // nebeneinander darf ausgerechnet die eigene nicht unten liegen.
   const folge = zeichnen.filter(id => id !== mein)
                         .concat(zeichnen.indexOf(mein) !== -1 ? [mein] : []);
-  const staerke = id => (streckenModus && id === zielRaceId) ? 8 : (id === mein ? 7 : 6);
+  const staerke = id => (streckenModus && id === zielRaceId) ? 8 : (id === mein ? 5 : 4);
 
-  // Eine einzelne Strecke bleibt durchgezogen, im Streckenmodus
-  // ebenfalls. Gestrichelt wird nur, wenn es etwas zu unterscheiden
-  // gibt.
-  const muster = (folge.length > 1 && !streckenModus)
-    ? strichPlan(zeichnen) : Object.create(null);
-  const gestrichelt = Object.keys(muster).length > 0;
+  const punkte = Object.create(null);
+  folge.forEach(id => { punkte[id] = versetzteCoords(gpxByRace[id], gpxVersatz[id]); });
 
-  // Erst alle Grundlinien, dann alle Farblinien. In einem Durchgang
-  // wuerde die Grundlinie des naechsten Rennens die Striche des
-  // vorigen ueberdecken.
-  if (gestrichelt) {
+  // Erst alle Konturen, dann alle Farblinien. In einem Durchgang wuerde
+  // die Kontur der Nachbarspur die zuvor gezeichnete Farblinie an der
+  // Kante anknabbern. Liegt nur eine Strecke auf der Karte, entfaellt
+  // die Kontur - das Bild ist dann das einer einzelnen Strecke wie vor
+  // 2.6.0.
+  if (folge.length > 1) {
     folge.forEach(id => {
-      gpxGrundlinie[id] = L.polyline(gpxByRace[id], {
-        color: rennFarbe(id), weight: 2, opacity: 0.45,
+      gpxKontur[id] = L.polyline(punkte[id], {
+        color: '#ffffff', weight: staerke(id) + 3, opacity: 0.9,
         lineJoin: 'round', lineCap: 'round', interactive: false
       }).addTo(map);
     });
   }
 
   folge.forEach(id => {
-    const opt = {
+    const linie = L.polyline(punkte[id], {
       color: (streckenModus && id === zielRaceId) ? '#1565c0' : rennFarbe(id),
       weight: staerke(id),
       opacity: (streckenModus && id === zielRaceId) ? 0.95 : 0.85,
       lineJoin: 'round', lineCap: 'round'
-    };
-    if (gestrichelt) {
-      // Butt statt Round: runde Enden lassen benachbarte Striche
-      // ineinanderlaufen, die Farbfolge wird dann unsauber.
-      opt.lineCap     = 'butt';
-      opt.dashArray   = STRICH_PX + ' ' + (folge.length - 1) * STRICH_PX;
-      opt.dashOffset  = String(muster[id]);
-    }
-    const linie = L.polyline(gpxByRace[id], opt).addTo(map);
+    }).addTo(map);
     linie.on('click', onTrackClick);
     gpxLayerByRace[id] = linie;
   });
@@ -151,33 +151,117 @@ function zeichneStrecken() {
   drawRaceMarker();
 }
 
-// Laenge eines Strichs in Bildschirmpixeln. Gross genug, dass die
-// Farbe in der Uebersicht als Farbe und nicht als Punktreihe
-// erscheint; klein genug, dass auf einem kurzen gemeinsamen Stueck
-// jedes Rennen wenigstens einmal vorkommt. Bei drei Rennen wiederholt
-// sich die Folge alle 54 Pixel.
-//
-// Das Muster ist ein Bildschirmmass und macht deshalb jeden Zoom
-// unveraendert mit - anders als ein Versatz in Koordinaten braucht es
-// keine Neuberechnung.
-const STRICH_PX = 18;
+// Abstand zweier Spuren in Bildschirmpixeln.
+const VERSATZ_PX = 5;
 
-// Wer zeichnet in welcher Phase. Das eigene Rennen faengt bei Null an,
-// die uebrigen folgen in der Reihenfolge der Rennliste. Zwei Rennen
-// duerfen nie dieselbe Phase bekommen, sonst liegen ihre Striche
-// wieder uebereinander.
-function strichPlan(ids) {
-  const mein  = (typeof meinRaceId === 'function') ? meinRaceId() : null;
-  const folge = (ids.indexOf(mein) !== -1)
+// Ueber welche Strecke die Fahrtrichtung gemittelt wird, ebenfalls in
+// Bildschirmpixeln. Das ist der Unterschied zu 2.6.1: dort kam die
+// Richtung aus dem direkten Nachbarpunkt, und der liegt auf einer
+// Aufzeichnung nur wenige Meter entfernt - bei 26 m Punktabstand und
+// 3 m Rauschen schwankt die Richtung dann um rund 13 Grad, bei
+// dichteren Punkten um bis zu 35. Ueber 25 Pixel gemittelt faellt das
+// Rauschen heraus, die Linie bleibt glatt, und echte Kurven sind auf
+// dieser Laenge noch gut aufgeloest.
+const GLAETTUNG_PX = 25;
+
+// Wer faehrt auf welcher Spur. Das eigene Rennen bekommt immer die
+// Null und liegt damit exakt auf der Fahrbahn; die uebrigen wandern
+// abwechselnd nach rechts und links. Die Stufe haengt an der
+// Reihenfolge der Rennliste, nicht am Startpunkt der Strecke - daran
+// scheiterte 2.6.0, sobald zwei Rennen nur ein Teilstueck gemeinsam
+// hatten.
+function versatzPlan(ids) {
+  const stufen = [0, 1, -1, 2];   // MAX_AKTIVE_RENNEN = 4
+  const mein   = (typeof meinRaceId === 'function') ? meinRaceId() : null;
+  const folge  = (ids.indexOf(mein) !== -1)
     ? [mein].concat(ids.filter(id => id !== mein))
     : ids.slice();
-  // Positiv, nicht negativ: negative Werte fuer stroke-dashoffset sind
-  // erst ab SVG 2 zulaessig. Die Richtung der Verschiebung ist egal,
-  // solange sich die Phasen unterscheiden.
   const plan = Object.create(null);
-  folge.forEach((id, i) => { plan[id] = i * STRICH_PX; });
+  folge.forEach((id, i) => {
+    plan[id] = (stufen[i] === undefined ? 0 : stufen[i]) * VERSATZ_PX;
+  });
   return plan;
 }
+
+// Punkte einer Strecke um px Bildschirmpixel senkrecht zur
+// Fahrtrichtung verschieben. Gerechnet wird im Pixelraum der Karte und
+// danach zurueck nach Grad; deshalb muss das Ergebnis bei jedem
+// Zoomwechsel neu gebildet werden (siehe aktualisiereVersatz).
+//
+// Die Richtung an einem Punkt ist die Verbindung zwischen dem letzten
+// Punkt mindestens GLAETTUNG_PX davor und dem ersten mindestens
+// GLAETTUNG_PX danach. Beide Grenzen werden mit mitlaufenden Zeigern
+// gesucht, nicht je Punkt neu - sonst waere der Aufwand im
+// Uebersichtszoom, wo hunderte Punkte in dasselbe Fenster fallen,
+// quadratisch.
+//
+// gpxByRace bleibt unberuehrt. Der Versatz existiert nur in den
+// gezeichneten Punkten - Kilometrierung, Marker und Zielstrich rechnen
+// weiter mit der echten Strecke.
+function versetzteCoords(coords, px) {
+  const c = coords || [];
+  if (!px || c.length < 2) return c;
+  const p = c.map(q => map.latLngToLayerPoint(L.latLng(q[0], q[1])));
+  const n = p.length;
+  const weit = (a, b) => {
+    const dx = p[a].x - p[b].x, dy = p[a].y - p[b].y;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // vor[i]  = erster Punkt ab i, der weit genug voraus liegt
+  const vor = new Array(n);
+  let j = 0;
+  for (let i = 0; i < n; i++) {
+    if (j < i) j = i;
+    while (j + 1 < n && weit(i, j) < GLAETTUNG_PX) j++;
+    vor[i] = j;
+  }
+  // zur[i] = letzter Punkt bis i, der weit genug zurueck liegt
+  const zur = new Array(n);
+  let k = 0;
+  for (let i = 0; i < n; i++) {
+    while (k + 1 <= i && weit(i, k + 1) >= GLAETTUNG_PX) k++;
+    zur[i] = k;
+  }
+
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    let a = zur[i], b = vor[i];
+    let dx = p[b].x - p[a].x, dy = p[b].y - p[a].y;
+    // Eine Runde endet dort, wo sie begonnen hat: dann koennen beide
+    // Grenzen auf denselben Punkt fallen. In dem Fall der direkte
+    // Nachbar - lieber eine leicht unruhige Stelle als geteilt durch
+    // null.
+    if (dx === 0 && dy === 0) {
+      a = Math.max(0, i - 1); b = Math.min(n - 1, i + 1);
+      dx = p[b].x - p[a].x; dy = p[b].y - p[a].y;
+    }
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const ll = map.layerPointToLatLng(
+      L.point(p[i].x - dy / len * px, p[i].y + dx / len * px));
+    out.push([ll.lat, ll.lng]);
+  }
+  return out;
+}
+
+// Beim Zoomen aendert sich das Verhaeltnis von Grad zu Pixel. Ohne
+// Nachrechnen laegen die Spuren in der Uebersicht meterweit
+// auseinander und im Nahzoom wieder deckungsgleich. Angefasst wird nur
+// die Geometrie der Linien - Marker, Zielflaggen und Zonen bleiben
+// stehen, deshalb kein volles zeichneStrecken().
+function aktualisiereVersatz() {
+  for (const id of Object.keys(gpxLayerByRace)) {
+    const px = gpxVersatz[id] || 0;
+    if (!px) continue;
+    const neu = versetzteCoords(gpxByRace[id], px);
+    try {
+      gpxLayerByRace[id].setLatLngs(neu);
+      if (gpxKontur[id]) gpxKontur[id].setLatLngs(neu);
+    } catch (e) { /* Layer schon weg */ }
+  }
+}
+
+map.on('zoomend', aktualisiereVersatz);
 
 // Welches Rennen ist gemeint, wenn nur eines gemeint sein kann.
 function fokusRaceId() {
@@ -193,11 +277,12 @@ function clearGpxLayer() {
   for (const id of Object.keys(gpxLayerByRace)) {
     try { map.removeLayer(gpxLayerByRace[id]); } catch (e) { /* schon weg */ }
   }
-  for (const id of Object.keys(gpxGrundlinie)) {
-    try { map.removeLayer(gpxGrundlinie[id]); } catch (e) { /* schon weg */ }
+  for (const id of Object.keys(gpxKontur)) {
+    try { map.removeLayer(gpxKontur[id]); } catch (e) { /* schon weg */ }
   }
   gpxLayerByRace = Object.create(null);
-  gpxGrundlinie = Object.create(null);
+  gpxKontur = Object.create(null);
+  gpxVersatz = Object.create(null);
   gpxByRace = Object.create(null);
   gpxLayer  = null;
   gpxCoords = [];
