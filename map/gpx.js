@@ -114,16 +114,40 @@ function zeichneStrecken() {
   const staerke = id => (streckenModus && id === zielRaceId) ? 8 : (id === mein ? 5 : 4);
 
   const punkte = Object.create(null);
-  folge.forEach(id => { punkte[id] = versetzteCoords(gpxByRace[id], gpxVersatz[id]); });
+  const cum    = Object.create(null);
+  folge.forEach(id => {
+    punkte[id] = versetzteCoords(gpxByRace[id], gpxVersatz[id]);
+    cum[id]    = gpxCumulative(gpxByRace[id]);
+  });
+
+  // Aussparungen. Ein zusammengefasster Markerring misst 32 Pixel, das
+  // Spurband bei drei Rennen rund 16 - der Ring deckt die Linien also
+  // ohnehin. Statt ihn zu ueberzeichnen, hoeren die Linien dort auf:
+  //     ----------(S)----------
+  // Die Ringluecke gilt fuer JEDE Spur, die dort vorbeikommt, auch fuer
+  // ein Rennen ohne eigenen Marker an der Stelle - sonst laeuft dessen
+  // Linie weiter durch das Symbol. Die Zonenluecke gilt nur fuer das
+  // Rennen, dem die Zone gehoert: dort tritt die Zone an die Stelle der
+  // Linie (siehe drawRaceMarker).
+  //
+  // Im Streckenmodus wird nichts ausgespart. Dort wird auf die Linie
+  // getippt, und eine Luecke waere eine Stelle, an der ein Tipp ins
+  // Leere geht.
+  const gruppen = (streckenModus && zielRaceId) ? [] : sammleMarker();
+  const luecken = lueckenPlan(folge, cum, gruppen);
 
   // Erst alle Konturen, dann alle Farblinien. In einem Durchgang wuerde
   // die Kontur der Nachbarspur die zuvor gezeichnete Farblinie an der
   // Kante anknabbern. Liegt nur eine Strecke auf der Karte, entfaellt
   // die Kontur - das Bild ist dann das einer einzelnen Strecke wie vor
   // 2.6.0.
+  //
+  // Die Kontur kennt nur die Ringluecken, nicht die Zonenluecken: so
+  // bekommt die Zone denselben weissen Rand wie die Linie, an deren
+  // Stelle sie tritt.
   if (folge.length > 1) {
     folge.forEach(id => {
-      gpxKontur[id] = L.polyline(punkte[id], {
+      gpxKontur[id] = L.polyline(mitLuecken(punkte[id], cum[id], luecken.ring[id]), {
         color: '#ffffff', weight: staerke(id) + 3, opacity: 0.9,
         lineJoin: 'round', lineCap: 'round', interactive: false
       }).addTo(map);
@@ -131,12 +155,13 @@ function zeichneStrecken() {
   }
 
   folge.forEach(id => {
-    const linie = L.polyline(punkte[id], {
-      color: (streckenModus && id === zielRaceId) ? '#1565c0' : rennFarbe(id),
-      weight: staerke(id),
-      opacity: (streckenModus && id === zielRaceId) ? 0.95 : 0.85,
-      lineJoin: 'round', lineCap: 'round'
-    }).addTo(map);
+    const linie = L.polyline(
+      mitLuecken(punkte[id], cum[id], luecken.ring[id].concat(luecken.zone[id])), {
+        color: (streckenModus && id === zielRaceId) ? '#1565c0' : rennFarbe(id),
+        weight: staerke(id),
+        opacity: (streckenModus && id === zielRaceId) ? 0.95 : 0.85,
+        lineJoin: 'round', lineCap: 'round'
+      }).addTo(map);
     linie.on('click', onTrackClick);
     gpxLayerByRace[id] = linie;
   });
@@ -246,22 +271,162 @@ function versetzteCoords(coords, px) {
 
 // Beim Zoomen aendert sich das Verhaeltnis von Grad zu Pixel. Ohne
 // Nachrechnen laegen die Spuren in der Uebersicht meterweit
-// auseinander und im Nahzoom wieder deckungsgleich. Angefasst wird nur
-// die Geometrie der Linien - Marker, Zielflaggen und Zonen bleiben
-// stehen, deshalb kein volles zeichneStrecken().
-function aktualisiereVersatz() {
-  for (const id of Object.keys(gpxLayerByRace)) {
-    const px = gpxVersatz[id] || 0;
-    if (!px) continue;
-    const neu = versetzteCoords(gpxByRace[id], px);
-    try {
-      gpxLayerByRace[id].setLatLngs(neu);
-      if (gpxKontur[id]) gpxKontur[id].setLatLngs(neu);
-    } catch (e) { /* Layer schon weg */ }
-  }
+// auseinander und im Nahzoom wieder deckungsgleich. Dasselbe gilt seit
+// 2.6.4 fuer die Aussparungen, deren Breite in Pixeln festgelegt ist.
+//
+// Bis 2.6.3 wurde dafuer nur die Geometrie der beiden Linien
+// nachgezogen. Jetzt haengen auch die Zonen am Zoom, und die zeichnet
+// drawRaceMarker(). Ein voller Neuaufbau ist deshalb der ehrlichere
+// Weg - er kostet dasselbe wie ein Takt der Streckenabfrage, der
+// ohnehin laufend passiert.
+map.on('zoomend', zeichneStrecken);
+
+// Breite der Aussparung unter einem Marker, in Bildschirmpixeln. Der
+// zusammengefasste Ring misst 32 Pixel, das einzelne Symbol 24; zwei
+// Pixel Luft auf jeder Seite lassen den Rand frei stehen.
+const LUECKE_RING_PX  = 36;
+const LUECKE_PUNKT_PX = 28;
+
+// ... aber nie mehr als so viele Meter Strecke. In der Uebersicht
+// entsprechen 36 Pixel schnell einige hundert Meter; ohne Deckel
+// verschluckte eine Wertung dort eine ganze Kurve.
+const LUECKE_MAX_M = 250;
+
+// Wie nah ein Rennen an einem Marker vorbeikommen muss, damit seine
+// Spur ausgespart wird. Faehrt es weiter weg, deckt der Ring seine
+// Linie gar nicht.
+const LUECKE_NAH_M = 60;
+
+// Wie viele Meter ein Bildschirmpixel im aktuellen Zoom entspricht.
+function meterProPixel() {
+  const breite = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180);
+  return breite / (256 * Math.pow(2, map.getZoom()));
 }
 
-map.on('zoomend', aktualisiereVersatz);
+// Streckenposition einer Koordinate, plus deren Abstand zur Strecke.
+//
+// Projiziert auf die Segmente, nicht auf die Stuetzpunkte. Der
+// Unterschied ist nicht akademisch: eine Aufzeichnung hat Punkte alle
+// 25 m, eine von Hand gezeichnete Route kann auf einer geraden
+// Landstrasse zwei Kilometer am Stueck ohne Zwischenpunkt haben - der
+// naechste Stuetzpunkt laege dann hunderte Meter entfernt und die
+// Aussparung fiele still aus.
+//
+// Gerechnet wird in einer ebenen Naeherung um den gesuchten Punkt.
+// Ueber die paar hundert Meter, um die es hier geht, ist der Fehler
+// weit unter einem Meter, und es faellt keine Winkelfunktion je
+// Streckenpunkt an.
+function sNaechst(lat, lon, coords, cum) {
+  const n = coords.length;
+  if (n < 2 || !cum || cum.length < n) return null;
+  const rad = Math.PI / 180, R = 6371000;
+  const kx = R * rad * Math.cos(lat * rad), ky = R * rad;
+  const px = lon * kx, py = lat * ky;
+  let best = Infinity, bs = 0;
+  for (let i = 1; i < n; i++) {
+    const ax = coords[i - 1][1] * kx, ay = coords[i - 1][0] * ky;
+    const vx = coords[i][1] * kx - ax, vy = coords[i][0] * ky - ay;
+    const l2 = vx * vx + vy * vy;
+    let t = l2 ? ((px - ax) * vx + (py - ay) * vy) / l2 : 0;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    const dx = px - (ax + vx * t), dy = py - (ay + vy * t);
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < best) { best = d; bs = cum[i - 1] + (cum[i] - cum[i - 1]) * t; }
+  }
+  return { s: bs, dist: best };
+}
+
+// Je Rennen zwei Listen von Sperrbereichen in Metern:
+//   ring - unter jedem Markersymbol, fuer jede Spur, die dort
+//          vorbeikommt
+//   zone - der Abschnitt einer Verpflegungs- oder Punktzone, nur fuer
+//          das Rennen, dem sie gehoert
+function lueckenPlan(ids, cum, gruppen) {
+  const plan = { ring: Object.create(null), zone: Object.create(null) };
+  ids.forEach(id => { plan.ring[id] = []; plan.zone[id] = []; });
+  if (!gruppen || !gruppen.length) return plan;
+
+  const mpp = meterProPixel();
+  gruppen.forEach(g => {
+    const gross = g.eintraege.length > 1;
+    const halb  = Math.min((gross ? LUECKE_RING_PX : LUECKE_PUNKT_PX) / 2 * mpp,
+                           LUECKE_MAX_M / 2);
+    ids.forEach(id => {
+      const t = sNaechst(g.lat, g.lon, gpxByRace[id] || [], cum[id] || []);
+      if (!t || t.dist > LUECKE_NAH_M) return;
+      plan.ring[id].push([t.s - halb, t.s + halb]);
+    });
+    // Zonen stehen in denselben Gruppen - so wird die Markerliste nur
+    // einmal durchlaufen.
+    if (!markerArt(g.typ).zone) return;
+    g.eintraege.forEach(e => {
+      if (e.m.sEnde === undefined || e.m.sEnde === null) return;
+      if (!plan.zone[e.raceId]) return;
+      plan.zone[e.raceId].push([e.m.s, e.m.sEnde]);
+    });
+  });
+  return plan;
+}
+
+// Punkt an einer Metermarke, interpoliert. Sucht binaer - bei 4000
+// Punkten und zwei Aufrufen je Teilstueck summiert sich lineares
+// Suchen sonst spuerbar.
+function punktBei(punkte, cum, m) {
+  const n = punkte.length;
+  if (m <= cum[0]) return punkte[0];
+  if (m >= cum[n - 1]) return punkte[n - 1];
+  let lo = 1, hi = n - 1;
+  while (lo < hi) {
+    const mi = (lo + hi) >> 1;
+    if (cum[mi] < m) lo = mi + 1; else hi = mi;
+  }
+  const f = (m - cum[lo - 1]) / ((cum[lo] - cum[lo - 1]) || 1);
+  return [punkte[lo - 1][0] + (punkte[lo][0] - punkte[lo - 1][0]) * f,
+          punkte[lo - 1][1] + (punkte[lo][1] - punkte[lo - 1][1]) * f];
+}
+
+// Punktliste in Teilstuecke zerlegen, die die Sperrbereiche aussparen.
+// Rueckgabe ist eine Liste von Listen - L.polyline zeichnet daraus
+// mehrere Striche in EINEM Layer. Der Klick-Handler haengt damit
+// weiterhin an genau einem Objekt je Rennen.
+//
+// Die Metermarken beziehen sich auf die echte Strecke, die Punkte
+// koennen versetzt sein; beide haben denselben Index, deshalb passt
+// dieselbe Aufteilung.
+function mitLuecken(punkte, cum, luecken) {
+  const n = punkte.length;
+  const laenge = n > 1 ? cum[n - 1] : 0;
+  if (!laenge || !luecken || !luecken.length) return punkte;
+
+  // Auf [0, laenge) normieren. Eine Zone darf ueber den Streckenanfang
+  // laufen und zerfaellt dann in zwei Sperrbereiche.
+  const sperr = [];
+  luecken.forEach(l => {
+    const von = ((l[0] % laenge) + laenge) % laenge;
+    const bis = ((l[1] % laenge) + laenge) % laenge;
+    if (bis <= von) { sperr.push([von, laenge]); sperr.push([0, bis]); }
+    else            { sperr.push([von, bis]); }
+  });
+  sperr.sort((a, b) => a[0] - b[0]);
+
+  const frei = [];
+  let pos = 0;
+  sperr.forEach(b => {
+    if (b[0] > pos) frei.push([pos, b[0]]);
+    if (b[1] > pos) pos = b[1];
+  });
+  if (pos < laenge) frei.push([pos, laenge]);
+
+  const teile = [];
+  frei.forEach(f => {
+    if (f[1] - f[0] < 1) return;
+    const t = [punktBei(punkte, cum, f[0])];
+    for (let i = 0; i < n; i++) if (cum[i] > f[0] && cum[i] < f[1]) t.push(punkte[i]);
+    t.push(punktBei(punkte, cum, f[1]));
+    if (t.length > 1) teile.push(t);
+  });
+  return teile;
+}
 
 // Welches Rennen ist gemeint, wenn nur eines gemeint sein kann.
 function fokusRaceId() {
@@ -582,9 +747,17 @@ function drawRaceMarker() {
   clearRaceMarker();
   const gruppen = sammleMarker();
 
-  // Zonen: jede fuer sich, in der Farbe ihres Rennens. Sie liegen
-  // flaechig auf der Strecke, ein Zusammenlegen wuerde die Grenzen
-  // verwischen.
+  // Zonen: jede fuer sich, in der Farbe ihres Rennens. Ein
+  // Zusammenlegen wuerde die Grenzen verwischen.
+  //
+  // Bis 2.6.3 lag die Zone als blasses breites Band auf der Fahrbahn.
+  // Seit die Spuren versetzt sind, verschwand sie darunter - das Band
+  // aus drei Spuren und Konturen ist breiter als die Zone selbst. Jetzt
+  // laeuft die Zone auf der Spur ihres Rennens und tritt dort an die
+  // Stelle der Linie, die zeichneStrecken() genau fuer diesen Abschnitt
+  // ausspart. Sie ist deshalb kraeftig statt blass und etwas staerker
+  // als die Linie: die Spur schwillt auf dem Zonenabschnitt an, und es
+  // bleibt eindeutig, zu welchem Rennen sie gehoert.
   gruppen.forEach(g => {
     const a = markerArt(g.typ);
     if (!a.zone) return;
@@ -592,8 +765,14 @@ function drawRaceMarker() {
       if (e.m.sEnde === undefined || e.m.sEnde === null) return;
       const pts = gpxSlice(e.m.s, e.m.sEnde, e.raceId);
       if (pts.length > 1) {
-        markerLayer.push(L.polyline(pts, {
-          color: rennFarbe(e.raceId), weight: 11, opacity: 0.40,
+        // So stark wie die weisse Kontur breit ist: die Zone fuellt die
+        // Spur samt Rand aus. Dadurch schwillt die Spur sichtbar an und
+        // verliert auf dem Abschnitt ihren weissen Saum - ein Signal,
+        // das auch in der Uebersicht traegt, ohne in die Nachbarspur zu
+        // ragen.
+        const eigen = (typeof meinRaceId === 'function') && meinRaceId() === e.raceId;
+        markerLayer.push(L.polyline(versetzteCoords(pts, gpxVersatz[e.raceId] || 0), {
+          color: rennFarbe(e.raceId), weight: eigen ? 8 : 7, opacity: 0.9,
           lineCap: 'butt', interactive: false
         }).addTo(map));
       }
@@ -622,7 +801,10 @@ function uebernehmeMarker(raceId, liste) {
     activeInfo.marker = Array.isArray(liste) ? liste : [];
   }
   if (sichtbareRaceIds().indexOf(raceId) === -1) return;
-  drawRaceMarker();
+  // Nicht nur drawRaceMarker(): seit 2.6.4 haengen die Aussparungen in
+  // den Linien an den Markern, und die zeichnet zeichneStrecken().
+  // Sie ruft drawRaceMarker() am Ende selbst auf.
+  zeichneStrecken();
 }
 
 // Der Streckenmodus wird aus dem Renn-Panel gestartet und kann damit
