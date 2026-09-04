@@ -123,6 +123,39 @@
     #teamCarToggle.active { background: #fff3e0; color: #c62828; }
     #optionsMenu #teamCarToggle:last-child { border-bottom: none; }
 
+    /* GESAMTE STRECKE (ab 2.6.6)
+       Dritter Knopf in der Spalte der Leaflet-Zoomleiste: gleiche
+       Aussenbreite (34 px), gleicher Rahmen, gleiche Rundung - er soll
+       aussehen, als gehoerte er dazu.
+       Die Zoomleiste endet bei rund 74 px (10 px Rand + zwei Knoepfe
+       a 30 px + 2 px Rahmen); 82 px lassen darunter denselben Abstand.
+       Bewusst OHNE env(safe-area-inset-top): die Zoomleiste rechnet es
+       auch nicht ein, und der Knopf soll unter ihr bleiben statt neben
+       ihr zu haengen.
+       z-index 1001: ueber Zoomleiste (1000) und Rennleiste (999),
+       unter Optionen und Taktik (1002). Die Rennleiste beginnt bei
+       left:52px und wird deshalb nicht verdeckt. */
+    #fitBtn {
+      position: absolute; top: 82px; left: 10px;
+      z-index: 1001; width: 34px; height: 34px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #fff; border: 2px solid rgba(0,0,0,0.2);
+      border-radius: 4px; cursor: pointer; color: #333;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #fitBtn:hover  { background: #f4f4f4; }
+    #fitBtn:active { background: #e9e9e9; }
+    #fitBtn svg {
+      width: 20px; height: 20px; fill: none; stroke: currentColor;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    /* Im Streckenmodus liegt oben die Eingabeleiste (z-index 1000, auf
+       dem Handy mehrzeilig). Solange sie offen ist, tritt der Knopf
+       zurueck, statt ueber ihrem Eingabefeld zu liegen. Reines CSS -
+       der Geschwisterselektor greift, weil #fitBtn im DOM hinter
+       #streckenBar steht. */
+    #streckenBar:not(.hidden) ~ #fitBtn { display: none; }
+
     /* CHANGE 1: Status hidden but JS logic intact */
     #status {
       display: none !important;

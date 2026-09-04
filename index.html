@@ -264,6 +264,18 @@
   <button class="btn" id="streckenFertig">Fertig</button>
 </div>
 <div id="raceClock" class="hidden"></div>
+<!-- GESAMTE STRECKE. Sitzt links unter der Leaflet-Zoomleiste und holt
+     die Strecken aller sichtbaren Rennen ins Bild. Muss im DOM hinter
+     #streckenBar stehen: der Geschwisterselektor in app.css blendet ihn
+     aus, solange die Streckenleiste offen ist.
+     Symbol als SVG statt als Zeichen - ein fehlendes Glyph waere im
+     Rennen ein leerer Knopf. -->
+<button id="fitBtn" type="button" title="Gesamte Strecke zeigen"
+        aria-label="Gesamte Strecke zeigen">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+  </svg>
+</button>
 <div id="status" class="warn">&#9898; Verbindung wird aufgebaut&#8230;</div>
 <div id="map"></div>
 

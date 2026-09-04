@@ -668,11 +668,21 @@ document.getElementById('groupSwitch').addEventListener('click', () => {
 updateSyncUi();
 updateGroupUi();
 
-document.getElementById('autoZoomBtn').addEventListener('click', () => {
-  autoZoom = !autoZoom;
+// Ab 2.6.6 eine Funktion statt eines Rumpfs im Handler: der Knopf
+// "Gesamte Strecke" schaltet Auto-Zoom ebenfalls ab und muss dabei
+// Beschriftung und Farbe des Menuepunkts mitfuehren. Zwei Stellen, die
+// dieselbe Beschriftung setzen, laufen frueher oder spaeter
+// auseinander.
+function setzeAutoZoom(an) {
+  autoZoom = !!an;
   const btn = document.getElementById('autoZoomBtn');
+  if (!btn) return;
   btn.textContent = autoZoom ? '\u{1F3AF} Auto-Zoom: Ein' : '\u{1F3AF} Auto-Zoom: Aus';
   btn.classList.toggle('active', autoZoom);
+}
+
+document.getElementById('autoZoomBtn').addEventListener('click', () => {
+  setzeAutoZoom(!autoZoom);
 });
 
 // =======================
@@ -1200,13 +1210,57 @@ let streckenPos   = Object.create(null);
 // Nicht angetastet ist der Auto-Zoom: sobald zwei frische Tracker
 // melden, rahmt er im Sekundentakt das Feld ein und ueberschreibt
 // diesen Ausschnitt. So war es bisher, und im Rennen ist das richtig.
-function startAusschnitt() {
-  if (startAusschnittGesetzt) return;
+// Die Streckenpunkte aller sichtbaren Rennen - die eine Stelle, an der
+// diese Liste entsteht. Der Startausschnitt und der Knopf "Gesamte
+// Strecke" rahmen dadurch garantiert dasselbe ein.
+function streckenPunkteSichtbar() {
   const punkte = [];
   sichtbareRennenListe().forEach(id => {
     const coords = (typeof gpxByRace !== 'undefined') ? gpxByRace[id] : null;
     if (Array.isArray(coords)) coords.forEach(p => punkte.push(p));
   });
+  return punkte;
+}
+
+// Der Knopf links unter der Zoomleiste. Anders als startAusschnitt()
+// ohne Sperre - er darf beliebig oft.
+//
+// Auto-Zoom wird dabei abgeschaltet: er rahmt im Sekundentakt das Feld
+// ein und haette den Streckenausschnitt nach spaetestens einer Sekunde
+// wieder ueberschrieben. Ein Knopf ohne sichtbare Wirkung ist
+// schlimmer als keiner. Zurueck geht es mit einem Tipp im Optionsmenue.
+//
+// Liegt keine Strecke vor - vor dem GPX-Upload -, treten die frischen
+// Tracker an ihre Stelle. Betreuer bleiben wie beim Auto-Zoom
+// draussen: einer an der Verpflegungszone 30 km abseits druckt das
+// Feld auf einen Punkt zusammen.
+function zoomAufStrecke() {
+  let punkte = streckenPunkteSichtbar();
+  if (punkte.length === 0) {
+    punkte = Object.values(lastPositions).filter(p => !p.betreuer && !p.stale);
+    if (teamCarMarker) {
+      const tc = teamCarMarker.getLatLng();
+      punkte.push([tc.lat, tc.lng]);
+    }
+  }
+  if (punkte.length === 0) {
+    if (typeof showToast === 'function') showToast('Keine Strecke geladen');
+    return;
+  }
+  if (autoZoom) {
+    setzeAutoZoom(false);
+    if (typeof showToast === 'function') showToast('Auto-Zoom aus');
+  }
+  if (punkte.length === 1) map.setView(punkte[0], 15);
+  else                     map.fitBounds(punkte, { padding: [40, 40] });
+}
+
+const fitBtnEl = document.getElementById('fitBtn');
+if (fitBtnEl) fitBtnEl.addEventListener('click', zoomAufStrecke);
+
+function startAusschnitt() {
+  if (startAusschnittGesetzt) return;
+  const punkte = streckenPunkteSichtbar();
   if (punkte.length === 0) return;
   startAusschnittGesetzt = true;
   // Der einmalige Sprung auf den ersten Tracker entfaellt damit: die
