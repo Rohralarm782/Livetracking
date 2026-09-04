@@ -632,16 +632,48 @@ function drawFinishMarkerAlt() {
 // als Meter am Rennen (raceMeta.marker) und kommen ueber /active mit.
 // Start/Ziel ist bewusst NICHT dabei - das ist startOffset und haengt
 // am Rundenzaehler.
+// Streckenschilder fuer Sprint, Bergwertung und Verpflegung. Eigene
+// Zeichnung statt Emoji: Emoji rendern auf jedem Geraet anders und sind
+// aus dem fahrenden Auto schlecht zu erkennen. Die drei Zeichen folgen
+// der Beschilderung am Streckenrand - gruenes S, rotes Bergschild,
+// blaues Besteck. Das Markup ist fest verdrahtet, es kommt kein
+// Benutzertext hinein. Zwischenzeit und freier Punkt behalten ihr
+// Emoji: sie sind keine Wertung, sondern eine eigene Notiz.
+const MK_SYM_KOPF = '<svg class="lt-sym" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">';
+const MK_SYM_SPRINT = MK_SYM_KOPF
+  + '<circle cx="12" cy="12" r="10.6" fill="#2e9b4f" stroke="#fff" stroke-width="2"/>'
+  + '<text x="12" y="17" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"'
+  + ' font-size="14" font-weight="700" fill="#fff">S</text></svg>';
+const MK_SYM_BERG = MK_SYM_KOPF
+  + '<circle cx="12" cy="12" r="10.6" fill="#d62828" stroke="#fff" stroke-width="2"/>'
+  + '<path d="M5 16.8 L9.9 8.4 L12.9 12.4 L15 9.6 L19 16.8 Z" fill="#fff"/></svg>';
+const MK_SYM_FOOD = MK_SYM_KOPF
+  + '<circle cx="12" cy="12" r="10.6" fill="#1976d2" stroke="#fff" stroke-width="2"/>'
+  + '<path d="M8.2 6.2v3.2M10 6.2v3.2M11.8 6.2v3.2" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>'
+  + '<path d="M7.9 9.1h4.2v.9a2.1 2.1 0 0 1-4.2 0Z" fill="#fff"/>'
+  + '<path d="M10 11.8v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>'
+  + '<path d="M15.4 6.1c2.1 1.1 2.1 4.9 0 5.9Z" fill="#fff"/>'
+  + '<path d="M15.4 11.6v6.2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
 const MARKER_ART = {
   start:       { icon: '\u{1F6A9}', label: 'Start',        farbe: '#2e7d32', zone: false },
-  wertung:     { icon: '\u{1F3C5}', label: 'Sprint',       farbe: '#1565c0', zone: false },
-  berg:        { icon: '\u26F0\uFE0F', label: 'Bergwertung', farbe: '#6d4c41', zone: false },
-  verpflegung: { icon: '\u{1F34C}', label: 'Verpflegung',  farbe: '#ef6c00', zone: true  },
+  wertung:     { icon: '\u{1F3C5}', svg: MK_SYM_SPRINT, label: 'Sprint',       farbe: '#1565c0', zone: false },
+  berg:        { icon: '\u26F0\uFE0F', svg: MK_SYM_BERG, label: 'Bergwertung', farbe: '#6d4c41', zone: false },
+  verpflegung: { icon: '\u{1F34C}', svg: MK_SYM_FOOD, label: 'Verpflegung',  farbe: '#ef6c00', zone: true  },
   frei:        { icon: '\u{1F4CC}', label: 'Punkt',        farbe: '#6a1b9a', zone: true  },
   zwischenzeit:{ icon: '\u23F1\uFE0F', label: 'ZZ',         farbe: '#00838f', zone: false }
 };
 
 function markerArt(typ) { return MARKER_ART[typ] || MARKER_ART.frei; }
+
+// Das Zeichen fuer eine Flaeche: Schild, wo es eines gibt, sonst das
+// Emoji. Nur fuer Stellen, an denen HTML erlaubt ist - in Tooltips,
+// Toasts und Ueberschriften bleibt a.icon stehen, dort landet der Wert
+// als Text.
+function markerSymbol(typ) {
+  const a = markerArt(typ);
+  return a.svg || a.icon;
+}
 
 // "km 3,40" - dieselbe Schreibweise wie im Streckeneditor.
 function kmText(meter) {
@@ -746,8 +778,9 @@ function naechstePunkteAb(lat, lon, raceId) {
     // dann bleibt nur ihr Ende uebrig.
     const drin = zone
       && ((((t.s - m.s) % L) + L) % L) <= ((((m.sEnde - m.s) % L) + L) % L);
-    if (!drin) roh.push({ icon: a.icon, d: vor(m.s),     ende: false, runden: m.runden });
-    if (zone)  roh.push({ icon: a.icon, d: vor(m.sEnde), ende: true,  runden: m.runden });
+    const sym  = a.svg || a.icon;
+    if (!drin) roh.push({ icon: sym, d: vor(m.s),     ende: false, runden: m.runden });
+    if (zone)  roh.push({ icon: sym, d: vor(m.sEnde), ende: true,  runden: m.runden });
   });
 
   const eintraege = [];
@@ -775,38 +808,17 @@ function clearRaceMarker() {
   markerLayer = [];
 }
 
+// Bis 2.7.0 trug ein Punkt, der fuer mehrere Rennen gilt, aussen einen
+// Ring aus einem Segment je Rennen (markerIconRing). Der ist mit 2.8.0
+// entfallen: die Wertungen liegen fast immer fuer alle Rennen an
+// derselben Stelle, nur bei verschiedenen Kilometern - und genau die
+// stehen weiterhin zeilenweise im Tooltip (clusterText). Der Ring hat
+// dafuer 8 px Durchmesser und den Kontrast des Schildes gekostet.
 function markerIcon(typ) {
   const a = markerArt(typ);
   return L.divIcon({
     className: '', iconSize: [24, 24], iconAnchor: [12, 12],
-    html: `<div class="lt-mk" style="border-color:${a.farbe}">${a.icon}</div>`
-  });
-}
-
-// Ein Punkt, der fuer mehrere Rennen gilt: ein Symbol, aussen ein Ring
-// aus einem Segment je Rennen. Bei genau einem Rennen ergibt das einen
-// einfachen Farbring - die Darstellung bleibt damit fast so, wie sie
-// bis 1.19.0 war.
-function markerIconRing(typ, farben) {
-  const a = markerArt(typ);
-  if (!farben || farben.length < 2) {
-    return L.divIcon({
-      className: '', iconSize: [24, 24], iconAnchor: [12, 12],
-      html: `<div class="lt-mk" style="border-color:${farben && farben[0] ? farben[0] : a.farbe}">${a.icon}</div>`
-    });
-  }
-  const R = 15, C = 16, dick = 4;
-  const u = 2 * Math.PI * R;
-  const seg = farben.map((f, i) => {
-    const teil = u / farben.length;
-    return `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${f}"
-      stroke-width="${dick}" stroke-dasharray="${teil - 1.5} ${u - teil + 1.5}"
-      stroke-dashoffset="${-i * teil}" transform="rotate(-90 ${C} ${C})"/>`;
-  }).join('');
-  return L.divIcon({
-    className: '', iconSize: [32, 32], iconAnchor: [16, 16],
-    html: `<div class="lt-mkr"><svg width="32" height="32" viewBox="0 0 32 32">${seg}</svg>`
-        + `<span class="lt-mkr-i">${a.icon}</span></div>`
+    html: a.svg || `<div class="lt-mk" style="border-color:${a.farbe}">${a.icon}</div>`
   });
 }
 
@@ -904,9 +916,8 @@ function drawRaceMarker() {
   });
 
   gruppen.forEach(g => {
-    const farben = g.eintraege.map(e => rennFarbe(e.raceId));
     markerLayer.push(
-      L.marker([g.lat, g.lon], { icon: markerIconRing(g.typ, farben), interactive: false })
+      L.marker([g.lat, g.lon], { icon: markerIcon(g.typ), interactive: false })
         .addTo(map)
         .bindTooltip(clusterText(g), { direction: 'top', className: 'lt-tt' }));
   });

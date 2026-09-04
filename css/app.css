@@ -835,17 +835,6 @@
     .tkRennN { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tkRennA { margin-left: auto; font-size: 10px; font-weight: 400; color: #78909c; flex: 0 0 auto; }
 
-    /* ZUSAMMENGELEGTER STRECKENPUNKT - ein Symbol, aussen ein
-       Ringsegment je Rennen. */
-    .lt-mkr { position: relative; width: 32px; height: 32px; }
-    .lt-mkr svg { position: absolute; inset: 0; }
-    .lt-mkr-i {
-      position: absolute; inset: 0; display: flex;
-      align-items: center; justify-content: center;
-      font-size: 13px; line-height: 1;
-    }
-    .leaflet-marker-icon.lt-mkr, .lt-mkr { background: none; border: none; }
-
     /* Tooltip eines zusammengelegten Punktes: eine Zeile je Rennen. */
     .lt-tt .lt-tt-h { font-weight: 600; margin-bottom: 3px; }
     .lt-tt .lt-tt-r { display: flex; align-items: center; gap: 5px; font-size: 11px; }
@@ -956,12 +945,25 @@
     .mk-form .row input { flex: 1; min-width: 0; }
     .mk-typen { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 9px; }
 
-    /* Symbol eines Streckenpunkts auf der Karte */
+    /* Symbol eines Streckenpunkts auf der Karte. Die weisse Scheibe
+       tragen seit 2.8.0 nur noch Zwischenzeit und freier Punkt -
+       Sprint, Berg und Verpflegung sind gezeichnete Schilder (.lt-sym). */
     .lt-mk {
       width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.95);
       border: 2px solid #999; display: flex; align-items: center; justify-content: center;
       font-size: 13px; line-height: 1; box-shadow: 0 1px 3px rgba(0,0,0,.35);
     }
+
+    /* Gezeichnetes Streckenschild. Der Schatten kommt aus dem Filter und
+       nicht aus box-shadow: das Schild ist rund, der Kasten drumherum
+       quadratisch. */
+    .lt-sym { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
+    /* In der Punkteliste und im Streckeneditor steht dasselbe Schild
+       kleiner neben dem Text. */
+    #naechstePunkte .npI .lt-sym { width: 17px; height: 17px; margin: 0 auto; }
+    #naechstePunkte .npZ.spaeter .lt-sym { opacity: .55; }
+    .mk-zeile .mk-icon .lt-sym { width: 18px; height: 18px; }
+    .mk-typen .btn .lt-sym { display: inline-block; width: 15px; height: 15px; vertical-align: -3px; }
 
     /* STARTLISTEN-EDITOR im Fahrer-Modal */
     .btn.active { border-color: #4caf50; color: #2e7d32; background: #f1f8e9; }

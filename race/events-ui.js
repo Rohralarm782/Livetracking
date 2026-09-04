@@ -417,6 +417,13 @@ const MK_ARTEN = [
 ];
 
 function mkArt(typ) { return MK_ARTEN.find(a => a.typ === typ) || MK_ARTEN[4]; }
+
+// Dasselbe Zeichen wie auf der Karte. markerSymbol() steht in gpx.js,
+// das vor dieser Datei geladen wird; der Rueckfall greift nur, falls
+// die Reihenfolge einmal kippt.
+function mkSym(a) {
+  return (typeof markerSymbol === 'function') ? markerSymbol(a.typ) : a.icon;
+}
 function mkKm(meter) { return ((meter || 0) / 1000).toFixed(2).replace('.', ','); }
 
 function markerBlockHtml(r) {
@@ -435,7 +442,7 @@ function markerBlockHtml(r) {
     const runden = (Array.isArray(m.runden) && m.runden.length)
       ? ` \u00B7 Runde ${m.runden.join(', ')}` : '';
     h += `<div class="mk-zeile">
-      <span class="mk-icon">${a.icon}</span>
+      <span class="mk-icon">${mkSym(a)}</span>
       <div style="flex:1;min-width:0">
         <div class="mk-name">${escH(m.name || a.label)}</div>
         <div class="mk-meta">km ${mkKm(m.s)}${bereich}${runden}</div>
@@ -454,7 +461,7 @@ function markerBlockHtml(r) {
       <div class="mk-typen">
         ${MK_ARTEN.map(x => `<button class="btn ${x.typ === mkForm.typ ? 'active' : ''}"
             data-action="mk-typ" data-id="${r.id}" data-typ="${x.typ}"
-            style="padding:5px 9px;font-size:12px">${x.icon} ${x.label}</button>`).join('')}
+            style="padding:5px 9px;font-size:12px">${mkSym(x)} ${x.label}</button>`).join('')}
       </div>
       <input type="text" id="mkName" maxlength="30" value="${escH(m && m.name ? m.name : '')}"
              placeholder="Name, z.\u202FB. Bergpreis Ilsenburg">
