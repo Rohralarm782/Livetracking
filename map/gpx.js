@@ -120,21 +120,24 @@ function zeichneStrecken() {
     cum[id]    = gpxCumulative(gpxByRace[id]);
   });
 
-  // Aussparungen. Ein zusammengefasster Markerring misst 32 Pixel, das
-  // Spurband bei drei Rennen rund 16 - der Ring deckt die Linien also
-  // ohnehin. Statt ihn zu ueberzeichnen, hoeren die Linien dort auf:
+  // Aussparungen. Bis 2.8.0 hoerten die Linien unter jedem Marker auf:
   //     ----------(S)----------
-  // Die Ringluecke gilt fuer JEDE Spur, die dort vorbeikommt, auch fuer
-  // ein Rennen ohne eigenen Marker an der Stelle - sonst laeuft dessen
-  // Linie weiter durch das Symbol. Die Zonenluecke gilt nur fuer das
-  // Rennen, dem die Zone gehoert: dort tritt die Zone an die Stelle der
-  // Linie (siehe drawRaceMarker).
+  // Das Symbol war ein Emoji in einer weissen Scheibe und der
+  // zusammengelegte Ring 32 Pixel breit - beides deckte die Linien
+  // schlecht, also machten die Linien Platz. Seit 2.8.0 ist das Symbol
+  // eine deckende Scheibe von 24 Pixeln und liegt in der Markerebene
+  // ueber den Linien. Die Spuren laufen deshalb wieder durch; die
+  // Luecke war ab da nur noch ein sichtbarer Bruch im Streckenverlauf.
+  //
+  // Geblieben ist die Zonenluecke: dort tritt das dicke Zonenband an
+  // die Stelle der Linie (siehe drawRaceMarker). Sie gilt nur fuer das
+  // Rennen, dem die Zone gehoert.
   //
   // Im Streckenmodus wird nichts ausgespart. Dort wird auf die Linie
   // getippt, und eine Luecke waere eine Stelle, an der ein Tipp ins
   // Leere geht.
   const gruppen = (streckenModus && zielRaceId) ? [] : sammleMarker();
-  const luecken = lueckenPlan(folge, cum, gruppen);
+  const zonen   = zonenPlan(folge, gruppen);
 
   // Erst alle Konturen, dann alle Farblinien. In einem Durchgang wuerde
   // die Kontur der Nachbarspur die zuvor gezeichnete Farblinie an der
@@ -142,12 +145,13 @@ function zeichneStrecken() {
   // die Kontur - das Bild ist dann das einer einzelnen Strecke wie vor
   // 2.6.0.
   //
-  // Die Kontur kennt nur die Ringluecken, nicht die Zonenluecken: so
-  // bekommt die Zone denselben weissen Rand wie die Linie, an deren
-  // Stelle sie tritt.
+  // Die Kontur kennt die Zonenluecken nicht: so bekommt die Zone
+  // denselben weissen Rand wie die Linie, an deren Stelle sie tritt.
+  // Seit 2.8.1 hat sie damit ueberhaupt keine Luecken mehr und laeuft
+  // durch.
   if (folge.length > 1) {
     folge.forEach(id => {
-      gpxKontur[id] = L.polyline(mitLuecken(punkte[id], cum[id], luecken.ring[id]), {
+      gpxKontur[id] = L.polyline(punkte[id], {
         color: '#ffffff', weight: staerke(id) + 3, opacity: 0.9,
         lineJoin: 'round', lineCap: 'round', interactive: false
       }).addTo(map);
@@ -156,7 +160,7 @@ function zeichneStrecken() {
 
   folge.forEach(id => {
     const linie = L.polyline(
-      mitLuecken(punkte[id], cum[id], luecken.ring[id].concat(luecken.zone[id])), {
+      mitLuecken(punkte[id], cum[id], zonen[id]), {
         color: (streckenModus && id === zielRaceId) ? '#1565c0' : rennFarbe(id),
         weight: staerke(id),
         opacity: (streckenModus && id === zielRaceId) ? 0.95 : 0.85,
@@ -271,8 +275,7 @@ function versetzteCoords(coords, px) {
 
 // Beim Zoomen aendert sich das Verhaeltnis von Grad zu Pixel. Ohne
 // Nachrechnen laegen die Spuren in der Uebersicht meterweit
-// auseinander und im Nahzoom wieder deckungsgleich. Dasselbe gilt seit
-// 2.6.4 fuer die Aussparungen, deren Breite in Pixeln festgelegt ist.
+// auseinander und im Nahzoom wieder deckungsgleich.
 //
 // Bis 2.6.3 wurde dafuer nur die Geometrie der beiden Linien
 // nachgezogen. Jetzt haengen auch die Zonen am Zoom, und die zeichnet
@@ -281,34 +284,6 @@ function versetzteCoords(coords, px) {
 // ohnehin laufend passiert.
 map.on('zoomend', zeichneStrecken);
 
-// Breite der Aussparung unter einem Marker, in Bildschirmpixeln. Der
-// zusammengefasste Ring misst 32 Pixel, das einzelne Symbol 24. Die
-// Luecke ist bewusst deutlich breiter als das Symbol: sie soll den
-// Marker frei stellen, nicht nur knapp umschliessen - sonst kleben die
-// Linien an seinem Rand und das Symbol geht im Band unter.
-const LUECKE_RING_PX  = 56;
-const LUECKE_PUNKT_PX = 46;
-
-// Deckel, damit im weit herausgezoomten Bild nicht ein halber Rundkurs
-// verschwindet: hoechstens zwei Prozent der Streckenlaenge, bei einem
-// 100-km-Rennen also zwei Kilometer. In den Zoomstufen, in denen im
-// Auto gearbeitet wird, greift der Deckel nie - dort sind 56 Pixel
-// einige hundert Meter. Der Mindestwert haelt die Luecke auch bei
-// einem kurzen Rundkurs brauchbar.
-const LUECKE_MAX_ANTEIL = 0.02;
-const LUECKE_MIN_M      = 250;
-
-// Wie nah ein Rennen an einem Marker vorbeikommen muss, damit seine
-// Spur ausgespart wird. Faehrt es weiter weg, deckt der Ring seine
-// Linie gar nicht.
-const LUECKE_NAH_M = 60;
-
-// Wie viele Meter ein Bildschirmpixel im aktuellen Zoom entspricht.
-function meterProPixel() {
-  const breite = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180);
-  return breite / (256 * Math.pow(2, map.getZoom()));
-}
-
 // Streckenposition einer Koordinate, plus deren Abstand zur Strecke.
 //
 // Projiziert auf die Segmente, nicht auf die Stuetzpunkte. Der
@@ -316,7 +291,7 @@ function meterProPixel() {
 // 25 m, eine von Hand gezeichnete Route kann auf einer geraden
 // Landstrasse zwei Kilometer am Stueck ohne Zwischenpunkt haben - der
 // naechste Stuetzpunkt laege dann hunderte Meter entfernt und die
-// Aussparung fiele still aus.
+// Liste der naechsten Punkte zeigte still auf die falsche Stelle.
 //
 // Gerechnet wird in einer ebenen Naeherung um den gesuchten Punkt.
 // Ueber die paar hundert Meter, um die es hier geht, ist der Fehler
@@ -342,39 +317,26 @@ function sNaechst(lat, lon, coords, cum) {
   return { s: bs, dist: best };
 }
 
-// Je Rennen zwei Listen von Sperrbereichen in Metern:
-//   ring - unter jedem Markersymbol, fuer jede Spur, die dort
-//          vorbeikommt
-//   zone - der Abschnitt einer Verpflegungs- oder Punktzone, nur fuer
-//          das Rennen, dem sie gehoert
-function lueckenPlan(ids, cum, gruppen) {
-  const plan = { ring: Object.create(null), zone: Object.create(null) };
-  ids.forEach(id => { plan.ring[id] = []; plan.zone[id] = []; });
+// Je Rennen eine Liste von Sperrbereichen in Metern: die Abschnitte
+// seiner Verpflegungs- und Punktzonen. Dort tritt das Zonenband an die
+// Stelle der Linie, also muss die Linie weichen.
+//
+// Bis 2.8.0 stand hier zusaetzlich ein Ringteil, der unter jedem
+// Markersymbol jede vorbeikommende Spur aussparte. Er ist mit 2.8.1
+// entfallen - siehe den Kommentar in zeichneStrecken(). Mit ihm faellt
+// eine Projektion je Markergruppe und Rennen ueber alle Streckenpunkte
+// weg, die bei jedem Zoomwechsel neu lief.
+function zonenPlan(ids, gruppen) {
+  const plan = Object.create(null);
+  ids.forEach(id => { plan[id] = []; });
   if (!gruppen || !gruppen.length) return plan;
 
-  const mpp = meterProPixel();
   gruppen.forEach(g => {
-    const gross = g.eintraege.length > 1;
-    const roh = (gross ? LUECKE_RING_PX : LUECKE_PUNKT_PX) / 2 * mpp;
-    ids.forEach(id => {
-      const t = sNaechst(g.lat, g.lon, gpxByRace[id] || [], cum[id] || []);
-      if (!t || t.dist > LUECKE_NAH_M) return;
-      // Der Deckel haengt an der Laenge DIESER Strecke: zwei Rennen mit
-      // sehr verschiedener Distanz sollen im selben Bild nicht
-      // unterschiedlich stark ausgespart werden, solange beide weit
-      // genug sind.
-      const c   = cum[id];
-      const max = Math.max(LUECKE_MIN_M, (c[c.length - 1] || 0) * LUECKE_MAX_ANTEIL);
-      const halb = Math.min(roh, max / 2);
-      plan.ring[id].push([t.s - halb, t.s + halb]);
-    });
-    // Zonen stehen in denselben Gruppen - so wird die Markerliste nur
-    // einmal durchlaufen.
     if (!markerArt(g.typ).zone) return;
     g.eintraege.forEach(e => {
       if (e.m.sEnde === undefined || e.m.sEnde === null) return;
-      if (!plan.zone[e.raceId]) return;
-      plan.zone[e.raceId].push([e.m.s, e.m.sEnde]);
+      if (!plan[e.raceId]) return;
+      plan[e.raceId].push([e.m.s, e.m.sEnde]);
     });
   });
   return plan;
