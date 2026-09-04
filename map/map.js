@@ -249,6 +249,10 @@ function startTeamCarTracking() {
         teamCarAccCircle.setLatLng(latlng);
         teamCarAccCircle.setRadius(accuracy);
       }
+      // Die eigene Ortung ist der genauere Bezugspunkt und kommt
+      // haeufiger als der Abfragetakt - die Kilometer laufen damit
+      // fluessig mit.
+      zeichneNaechstePunkte();
     },
     (err) => {
       console.error("Geolocation-Fehler:", err.message);
@@ -641,6 +645,84 @@ function updateGroupUi() {
     : 'Aus. Jeder Fahrer bekommt einen eigenen Marker.';
 }
 
+// =======================
+// NAECHSTE PUNKTE
+// =======================
+// Die Liste links unter dem Knopf "Gesamte Strecke": Symbol und
+// Kilometer bis zu den naechsten Punkten des eigenen Rennens. Der
+// Schalter steht in den erweiterten Einstellungen und gilt nur fuer
+// dieses Geraet - deshalb localStorage und keine Serverroute.
+// Voreingestellt ein; die Liste blendet sich selbst aus, sobald etwas
+// fehlt (keine Position, keine Strecke, kein Punkt voraus).
+let npOn = localStorage.getItem('npPref') !== 'off';
+
+function updateNpUi() {
+  const sw  = document.getElementById('npSwitch');
+  const sub = document.getElementById('npSub');
+  if (sw)  sw.classList.toggle('on', npOn);
+  if (sub) sub.textContent = npOn
+    ? 'Links auf der Karte: Entfernung bis zu den n\u00E4chsten f\u00FCnf Punkten des eigenen Rennens.'
+    : 'Aus. Die Karte zeigt keine Entfernungen zu den n\u00E4chsten Punkten.';
+}
+
+// Bezugspunkt der Rechnung.
+//
+// Erste Wahl ist die eigene Ortung, solange sie laeuft: sie ist eine
+// Sekunde frisch statt einen Abfragetakt alt. Sonst die Position, die
+// der SpoLei sendet - sie markiert, wo das Rennen ist, und steht in
+// /positions jedem Geraet zur Verfuegung.
+//
+// lastPosData wird in race/taktik.js mit let deklariert, und das laedt
+// nach map.js. Ein Zugriff vor dem Laden faellt in die temporale Tote
+// Zone und wirft - auch bei typeof. Deshalb try/catch statt Abfrage.
+function npBezugsPunkt() {
+  if (teamCarMarker) {
+    const p = teamCarMarker.getLatLng();
+    return [p.lat, p.lng];
+  }
+  let daten = null;
+  try { daten = lastPosData; } catch (e) { return null; }
+  const p = daten ? daten['TEAMAUTO'] : null;
+  if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return null;
+  // Eine Stunde alte Position waere schlimmer als keine: sie sieht aus
+  // wie eine Aussage und ist keine.
+  if (p.timestamp && Date.now() - p.timestamp > STALE_MS) return null;
+  return [p.lat, p.lon];
+}
+
+// Unter einem Kilometer in Zehnerschritten - "in 940 m" ist im Auto
+// brauchbarer als "0,9 km", und die Zahl zappelt nicht bei jedem Fix.
+function npKmText(d) {
+  if (d < 950) return (Math.round(d / 10) * 10) + ' m';
+  return (d / 1000).toFixed(1).replace('.', ',') + ' km';
+}
+
+function zeichneNaechstePunkte() {
+  const el = document.getElementById('naechstePunkte');
+  if (!el) return;
+  const rid = (typeof meinRaceId === 'function') ? meinRaceId() : null;
+  const p   = npOn ? npBezugsPunkt() : null;
+  // gpx.js laedt nach map.js: beim ersten Lauf kann es die Funktion
+  // noch nicht geben.
+  const erg = (p && rid && typeof naechstePunkteAb === 'function')
+    ? naechstePunkteAb(p[0], p[1], rid) : null;
+  if (!erg) {
+    el.className = 'hidden';
+    el.innerHTML = '';
+    return;
+  }
+  // Die Symbole stammen aus MARKER_ART, nicht aus einer Eingabe -
+  // hier landet kein freier Text im innerHTML.
+  const zeilen = erg.eintraege.map(e =>
+      `<div class="npZ${e.spaeter ? ' spaeter' : ''}">`
+    + `<span class="npI${e.ende ? ' ende' : ''}">${e.icon}</span>`
+    + `<span class="npKm">${npKmText(e.d)}</span></div>`).join('');
+  const kopf = erg.abseits
+    ? `<div class="npWeg">${npKmText(erg.abstand)} neben der Strecke</div>` : '';
+  el.className = erg.abseits ? 'abseits' : '';
+  el.innerHTML = kopf + zeilen;
+}
+
 document.getElementById('syncSwitch').addEventListener('click', () => {
   syncOn = !syncOn;
   localStorage.setItem('syncPref', syncOn ? 'on' : 'off');
@@ -665,8 +747,21 @@ document.getElementById('groupSwitch').addEventListener('click', () => {
   loadPositions();
 });
 
+document.getElementById('npSwitch').addEventListener('click', () => {
+  npOn = !npOn;
+  localStorage.setItem('npPref', npOn ? 'on' : 'off');
+  updateNpUi();
+  // Sofort, nicht erst beim naechsten Takt: ein Schalter ohne
+  // sichtbare Wirkung wird noch einmal gedrueckt.
+  zeichneNaechstePunkte();
+});
+
 updateSyncUi();
 updateGroupUi();
+// Nur die Beschriftung des Schalters. Gezeichnet wird erst aus
+// loadPositions() heraus - vorher fehlen die Positionen und gpx.js
+// ist noch nicht geladen.
+updateNpUi();
 
 // Ab 2.6.6 eine Funktion statt eines Rumpfs im Handler: der Knopf
 // "Gesamte Strecke" schaltet Auto-Zoom ebenfalls ab und muss dabei
@@ -904,6 +999,10 @@ async function loadPositions() {
       historyData = {};
     }
     lastPosData = data;
+    // Vor allen weiteren Auswertungen und vor jedem vorzeitigen
+    // return: faellt die Antwort leer aus, muss auch die Punkteliste
+    // verschwinden.
+    zeichneNaechstePunkte();
     const ids  = Object.keys(data);
 
     // Marker wurden angelegt und aktualisiert, aber nie entfernt - und

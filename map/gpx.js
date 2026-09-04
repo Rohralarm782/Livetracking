@@ -656,6 +656,118 @@ function markerBeschriftung(m) {
   return t;
 }
 
+// =======================
+// NAECHSTE PUNKTE AB EINER POSITION (ab 2.7.0)
+// =======================
+// Bezugspunkt ist die Position, die der SpoLei sendet (TEAMAUTO). Sie
+// markiert, wo das Rennen gerade ist, und liegt ueber /positions jedem
+// Geraet vor - auch ohne Login und ohne eigene Ortung. Wer selbst
+// ortet, rechnet mit der eigenen Koordinate (siehe map.js).
+//
+// Gerechnet wird ausschliesslich hier im Browser, gegen die Strecke des
+// EIGENEN Rennens. Der Serverwert p.s taugt dafuer nicht: den rechnet
+// verfolgeStrecke() gegen das Leitrennen, nicht gegen das Rennen, das
+// dieses Geraet ausgewaehlt hat.
+//
+// Nichts hier schreibt: startOffset, marker[] und die Streckenpunkte
+// werden nur gelesen.
+
+const NP_ANZAHL     = 5;     // so viele Zeilen
+const NP_ABSEITS_M  = 250;   // darueber gilt die Projektion als unsicher
+const NP_RUNDKURS_M = 200;   // Abstand Anfang/Ende, bis zu dem es eine Runde ist
+const NP_ZIEL_ICON  = '\u{1F3C1}';
+
+// gpxCumulative() laeuft ueber alle Streckenpunkte. Bis 2.6.7 fiel das
+// nicht auf, weil die Summe nur beim Zeichnen gebraucht wurde - jetzt
+// im Sekundentakt. Map haelt die Einfuegereihenfolge, der aelteste
+// Eintrag fliegt zuerst.
+const npCum = new Map();     // coords-Array -> cum[]
+
+function npCumOf(coords) {
+  if (!Array.isArray(coords) || coords.length < 2) return null;
+  const treffer = npCum.get(coords);
+  if (treffer) return treffer;
+  const c = gpxCumulative(coords);
+  npCum.set(coords, c);
+  // Vier Rennen, dazu ein Streckenwechsel: mehr als acht Eintraege
+  // sind immer Altlast.
+  if (npCum.size > 8) npCum.delete(npCum.keys().next().value);
+  return c;
+}
+
+// Rundkurs oder Punkt-zu-Punkt. Auf einem Rundkurs liegt hinter dem
+// Zielstrich die naechste Runde; auf einer Strecke von A nach B liegt
+// dort nichts mehr, und die Modulo-Rechnung wuerde einen laengst
+// passierten Sprint als "in 47 km" ausgeben.
+function npIstRundkurs(coords) {
+  const n = coords.length;
+  if (n < 2) return false;
+  return distMeters(coords[0][0], coords[0][1],
+                    coords[n - 1][0], coords[n - 1][1]) <= NP_RUNDKURS_M;
+}
+
+// Die naechsten Punkte ab einer Koordinate, in Fahrtrichtung sortiert.
+// Rueckgabe: null, wenn es nichts zu zeigen gibt, sonst
+//   { abstand, abseits, eintraege: [{ icon, d, ende, spaeter }] }
+function naechstePunkteAb(lat, lon, raceId) {
+  if (typeof lat !== 'number' || typeof lon !== 'number' || !raceId) return null;
+  const coords = gpxByRace[raceId];
+  if (!Array.isArray(coords) || coords.length < 2) return null;
+  const cum = npCumOf(coords);
+  if (!cum) return null;
+  const L = cum[cum.length - 1];
+  if (!L) return null;
+  const t = sNaechst(lat, lon, coords, cum);
+  if (!t) return null;
+
+  const sb        = (typeof steckbriefOf === 'function') ? steckbriefOf(raceId) : null;
+  const off       = sb ? (sb.startOffset || 0) : 0;
+  const runde     = (sb && sb.currentLap) ? sb.currentLap : 1;
+  const zielrunde = !!(sb && sb.finalLap);
+  const rund      = npIstRundkurs(coords);
+
+  // Beide Werte stehen in Metern ab GPX-Anfang - der startOffset muss
+  // dafuer nicht herausgerechnet werden, er kuerzt sich weg.
+  const vor   = x => (((x - t.s) % L) + L) % L;
+  const dZiel = vor(off);
+
+  const roh = [];
+  // Der Zielstrich steht nicht in marker[], sondern ist der
+  // startOffset des Rennens.
+  roh.push({ icon: NP_ZIEL_ICON, d: dZiel, ende: false, runden: null });
+
+  const liste = (sb && Array.isArray(sb.marker)) ? sb.marker : [];
+  liste.forEach(m => {
+    if (!m || typeof m.s !== 'number') return;
+    if (m.typ === 'start') return;              // sagt im Rennen nichts
+    const a    = markerArt(m.typ);
+    const zone = !!a.zone && m.sEnde !== undefined && m.sEnde !== null;
+    // Stehen wir schon in der Zone, ist ihr Anfang Vergangenheit -
+    // dann bleibt nur ihr Ende uebrig.
+    const drin = zone
+      && ((((t.s - m.s) % L) + L) % L) <= ((((m.sEnde - m.s) % L) + L) % L);
+    if (!drin) roh.push({ icon: a.icon, d: vor(m.s),     ende: false, runden: m.runden });
+    if (zone)  roh.push({ icon: a.icon, d: vor(m.sEnde), ende: true,  runden: m.runden });
+  });
+
+  const eintraege = [];
+  roh.forEach(e => {
+    // Alles hinter dem Zielstrich gehoert zur naechsten Runde.
+    const spaeter = e.d > dZiel;
+    if (spaeter && (!rund || zielrunde)) return;
+    const r = spaeter ? runde + 1 : runde;
+    if (Array.isArray(e.runden) && e.runden.length && e.runden.indexOf(r) === -1) return;
+    eintraege.push({ icon: e.icon, d: e.d, ende: !!e.ende, spaeter });
+  });
+  if (!eintraege.length) return null;
+  eintraege.sort((a, b) => a.d - b.d);
+  return {
+    abstand:   t.dist,
+    abseits:   t.dist > NP_ABSEITS_M,
+    eintraege: eintraege.slice(0, NP_ANZAHL)
+  };
+}
+
 let markerLayer = [];
 
 function clearRaceMarker() {
