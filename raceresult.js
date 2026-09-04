@@ -244,6 +244,22 @@ const MUSTER = {
 // nicht von einer unschaerferen weggeschnappt werden.
 const ROLLEN = ['bib', 'bibKurz', 'platz', 'name', 'team', 'jahr', 'nation', 'zeit', 'rueck'];
 
+// Ausdruecke, die nie eine Zeit sind - auch wenn ein Zeitbezeichner
+// darin vorkommt. race|result faerbt die Gruppen des Feldes mit
+//
+//   BunchColor(if(StageTime([CONTEST.LiveStageID])<>"";BunchRank(...);...))
+//
+// Der Ausdruck enthaelt StageTime, und bis 2.6.6 griff das Muster fuer
+// die Zeitspalte genau dort. Am 04.09.2026 an Event 409896 in der
+// Liste "LIVE Stage Results" gesehen: als "Zeit" wurde ein Farbwert
+// gelesen, die Gruppenbildung fand keine einzige verwertbare Zeit und
+// lieferte im Rennen dauerhaft einen leeren Vorschlag.
+//
+// Bewusst eng gefasst: nur die Bunch-Funktionen. Ein Ausschluss auf
+// StageStatus haette echte Zeitspalten der Form
+// if(StageStatus(...)="";StageTime(...)) mit erschlagen.
+const KEINE_ZEIT = /Bunch(Color|Number)/i;
+
 function zuordnung(res) {
   const sp   = res.spalten || [];
   const idx  = {};
@@ -271,8 +287,11 @@ function zuordnung(res) {
   // 2. Ueber die Bezeichner im Ausdruck.
   for (const rolle of ROLLEN) {
     if (idx[rolle] !== undefined) continue;
+    const zeitartig = (rolle === 'zeit' || rolle === 'rueck');
     for (const reg of (MUSTER[rolle] || [])) {
-      const i = sp.findIndex((s, k) => !belegt.has(k) && reg.test(String(s)));
+      const i = sp.findIndex((s, k) => !belegt.has(k)
+        && !(zeitartig && KEINE_ZEIT.test(String(s)))
+        && reg.test(String(s)));
       if (setze(rolle, i)) break;
     }
   }
@@ -289,9 +308,20 @@ function sauber(v) {
     .trim();
 }
 
+// Ohne Zeit- oder Rueckstandsspalte laesst sich keine Gruppe bilden -
+// eine Liste, die nur Plaetze fuehrt, ist deshalb keine Ergebnisliste
+// im Sinne dieses Moduls. Am 04.09.2026 an Event 409896: "LIVE Time
+// Trial" fuehrt Rang, Nummer, Name und Verein, aber keine Zeit. Als
+// Ergebnisliste gezaehlt haette sie mit ihrem Live-Vorzug die
+// Tageswertung verdraengt, sobald die erste Zeile darin steht - und
+// dem Rennen einen dauerhaft leeren Vorschlag beschert.
+//
+// alsErgebnis() verwirft aus demselben Grund jeden Eintrag ohne Zeit
+// und ohne Rueckstand. Die Listenwahl folgt dieser Regel jetzt schon
+// eine Stufe frueher.
 function artDerListe(res) {
   const i = zuordnung(res);
-  if (i.platz !== undefined || i.zeit !== undefined) return 'ergebnis';
+  if (i.zeit !== undefined || i.rueck !== undefined) return 'ergebnis';
   if (i.name !== undefined) return 'startliste';
   return null;
 }
@@ -300,25 +330,49 @@ function artDerListe(res) {
 // Fahrer und Ergebnisse
 // ---------------------------------------------------------------------
 
-// Startnummern: angezeigt wird die volle Nummer (BIB, z. B. 4001),
-// verglichen wird zusaetzlich gegen die kurze (DisplayBib, z. B. 1).
-// Welche von beiden in einer bestehenden Startliste steht, ist von
-// Veranstaltung zu Veranstaltung verschieden.
+// Startnummern: es gilt DisplayBib - das ist die Nummer am Trikot.
+// BIB ist die interne Nummer von race|result und traegt bei Events mit
+// mehreren Contests deren Nummernkreis vorneweg. Am 04.09.2026 an
+// Event 409896 gemessen:
+//
+//   Contest 3 (Bundesliga Frauen/Juniorinnen)  DisplayBib 327 -> BIB 3327
+//   Contest 4 (U17 Maennlich)                  DisplayBib 295 -> BIB 4295
+//   Contest 5 (U17 Weiblich)                   DisplayBib  16 -> BIB 5016
+//
+// Bis 2.6.6 wurde BIB bevorzugt. Damit stand in jeder importierten
+// Startliste eine Nummer, die es am Rad nicht gibt - und die Ansage
+// "Nummer 337 attackiert" fand im Livetracking niemanden.
+//
+// Der Rueckfall auf BIB greift je Zeile, nicht je Liste: fehlt die
+// Spalte, ist die Zelle leer oder steht dort etwas Nichtnumerisches,
+// gilt weiter BIB. Bei Veranstaltungen ohne DisplayBib aendert sich
+// dadurch nichts.
+//
+// Wichtig: DisplayBib ist nur innerhalb eines Contests eindeutig. An
+// Event 409896 tragen 22 Nummern sowohl ein U17-Maennlich- als auch
+// ein U17-Weiblich-Trikot. Das ist unkritisch, solange jede Nummer nur
+// innerhalb ihres Rennens nachgeschlagen wird - so macht es der Server
+// (races[rid].riders), und so muss es bleiben.
+function startnummern(z, i) {
+  const voll = i.bib     !== undefined ? sauber(z[i.bib])     : '';
+  const kurz = i.bibKurz !== undefined ? sauber(z[i.bibKurz]) : '';
+  const nv = /^[0-9]+$/.test(voll) ? Number(voll) : NaN;
+  const nk = /^[0-9]+$/.test(kurz) ? Number(kurz) : NaN;
+  return { nr: (Number.isFinite(nk) && nk > 0) ? nk : nv, voll: nv };
+}
+
 function alsFahrer(res) {
   const i = zuordnung(res);
   const out = [];
   for (const z of res.zeilen) {
-    const voll = i.bib     !== undefined ? sauber(z[i.bib])     : '';
-    const kurz = i.bibKurz !== undefined ? sauber(z[i.bibKurz]) : '';
-    const nr   = Number(voll || kurz);
+    const { nr, voll } = startnummern(z, i);
     if (!Number.isFinite(nr) || nr <= 0) continue;
     const f = {
       nr,
       name: i.name !== undefined ? sauber(z[i.name]) : '',
       team: i.team !== undefined ? sauber(z[i.team]) : ''
     };
-    const k = Number(kurz);
-    if (Number.isFinite(k) && k > 0 && k !== nr) f.nrKurz = k;
+    if (Number.isFinite(voll) && voll > 0 && voll !== nr) f.nrVoll = voll;
     if (i.jahr   !== undefined) { const j = Number(sauber(z[i.jahr])); if (j > 1900) f.jahrgang = j; }
     if (i.nation !== undefined) { const n = sauber(z[i.nation]); if (n) f.nation = n; }
     if (f.name) out.push(f);
@@ -330,9 +384,10 @@ function alsErgebnis(res) {
   const i = zuordnung(res);
   const out = [];
   for (const z of res.zeilen) {
-    const voll = i.bib     !== undefined ? sauber(z[i.bib])     : '';
-    const kurz = i.bibKurz !== undefined ? sauber(z[i.bibKurz]) : '';
-    const nr   = Number(voll || kurz);
+    // Zwingend dieselbe Wahl wie in alsFahrer: die Gruppen werden ueber
+    // diese Nummern gegen races[].riders aufgeloest. Weichen beide
+    // Seiten voneinander ab, zeigt jede Gruppe Nummern ohne Namen.
+    const { nr, voll } = startnummern(z, i);
     if (!Number.isFinite(nr) || nr <= 0) continue;
     const e = {
       nr,
@@ -341,8 +396,7 @@ function alsErgebnis(res) {
       rueck: i.rueck !== undefined ? sauber(z[i.rueck]) : '',
       platz: i.platz !== undefined ? Number(String(sauber(z[i.platz])).replace(/\D/g, '')) : null
     };
-    const k = Number(kurz);
-    if (Number.isFinite(k) && k > 0 && k !== nr) e.nrKurz = k;
+    if (Number.isFinite(voll) && voll > 0 && voll !== nr) e.nrVoll = voll;
     if (!e.zeit && !e.rueck) continue;   // ohne Zeit keine Gruppe
     out.push(e);
   }
