@@ -355,16 +355,18 @@ function ageLabel(ms) {
   return Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0') + ' h';
 }
 
-function tooltipContent(id, bat, age, avgKmh) {
+// Der Schnitt stand bis 2.9.0 hier und in der Rennleiste. Er wurde ab
+// 2.10.0 aus der Anzeige genommen: die Zahl kam aus einer Strecke, die
+// mit dem ersten GPS-Punkt des Tages beginnt, und einer Zeit, die erst
+// mit dem Rennen beginnt - im Auto war sie nicht zu gebrauchen.
+// Der Server rechnet und liefert avgKmh weiter; damit laeuft kein
+// anderer Client (Android Auto, Garmin) auf ein fehlendes Feld, und die
+// Anzeige laesst sich mit zwei Zeilen zurueckholen.
+function tooltipContent(id, bat, age) {
   const old = (typeof age === 'number' && age > STALE_MS)
     ? ` <span style="color:#c62828;font-size:11px">\u23F8 ${ageLabel(age)}</span>`
     : '';
-  // Schnitt nur, wenn der Server einen liefert - er braucht dafuer eine
-  // Startzeit und mindestens eine halbe Minute Rennen.
-  const avg = (typeof avgKmh === 'number')
-    ? ` <span style="color:#666;font-size:11px">\u00D8 ${avgKmh.toFixed(1).replace('.', ',')}</span>`
-    : '';
-  return id + batLabel(bat) + avg + old;
+  return id + batLabel(bat) + old;
 }
 
 // =======================
@@ -707,8 +709,18 @@ function zeichneNaechstePunkte() {
   const erg = (p && rid && typeof naechstePunkteAb === 'function')
     ? naechstePunkteAb(p[0], p[1], rid) : null;
   if (!erg) {
-    el.className = 'hidden';
-    el.innerHTML = '';
+    // Bis 2.9.0 blendete sich der Kasten hier still aus. Vier Gruende
+    // koennen dazu fuehren, und keiner davon war zu sehen - am
+    // 05.09.2026 wurde eine halbe Stunde nach einem Fehler gesucht, wo
+    // nur das Rennen noch nicht aktiviert war.
+    // Bei ausgeschaltetem Schalter bleibt es beim stillen Ausblenden:
+    // wer ihn aus hat, will die Liste nicht sehen, auch nicht als Grund.
+    if (!npOn) { el.className = 'hidden'; el.innerHTML = ''; return; }
+    const grund = !rid ? 'Kein Rennen aktiviert'
+                : !p   ? 'Keine Teamauto-Position'
+                :        'Keine Punkte voraus';
+    el.className = 'grund';
+    el.innerHTML = `<div class="npG">${grund}</div>`;
     return;
   }
   // Die Symbole stammen aus MARKER_ART, nicht aus einer Eingabe -
@@ -1094,7 +1106,7 @@ async function loadPositions() {
           markerRolle[id] = istAuto ? 'teamauto' : null;
         }
 
-        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age, pos.avgKmh);
+        const label = isBetreuer ? `\u{1F464} ${pos.name || id}` : tooltipContent(displayName, bat, age);
 
         const marker = L.marker(latlng, { icon }).addTo(map)
           .bindTooltip(label, { permanent: true, direction: 'top' });
@@ -1148,7 +1160,7 @@ async function loadPositions() {
         // Akkustand froren auf dem Stand der ersten Meldung ein, nur
         // die Deckkraft ging leise auf 0.45.
         if (!isBetreuer) {
-          markers[id].setTooltipContent(tooltipContent(displayName, bat, age, pos.avgKmh));
+          markers[id].setTooltipContent(tooltipContent(displayName, bat, age));
         }
         // Zuordnung kann sich waehrend des Rennens aendern - auch von
         // einem anderen Geraet aus. Der Vergleich in setzeRennFarbe()
@@ -1428,10 +1440,10 @@ async function loadActiveInfo() {
 }
 
 // =======================
-// RENNUHR UND SCHNITT
+// RENNUHR
 // =======================
 // Sekundengenau ohne Netzverkehr: der Takt laeuft lokal, die Grundlage
-// (Startzeit) kommt aus /active, der Schnitt aus /positions.
+// (Startzeit) kommt aus /active.
 function raceStartMsClient() {
   if (!activeInfo || !activeInfo.raceId) return null;
   if (activeInfo.actualStart) return { ms: activeInfo.actualStart, echt: true };
@@ -1440,16 +1452,6 @@ function raceStartMsClient() {
     if (!isNaN(t) && t <= Date.now()) return { ms: t, echt: false };
   }
   return null;
-}
-
-// Schnitt ueber alle Fahrer-Tracker, die aktuell melden. Betreuer und
-// Teamauto bleiben draussen - die fahren andere Wege.
-function feldSchnitt() {
-  const w = Object.values(lastPosData || {})
-    .filter(p => p && typeof p.avgKmh === 'number' && p.type !== 'betreuer')
-    .map(p => p.avgKmh);
-  if (!w.length) return null;
-  return Math.round(w.reduce((a, b) => a + b, 0) / w.length * 10) / 10;
 }
 
 // Handkorrektur des Rundenzaehlers. Die Automatik rechnet danach vom
@@ -1645,7 +1647,6 @@ function updateRaceClock() {
   const sek = Math.max(0, Math.floor((Date.now() - s.ms) / 1000));
   const zeit = `${Math.floor(sek / 3600)}:${String(Math.floor(sek / 60) % 60).padStart(2, '0')}`
              + `:${String(sek % 60).padStart(2, '0')}`;
-  const avg = feldSchnitt();
   // Zielrunde statt "4/4": im Auto zaehlt die Aussage, nicht die Zahl.
   let runde = '';
   if (activeInfo.currentLap) {
@@ -1665,7 +1666,6 @@ function updateRaceClock() {
   }
   el.innerHTML = `\u23F1 ${zeit}`
     + runde
-    + (avg !== null ? `<span class="rcAvg">\u00D8 ${avg.toFixed(1).replace('.', ',')} km/h</span>` : '')
     + naechsterPunktText();
   el.querySelectorAll('.rcLap').forEach(b => {
     b.addEventListener('click', ev => {

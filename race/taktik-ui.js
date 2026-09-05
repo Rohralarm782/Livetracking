@@ -118,6 +118,16 @@ function renderStripReiter() {
        + `${escH(String(lbl).slice(0, 6))}</div>`;
 }
 
+// Groesse einer Gruppe. Wie auf dem Garmin zaehlen DSQ und DNF nicht
+// mit: eine Spitzengruppe als "4x" zu melden, in der einer
+// disqualifiziert ist, waere schlicht falsch. Bis 2.9.0 stand dieselbe
+// Rechnung nur in renderStrip(); jetzt teilen sich Streifen und
+// Gruppenkarte eine Quelle, damit sie nie auseinanderlaufen.
+function aktivZahl(g) {
+  return ((g && g.riders) || []).filter(r =>
+    !(r && (r.status === 'dsq' || r.status === 'dnf'))).length;
+}
+
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
   // filter(Boolean) VOR dem Zaehlen: sonst zeigen die Verbindungslinien
@@ -128,8 +138,7 @@ function renderStrip(grps) {
   strip.classList.remove('hidden');
   strip.innerHTML = reiter + list.map((g, i) => {
     // Wie auf dem Garmin: DSQ und DNF zaehlen nicht mehr mit.
-    const cnt      = (g.riders||[]).filter(r =>
-      !(r && (r.status === 'dsq' || r.status === 'dnf'))).length;
+    const cnt      = aktivZahl(g);
     // g.name kann fehlen, wenn eine Gruppe ueber die API angelegt
     // wurde. Frueher warf .length hier - und weil pollGroups() den
     // Fehler schluckt, hoerte der Streifen einfach auf zu leben.
@@ -289,6 +298,22 @@ function renderTaktikBody() {
         rateHtml = `<div style="font-size:10px;margin-top:2px;text-align:right;color:${
           closing ? '#2e7d32' : '#c62828'}">${closing ? '\u25BC' : '\u25B2'} ${perMin} s/min${etaTxt}</div>`;
       }
+      // Gruppengroesse im Kopf, im Format des Garmin-Textes: die Zahl
+      // klebt am x und ist damit als Stueckzahl kenntlich - "4 0:15"
+      // laese sich wie zwei gleichrangige Zahlen.
+      const zahl    = aktivZahl(g);
+      const cntHtml = zahl > 0 ? `<span class="gc-cnt">${zahl}x</span>` : '';
+      // Rueckstand auf die Spitze: Summe der Zwischenabstaende bis
+      // hierher. Fehlt einer davon, gibt es keine Summe - lieber nichts
+      // als eine Zahl, die zu klein ist.
+      let spitzeSek = 0, spitzeOk = idx > 0;
+      for (let k = 1; k <= idx && spitzeOk; k++) {
+        const s = gapToSec(taktikGroups[k] && taktikGroups[k].gap);
+        if (s === null) spitzeOk = false; else spitzeSek += s;
+      }
+      const spitzeHtml = (spitzeOk && spitzeSek > 0)
+        ? `<div class="gc-spitze" title="R\u00FCckstand auf die Spitze">Spitze +${secToGap(spitzeSek)}</div>`
+        : '';
       const gapHtml = isLeading
         ? `<span style="font-size:12px;padding:3px 9px;border-radius:12px;background:#e8f5e9;color:#2e7d32">F\u00FChrend</span>`
         : authToken
@@ -390,10 +415,11 @@ function renderTaktikBody() {
           <div style="display:flex;align-items:center;gap:7px;min-width:0">
             <div class="gc-dot" style="background:${g.color}"></div>
             ${nameHtml}
+            ${cntHtml}
             ${typeof timingSrcBadge === 'function' ? timingSrcBadge(g) : ''}
             ${hfHtml}
           </div>
-          <div style="flex-shrink:0">${gapHtml}${rateHtml}</div>
+          <div style="flex-shrink:0;text-align:right">${gapHtml}${spitzeHtml}${rateHtml}</div>
         </div>
         ${riders.length > 0 ? `<div class="gc-sec">${riderRows}</div>` : ''}
         ${footer}

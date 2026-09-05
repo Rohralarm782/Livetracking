@@ -679,15 +679,37 @@ function zuGruppen(eintraege, optionen) {
   const spitze      = roh[0].sek;
   const gleich      = g => g.block === ersterBlock;
 
+  // Ab 2.10.0 ist `gap` der Rueckstand auf die Gruppe DAVOR - genau so,
+  // wie ihn der gesamte uebrige Taktik-Teil versteht: sanitizeGroups()
+  // und buildAutoText() in server.js, confirmSplit() in race/taktik.js
+  // und renderStrip() in race/taktik-ui.js rechnen alle damit.
+  // Bis 2.9.x stand hier der Rueckstand auf die SPITZE. Der Wert landete
+  // ueber applyVorschlag() unveraendert in groups[i].gap und wurde dort
+  // als Zwischenabstand gelesen - ab der dritten Gruppe war jede Zahl zu
+  // gross, und beim Loeschen der Spitzengruppe bezog sich der Rest auf
+  // eine Bezugsgroesse, die es nicht mehr gab.
+  // Der Rueckstand auf die Spitze geht nicht verloren: er ist die Summe
+  // der Zwischenabstaende und wird in der Gruppenkarte aufaddiert.
   return {
     modus: nachGleich ? 'gleich' : 'schwelle',
     verworfen,
-    gruppen: roh.map((g, i) => ({
-      riders:     g.nrs,
-      gap:        i === 0 ? null : (gleich(g) ? ausSekunden(g.sek - spitze) : null),
-      gapSek:     i === 0 ? 0    : (gleich(g) ? Math.round(g.sek - spitze)  : null),
-      messstelle: g.blockName || null
-    }))
+    gruppen: roh.map((g, i) => {
+      const vor = i === 0 ? null : roh[i - 1];
+      // Ueber Messstellen hinweg gibt es keinen belastbaren Abstand -
+      // beide Gruppen muessen an derselben Stelle gemessen worden sein.
+      const messbar = (vor !== null) && gleich(g) && gleich(vor);
+      const dSek    = messbar ? Math.round(g.sek - vor.sek) : null;
+      return {
+        riders:       g.nrs,
+        gap:          dSek === null ? null : ausSekunden(dSek),
+        gapSek:       i === 0 ? 0 : dSek,
+        // Rein informativ, wird derzeit von niemandem gelesen. Steht
+        // hier, damit ein spaeterer Leser die alte Bedeutung wiederfindet
+        // statt sie aus der Summe zurueckzurechnen.
+        gapSpitzeSek: i === 0 ? 0 : (gleich(g) ? Math.round(g.sek - spitze) : null),
+        messstelle:   g.blockName || null
+      };
+    })
   };
 }
 

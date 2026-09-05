@@ -1199,6 +1199,23 @@ let timingErkundung = Object.create(null);
 // Stand - uebernommen wird ausschliesslich durch den Anwender.
 let timingStand = Object.create(null);
 
+// Fingerabdruck eines Vorschlags: Startnummern je Gruppe, Abstand,
+// Hinweis. Zwei Staende mit demselben Abdruck sind fuer den Anwender
+// derselbe Vorschlag.
+// Bis 2.9.x bekam timingStand[].ts bei JEDEM Durchlauf Date.now() -
+// der Balken "Neuer Stand" blinkte alle 15 Sekunden, auch wenn sich
+// nichts bewegt hatte. Und "Verwerfen" loeschte den Stand, den der
+// naechste Abruf sofort identisch wieder hinlegte.
+function timingSignatur(gruppen, hinweis) {
+  const teile = (gruppen || []).map(g =>
+    (g.riders || []).slice().sort((a, b) => a - b).join(',') + '@' + (g.gap || ''));
+  return teile.join('|') + '#' + (hinweis || '');
+}
+
+// Welche Signatur je Rennen zuletzt verworfen oder uebernommen wurde.
+// Der Balken kommt erst wieder, wenn sich der Inhalt aendert.
+let timingErledigt = Object.create(null);
+
 // Betriebszustand. Sichtbar unter /health, damit ein Ausfall nicht
 // erst im Rennen auffaellt.
 let timingLauf = {
@@ -1271,23 +1288,65 @@ async function timingRunde(raceId) {
   const res = await rr.holeListe(ev.eventId, wahl.tab, cfg.key, wahl.name, rc.contest, ev.host);
   if (res.fehler) throw new Error(res.fehler);
 
-  const eintraege = rr.alsErgebnis(res);
+  const alleEintraege = rr.alsErgebnis(res);
+
+  // Nur wer im Rennen ist, darf die Einteilung bestimmen. Bis 2.9.x
+  // ging die Ergebnisliste ungefiltert in zuGruppen(): am 05.09.2026
+  // standen drei ausgeschiedene Fahrer vor dem Feld, wurden damit zur
+  // Spitzengruppe und haben jeden Abstand dahinter verschoben.
+  // Zwei Gruende schliessen aus:
+  //   * Startnummer nicht in races[].riders - fremdes Rennen
+  //   * Zustand dsq/dnf - aus der Wertung genommen
+  // Ohne Startliste wird nur der zweite Grund geprueft: sonst waere der
+  // Vorschlag fuer jedes noch nicht importierte Rennen leer, und das
+  // waere schlechter als der alte Zustand.
+  const kennt  = new Set(races[raceId].riders.map(r => Number(r.nr)));
+  const gegen  = kennt.size > 0;
+  const draus  = outNrs(raceId);
+  const eintraege   = [];
+  const ausgelassen = [];
+  for (const e of alleEintraege) {
+    const nr = Number(e.nr);
+    if (gegen && !kennt.has(nr)) { ausgelassen.push({ nr, grund: 'nicht im Rennen' }); continue; }
+    if (draus.has(nr))           { ausgelassen.push({ nr, grund: 'DSQ/DNF' });         continue; }
+    eintraege.push(e);
+  }
+
   const g = rr.zuGruppen(eintraege, { schwelle: rc.schwelle });
 
   // Bei fahrerscharfen Zeiten - Einzelzeitfahren, Prolog - entsteht
   // eine formal richtige, sachlich sinnlose Einteilung. Das gehoert
   // gesagt, nicht verschwiegen.
-  const hinweis = (g.modus === 'schwelle' && eintraege.length > 20 && g.gruppen.length <= 2)
+  // Bis 2.9.x lautete die Bedingung "Schwellenmodus, mehr als 20 Fahrer,
+  // hoechstens zwei Gruppen". Das beschreibt einen geschlossenen Bunch,
+  // nicht ein Zeitfahren - und es schwieg genau bei den ersten
+  // Zielankuenften, wo der Hinweis gebraucht wird.
+  // Ab 2.10.0 zaehlt das Verhaeltnis: wenn fast jede Gruppe aus einem
+  // einzigen Fahrer besteht, sind die Zeiten fahrerscharf. Der
+  // Listenname zaehlt zusaetzlich, weil der Zeitnehmer ihn ohnehin
+  // eindeutig vergibt.
+  const einzeln = g.gruppen.filter(x => (x.riders || []).length === 1).length;
+  const nameTT  = /time\s*trial|zeitfahren|prolog/i.test(String(wahl.name || ''));
+  const hinweis = (eintraege.length >= 3 && g.gruppen.length > 0
+                   && (nameTT || einzeln >= g.gruppen.length * 0.8))
     ? 'Zeiten sind fahrerscharf - vermutlich ein Zeitfahren. Gruppen mit Vorsicht.'
     : null;
 
+  const sig = timingSignatur(g.gruppen, hinweis);
+  const alt = timingStand[raceId];
   timingStand[raceId] = {
-    ts:      Date.now(),
-    liste:   wahl.name,
-    live:    !!wahl.live,
-    modus:   g.modus,
-    fahrer:  eintraege.length,
-    gruppen: g.gruppen,
+    // ts nur fortschreiben, wenn sich der Inhalt geaendert hat.
+    ts:          (alt && alt.sig === sig) ? alt.ts : Date.now(),
+    sig,
+    liste:       wahl.name,
+    live:        !!wahl.live,
+    modus:       g.modus,
+    fahrer:      eintraege.length,
+    gruppen:     g.gruppen,
+    // Bis 2.9.x wurde beides stillschweigend geschluckt. Wer im Auto
+    // eine Nummer vermisst, soll nicht raten muessen, warum sie fehlt.
+    verworfen:   Array.isArray(g.verworfen) ? g.verworfen : [],
+    ausgelassen,
     hinweis
   };
 }
@@ -1373,6 +1432,10 @@ function applyVorschlag(raceId, nurGid) {
     : neu;
 
   const sauber = sanitizeGroups(ziel);
+  // Ein vollstaendig uebernommener Vorschlag ist erledigt - sonst stuende
+  // der Balken "Neuer Stand" unmittelbar nach dem Uebernehmen wieder da.
+  // Bei einer einzelnen Gruppe bleibt er stehen: der Rest ist offen.
+  if (!nurGid && st.sig) timingErledigt[raceId] = st.sig;
   if (raceId === activeRaceId) { groups = sauber; syncGroupsToRace(); }
   else if (races[raceId])      { races[raceId].groups = sauber; }
   saveRacesToDisk();
@@ -2578,6 +2641,7 @@ function deactivateRace(id) {
   // Vorschlaege des beendeten Rennens verwerfen: ein alter Stand, der
   // nach dem Zieleinlauf stehenbleibt, liest sich wie ein aktueller.
   delete timingStand[id];
+  delete timingErledigt[id];
   timingNeuBewerten();
 }
 
@@ -3522,11 +3586,14 @@ app.post('/timing/apply', requireAuth, (req, res) => {
   res.json({ ok: true, groups: neu });
 });
 
-// Vorschlag verwerfen. Der naechste Abruf meldet sich neu - verworfen
-// wird ein Stand, nicht die Verbindung.
+// Vorschlag verwerfen. Verworfen wird ein Stand, nicht die Verbindung.
+// Bis 2.9.x wurde timingStand geloescht - der naechste Abruf legte
+// denselben Vorschlag 15 Sekunden spaeter identisch wieder hin, das
+// Verwerfen hielt also nie. Jetzt wird die Signatur vermerkt: der Balken
+// kommt erst zurueck, wenn sich der Inhalt tatsaechlich aendert.
 app.post('/timing/dismiss', requireAuth, (req, res) => {
   const { race } = req.body || {};
-  if (race && timingStand[race]) delete timingStand[race];
+  if (race && timingStand[race]) timingErledigt[race] = timingStand[race].sig || null;
   res.json({ ok: true });
 });
 
@@ -3536,12 +3603,17 @@ app.get('/timing/proposal', requireAuth, (req, res) => {
   const st  = rid ? timingStand[rid] : null;
   res.set('Cache-Control', 'no-store');
   if (!st) return res.json({ vorhanden: false });
+  // Von Hand verworfen oder bereits uebernommen: erst wieder melden,
+  // wenn sich der Inhalt aendert.
+  if (st.sig && timingErledigt[rid] === st.sig) return res.json({ vorhanden: false });
   const map = Object.create(null);
   if (races[rid]) for (const r of races[rid].riders) map[Number(r.nr)] = r;
   res.json({
     vorhanden: true, race: rid, ts: st.ts, modus: st.modus || null,
     liste: st.liste || null, live: !!st.live, hinweis: st.hinweis || null,
     leer: st.leer || null,
+    verworfen:   Array.isArray(st.verworfen)   ? st.verworfen   : [],
+    ausgelassen: Array.isArray(st.ausgelassen) ? st.ausgelassen : [],
     gruppen: (st.gruppen || []).map(g => ({
       gap: g.gap,
       riders: g.riders.map(nr => ({ nr, name: (map[nr] || {}).name || null,

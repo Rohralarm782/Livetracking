@@ -480,6 +480,25 @@ async function deleteGroup(gid) {
   const grp = taktikGroups.find(g => g.id === gid);
   const cnt = grp ? (grp.riders || []).length : 0;
   if (cnt > 0 && !confirm(`Gruppe \u201E${grp.name}\u201C mit ${cnt} Fahrer${cnt === 1 ? '' : 'n'} l\u00F6schen?`)) return;
+  // gap meint den Rueckstand auf die Gruppe DAVOR. Faellt eine Gruppe
+  // aus der Reihe, zeigt der Abstand der folgenden auf einen Vorgaenger,
+  // den es nicht mehr gibt. Bis 2.9.x wurde nur gefiltert - danach war
+  // die ganze Kette dahinter falsch, und beim Loeschen der ersten
+  // Gruppe blieb ein Wert stehen, den die Anzeige nicht mehr zeigt.
+  // confirmSplit() macht dasselbe seit jeher richtig.
+  const dIdx  = taktikGroups.findIndex(g => g.id === gid);
+  const dNach = dIdx >= 0 ? (taktikGroups[dIdx + 1] || null) : null;
+  if (dNach) {
+    if (dIdx === 0) {
+      // Die naechste Gruppe wird fuehrend und hat keinen Vordermann mehr.
+      dNach.gapPrev = dNach.gap;
+      dNach.gap     = null;
+    } else {
+      const summe = (gapToSec(grp && grp.gap) || 0) + (gapToSec(dNach.gap) || 0);
+      dNach.gapPrev = dNach.gap;
+      dNach.gap     = summe > 0 ? secToGap(summe) : null;
+    }
+  }
   taktikGroups = taktikGroups.filter(g => g.id !== gid);
   await saveGroups();
   renderTaktikBody();
@@ -554,6 +573,22 @@ async function confirmMerge(sourceGid, targetGid) {
   const src = taktikGroups.find(g => g.id === sourceGid);
   const tgt = taktikGroups.find(g => g.id === targetGid);
   if (!src || !tgt) return;
+  // Wie beim Loeschen: die Quellgruppe verschwindet aus der Reihe, ihr
+  // Abstand muss auf die folgende Gruppe uebergehen. Wandert eine Gruppe
+  // in ihren eigenen Nachfolger, ist nichts zu tun - der Abstand
+  // zwischen beiden entfaellt mit der Verschmelzung.
+  const mIdxSrc = taktikGroups.indexOf(src);
+  const mNach   = mIdxSrc >= 0 ? (taktikGroups[mIdxSrc + 1] || null) : null;
+  if (mNach && mNach !== tgt) {
+    if (mIdxSrc === 0) {
+      mNach.gapPrev = mNach.gap;
+      mNach.gap     = null;
+    } else {
+      const summeM = (gapToSec(src.gap) || 0) + (gapToSec(mNach.gap) || 0);
+      mNach.gapPrev = mNach.gap;
+      mNach.gap     = summeM > 0 ? secToGap(summeM) : null;
+    }
+  }
   tgt.riders = [...(tgt.riders||[]), ...(src.riders||[])];
   taktikGroups = taktikGroups.filter(g => g.id !== sourceGid);
   mergingGid = null;

@@ -157,11 +157,34 @@ function timingBanner() {
     <div class="zm-ttl">\u23F1 Neuer Stand</div>
     <div class="zm-meta">${escH(meta)}</div>
     ${timingProp.hinweis ? `<div class="zm-warn">\u26A0\uFE0F ${escH(timingProp.hinweis)}</div>` : ''}
+    ${zmAusgelassen()}
     <div class="zm-acts">
       <button class="btn zm-prim" data-action="timing-apply-all">\u00DCbernehmen</button>
       <button class="btn" data-action="timing-dismiss">Verwerfen</button>
     </div>
   </div>`;
+}
+
+// Nummern, die es nicht in den Vorschlag geschafft haben. Bis 2.9.x
+// wurden sie stillschweigend geschluckt - wer im Auto eine Nummer
+// vermisst, soll nicht raten muessen, warum sie fehlt.
+// Zwei Quellen: ausgelassen (nicht im Rennen oder DSQ/DNF, aussortiert
+// vom Server) und verworfen (unglaubwuerdige Messstelle, aussortiert in
+// zuGruppen). Beides wird knapp gehalten - der Balken ist kein Bericht.
+function zmAusgelassen() {
+  const aus = Array.isArray(timingProp.ausgelassen) ? timingProp.ausgelassen : [];
+  const vw  = Array.isArray(timingProp.verworfen)   ? timingProp.verworfen   : [];
+  if (aus.length === 0 && vw.length === 0) return '';
+  const teile = [];
+  if (aus.length) {
+    const nrs = aus.slice(0, 8).map(e => e.nr).join(', ');
+    teile.push(`${aus.length} nicht gewertet (${nrs}${aus.length > 8 ? ' \u2026' : ''})`);
+  }
+  if (vw.length) {
+    const nrs = vw.slice(0, 8).map(e => e.nr).join(', ');
+    teile.push(`${vw.length} unglaubw\u00FCrdig (${nrs}${vw.length > 8 ? ' \u2026' : ''})`);
+  }
+  return `<div class="zm-aus">\u2298 ${escH(teile.join(' \u00B7 '))}</div>`;
 }
 
 // Herkunftsmarke im Gruppenkopf.

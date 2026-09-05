@@ -178,6 +178,10 @@
       pointer-events: none;
     }
     #naechstePunkte.hidden { display: none; }
+    /* Grund statt stiller Ausblendung: der Kasten sagt, warum er leer
+       ist. Zurueckgenommen, damit er nicht wie eine Meldung wirkt. */
+    #naechstePunkte.grund { color: #90a4ae; }
+    #naechstePunkte .npG { padding: 3px 6px; white-space: nowrap; font-size: 12px; }
     #naechstePunkte .npZ {
       display: flex; align-items: center; gap: 7px;
       padding: 3px 6px; white-space: nowrap;
@@ -314,7 +318,6 @@
     @media (max-width: 560px) {
       #streckenBar .sbHint { flex-basis: 100%; order: 3; font-size: 12px; }
     }
-    #raceClock .rcAvg { color: #666; font-weight: 400; margin-left: 8px; }
     /* Naechster Streckenpunkt. Bricht auf schmalen Geraeten in eine
        eigene Zeile, damit die Uhr nicht aus dem Kasten laeuft. */
     #raceClock .rcNext {
@@ -867,6 +870,17 @@
     .gc-hdr   { padding: 11px 14px 9px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .gc-sec   { border-top: 1px solid #f0f0f0; padding: 9px 14px; }
     .gc-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    /* Gruppengroesse im Kopf. Zurueckgenommen wie der HF-Marker: die
+       Zahl soll im Blick liegen, aber den Namen nicht ueberstimmen. */
+    .gc-cnt   { flex-shrink: 0; font-size: 11px; font-weight: 600;
+                padding: 2px 6px; border-radius: 10px;
+                background: #f2f4f5; color: #555; border: 1px solid #e3e6e8;
+                font-variant-numeric: tabular-nums; }
+    /* Rueckstand auf die Spitze, unter dem Abstand zum Vordermann.
+       Grau und klein: im Auto zaehlt der Vordermann, die Spitze ist
+       Einordnung. */
+    .gc-spitze { font-size: 10px; color: #999; margin-top: 2px; white-space: nowrap;
+                 font-variant-numeric: tabular-nums; }
     .r-row    { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; }
     .r-nr     { background: #f0f0f0; color: #666; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 500; min-width: 26px; text-align: center; margin-top: 2px; flex-shrink: 0; }
     .r-name   { font-size: 13px; font-weight: 500; color: #333; }
@@ -1010,6 +1024,7 @@
     .zm-ttl  { font-size: 13px; font-weight: 600; color: #5e35b1; margin-bottom: 3px; }
     .zm-meta { font-size: 11px; color: #999; margin-bottom: 9px; }
     .zm-warn { font-size: 11.5px; color: #e65100; margin-bottom: 9px; line-height: 1.45; }
+    .zm-aus  { font-size: 11px; color: #888; margin-bottom: 9px; line-height: 1.45; }
     .zm-acts { display: flex; gap: 7px; }
     .zm-acts .btn { flex: 1; min-width: unset; padding: 7px 10px; font-size: 12.5px; }
     .btn.zm-prim { background: #ede7f6; border-color: #b39ddb; color: #5e35b1; font-weight: 600; }
