@@ -335,6 +335,9 @@ function zonenPlan(ids, gruppen) {
     if (!markerArt(g.typ).zone) return;
     g.eintraege.forEach(e => {
       if (e.m.sEnde === undefined || e.m.sEnde === null) return;
+      // Ohne Band bleibt die Linie stehen: es gibt nichts, was an ihre
+      // Stelle traete.
+      if (e.m.band === false) return;
       if (!plan[e.raceId]) return;
       plan[e.raceId].push([e.m.s, e.m.sEnde]);
     });
@@ -609,20 +612,32 @@ const MK_SYM_SPRINT = MK_SYM_KOPF
 const MK_SYM_BERG = MK_SYM_KOPF
   + '<circle cx="12" cy="12" r="10.6" fill="#d62828" stroke="#fff" stroke-width="2"/>'
   + '<path d="M5 16.8 L9.9 8.4 L12.9 12.4 L15 9.6 L19 16.8 Z" fill="#fff"/></svg>';
-const MK_SYM_FOOD = MK_SYM_KOPF
-  + '<circle cx="12" cy="12" r="10.6" fill="#1976d2" stroke="#fff" stroke-width="2"/>'
-  + '<path d="M8.2 6.2v3.2M10 6.2v3.2M11.8 6.2v3.2" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>'
+const MK_GLYPH_FOOD =
+    '<path d="M8.2 6.2v3.2M10 6.2v3.2M11.8 6.2v3.2" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>'
   + '<path d="M7.9 9.1h4.2v.9a2.1 2.1 0 0 1-4.2 0Z" fill="#fff"/>'
   + '<path d="M10 11.8v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>'
   + '<path d="M15.4 6.1c2.1 1.1 2.1 4.9 0 5.9Z" fill="#fff"/>'
-  + '<path d="M15.4 11.6v6.2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  + '<path d="M15.4 11.6v6.2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>';
+const MK_SYM_FOOD = MK_SYM_KOPF
+  + '<circle cx="12" cy="12" r="10.6" fill="#1976d2" stroke="#fff" stroke-width="2"/>'
+  + MK_GLYPH_FOOD + '</svg>';
+
+// Zonenende. Dasselbe Schild, gedaempft und durchgestrichen - der
+// Strich liegt zweimal uebereinander, weiss als Kontur und rot darauf,
+// damit er auch auf dunklem Kartengrund steht.
+const MK_SYM_FOOD_ENDE = MK_SYM_KOPF
+  + '<circle cx="12" cy="12" r="10.6" fill="#5b7fa6" stroke="#fff" stroke-width="2"/>'
+  + '<g opacity=".75">' + MK_GLYPH_FOOD + '</g>'
+  + '<path d="M4.6 19.4 L19.4 4.6" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>'
+  + '<path d="M4.6 19.4 L19.4 4.6" stroke="#c62828" stroke-width="2" stroke-linecap="round"/></svg>';
 
 const MARKER_ART = {
   start:       { icon: '\u{1F6A9}', label: 'Start',        farbe: '#2e7d32', zone: false },
   wertung:     { icon: '\u{1F3C5}', svg: MK_SYM_SPRINT, label: 'Sprint',       farbe: '#1565c0', zone: false },
   berg:        { icon: '\u26F0\uFE0F', svg: MK_SYM_BERG, label: 'Bergwertung', farbe: '#6d4c41', zone: false },
-  verpflegung: { icon: '\u{1F34C}', svg: MK_SYM_FOOD, label: 'Verpflegung',  farbe: '#ef6c00', zone: true  },
-  frei:        { icon: '\u{1F4CC}', label: 'Punkt',        farbe: '#6a1b9a', zone: true  },
+  verpflegung: { icon: '\u{1F34C}', svg: MK_SYM_FOOD, svgEnde: MK_SYM_FOOD_ENDE,
+                 label: 'Verpflegung',  farbe: '#ef6c00', zoneFarbe: '#1976d2', zone: true  },
+  frei:        { icon: '\u{1F4CC}', label: 'Punkt',        farbe: '#6a1b9a', zoneFarbe: '#6a1b9a', zone: true  },
   zwischenzeit:{ icon: '\u23F1\uFE0F', label: 'ZZ',         farbe: '#00838f', zone: false }
 };
 
@@ -784,6 +799,18 @@ function markerIcon(typ) {
   });
 }
 
+// Das Schild am Ende einer Zone. Wo es ein gezeichnetes Schild gibt,
+// steht dafuer eine eigene Fassung bereit; sonst bekommt die weisse
+// Scheibe den Strich aus dem Stilblatt (.lt-mk-ende).
+function markerIconEnde(typ) {
+  const a = markerArt(typ);
+  return L.divIcon({
+    className: '', iconSize: [24, 24], iconAnchor: [12, 12],
+    html: a.svgEnde
+       || `<div class="lt-mk lt-mk-ende" style="border-color:${a.farbe}">${a.icon}</div>`
+  });
+}
+
 // Punkte verschiedener Rennen, die an derselben Stelle liegen, werden
 // zu einem Symbol zusammengefasst. Drei Bedingungen muessen alle
 // zutreffen:
@@ -825,14 +852,51 @@ function sammleMarker() {
   return gruppen;
 }
 
-function clusterText(g) {
+// Dieselbe Sammlung fuer die ENDEN der Zonen, in einer eigenen Liste.
+// Zusammen mit den Anfaengen wuerde eine sehr kurze Zone sonst beide
+// Schilder in dieselbe Gruppe legen und eines davon verschlucken.
+//
+// Das Ende wird auch dann gezeichnet, wenn das Band abgeschaltet ist -
+// gerade dann ist es das einzige, was den Abschnitt begrenzt.
+function sammleZonenEnden() {
+  const gruppen = [];
+  sichtbareRaceIds().forEach(rid => {
+    if ((gpxByRace[rid] || []).length < 2) return;
+    const s = (typeof steckbriefOf === 'function') ? steckbriefOf(rid) : null;
+    const liste = (s && Array.isArray(s.marker)) ? s.marker : [];
+    liste.forEach(m => {
+      if (!m || !markerArt(m.typ).zone) return;
+      if (m.sEnde === undefined || m.sEnde === null) return;
+      const p = gpxPointAt(m.sEnde, rid);
+      if (!p) return;
+      const kurs = gpxBearingAt(m.sEnde, rid);
+      const treffer = gruppen.find(g =>
+        g.typ === m.typ
+        && distMeters(g.lat, g.lon, p[0], p[1]) <= MK_CLUSTER_M
+        && winkelDiff(g.kurs, kurs) < MK_CLUSTER_GRAD);
+      if (treffer) treffer.eintraege.push({ raceId: rid, m });
+      else gruppen.push({ typ: m.typ, lat: p[0], lon: p[1], kurs,
+                          eintraege: [{ raceId: rid, m }] });
+    });
+  });
+  return gruppen;
+}
+
+// ende = true beschriftet die Gruppe als Zonenende und zeigt je Rennen
+// den Kilometer des Endes statt der Spanne.
+function clusterText(g, ende) {
   const a = markerArt(g.typ);
-  const kopf = `${a.icon} ${g.eintraege[0].m.name || a.label}`;
+  const name = g.eintraege[0].m.name || a.label;
+  const kopf = ende ? `${a.icon} Ende ${name}` : `${a.icon} ${name}`;
   const zeilen = g.eintraege.map(e => {
     const nm = (typeof raceLabel === 'function') ? raceLabel(e.raceId, true) : e.raceId;
-    let z = `<span class="lt-tt-d" style="background:${rennFarbe(e.raceId)}"></span>${nm}`
-          + ` \u00B7 ${kmText(e.m.s)}`;
-    if (e.m.sEnde !== undefined && e.m.sEnde !== null) z += ` \u2013 ${kmText(e.m.sEnde)}`;
+    let z = `<span class="lt-tt-d" style="background:${rennFarbe(e.raceId)}"></span>${nm}`;
+    if (ende) {
+      z += ` \u00B7 ${kmText(e.m.sEnde)}`;
+    } else {
+      z += ` \u00B7 ${kmText(e.m.s)}`;
+      if (e.m.sEnde !== undefined && e.m.sEnde !== null) z += ` \u2013 ${kmText(e.m.sEnde)}`;
+    }
     if (Array.isArray(e.m.runden) && e.m.runden.length) z += ` \u00B7 Runde ${e.m.runden.join(', ')}`;
     return `<div class="lt-tt-r">${z}</div>`;
   }).join('');
@@ -845,22 +909,31 @@ function drawRaceMarker() {
   clearRaceMarker();
   const gruppen = sammleMarker();
 
-  // Zonen: jede fuer sich, in der Farbe ihres Rennens. Ein
-  // Zusammenlegen wuerde die Grenzen verwischen.
+  // Zonen: jede fuer sich. Ein Zusammenlegen wuerde die Grenzen
+  // verwischen.
   //
   // Bis 2.6.3 lag die Zone als blasses breites Band auf der Fahrbahn.
   // Seit die Spuren versetzt sind, verschwand sie darunter - das Band
   // aus drei Spuren und Konturen ist breiter als die Zone selbst. Jetzt
   // laeuft die Zone auf der Spur ihres Rennens und tritt dort an die
   // Stelle der Linie, die zeichneStrecken() genau fuer diesen Abschnitt
-  // ausspart. Sie ist deshalb kraeftig statt blass und etwas staerker
-  // als die Linie: die Spur schwillt auf dem Zonenabschnitt an, und es
-  // bleibt eindeutig, zu welchem Rennen sie gehoert.
+  // ausspart.
+  //
+  // Seit 2.9.0 in der Farbe des Schildes statt der des Rennens: in der
+  // Rennfarbe war die Zone nur dieselbe Linie, drei Pixel dicker, und
+  // damit praktisch nicht zu erkennen. Welchem Rennen sie gehoert,
+  // sagt weiterhin die Spurlage - das Band liegt auf dem Versatz seines
+  // Rennens.
   gruppen.forEach(g => {
     const a = markerArt(g.typ);
     if (!a.zone) return;
     g.eintraege.forEach(e => {
       if (e.m.sEnde === undefined || e.m.sEnde === null) return;
+      // Ohne Band bleiben nur die beiden Schilder stehen. Gedacht fuer
+      // lange Abschnitte - etwa die Strecke, auf der aus dem Fahrzeug
+      // verpflegt werden darf: ein Band ueber 40 km wuerde die Karte
+      // beherrschen, ohne mehr zu sagen als Anfang und Ende.
+      if (e.m.band === false) return;
       const pts = gpxSlice(e.m.s, e.m.sEnde, e.raceId);
       if (pts.length > 1) {
         // So stark wie die weisse Kontur breit ist: die Zone fuellt die
@@ -870,7 +943,7 @@ function drawRaceMarker() {
         // ragen.
         const eigen = (typeof meinRaceId === 'function') && meinRaceId() === e.raceId;
         markerLayer.push(L.polyline(versetzteCoords(pts, gpxVersatz[e.raceId] || 0), {
-          color: rennFarbe(e.raceId), weight: eigen ? 8 : 7, opacity: 0.9,
+          color: a.zoneFarbe || rennFarbe(e.raceId), weight: eigen ? 8 : 7, opacity: 0.9,
           lineCap: 'butt', interactive: false
         }).addTo(map));
       }
@@ -882,6 +955,13 @@ function drawRaceMarker() {
       L.marker([g.lat, g.lon], { icon: markerIcon(g.typ), interactive: false })
         .addTo(map)
         .bindTooltip(clusterText(g), { direction: 'top', className: 'lt-tt' }));
+  });
+
+  sammleZonenEnden().forEach(g => {
+    markerLayer.push(
+      L.marker([g.lat, g.lon], { icon: markerIconEnde(g.typ), interactive: false })
+        .addTo(map)
+        .bindTooltip(clusterText(g, true), { direction: 'top', className: 'lt-tt' }));
   });
 }
 

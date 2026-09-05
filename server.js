@@ -3113,8 +3113,16 @@ app.post('/races/:id/marker', requireSpolei, (req, res) => {
     } else if (b.sEnde !== undefined) {
       e.sEnde = (b.sEnde === null || b.sEnde === '') ? null : Math.round(faltenAufRunde(r.id, b.sEnde));
     }
+    // Soll der Abschnitt auf der Karte eingefaerbt werden? Fuer lange
+    // Zonen - etwa die Strecke, auf der aus dem Fahrzeug verpflegt
+    // werden darf - reichen die beiden Schilder. Wer das Feld nicht
+    // mitschickt (Karte antippen, alte Bestaende), behaelt seinen Wert
+    // und bekommt sonst die Vorgabe true.
+    if (b.band !== undefined) e.band = (b.band !== false);
+    else if (e.band === undefined) e.band = true;
   } else {
     delete e.sEnde;
+    delete e.band;
   }
 
   if (b.runden !== undefined) e.runden = normalizeRunden(b.runden);

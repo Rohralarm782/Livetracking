@@ -441,11 +441,15 @@ function markerBlockHtml(r) {
       ? ` \u2013 ${mkKm(m.sEnde)}` : '';
     const runden = (Array.isArray(m.runden) && m.runden.length)
       ? ` \u00B7 Runde ${m.runden.join(', ')}` : '';
+    // Nur bei einer echten Zone: ohne Ende gibt es nichts einzufaerben.
+    const ohneBand = (a.zone && m.band === false
+                      && m.sEnde !== undefined && m.sEnde !== null)
+      ? ' \u00B7 ohne Band' : '';
     h += `<div class="mk-zeile">
       <span class="mk-icon">${mkSym(a)}</span>
       <div style="flex:1;min-width:0">
         <div class="mk-name">${escH(m.name || a.label)}</div>
-        <div class="mk-meta">km ${mkKm(m.s)}${bereich}${runden}</div>
+        <div class="mk-meta">km ${mkKm(m.s)}${bereich}${runden}${ohneBand}</div>
       </div>
       <button class="btn" data-action="mk-edit" data-id="${r.id}" data-mid="${m.id}"
         style="padding:4px 8px;font-size:12px">\u270E</button>
@@ -475,7 +479,11 @@ function markerBlockHtml(r) {
         <input type="text" id="mkKmEnde" inputmode="decimal"
                value="${m && m.sEnde !== undefined && m.sEnde !== null ? mkKm(m.sEnde) : ''}"
                placeholder="Ende km (leer = Punkt statt Zone)" aria-label="Ende in Kilometern">
-      </div>` : ''}
+      </div>
+      <label class="mkBandZ">
+        <input type="checkbox" id="mkBand" ${(!m || m.band !== false) ? 'checked' : ''}>
+        Zone auf der Karte einf\u00E4rben
+      </label>` : ''}
       <input type="text" id="mkRunden"
              value="${m && Array.isArray(m.runden) ? m.runden.join(', ') : ''}"
              placeholder="Runden, z.\u202FB. 2, 4 \u2013 leer = jede Runde">
@@ -721,6 +729,8 @@ evBody.addEventListener('click', function (e) {
         const e = mkMeter('#mkKmEnde');
         if (e === undefined) { showToast('\u26A0\uFE0F Ende bitte als Kilometer, z.\u202FB. 3,60'); break; }
         felder.sEnde = e;   // null loescht die Ausdehnung
+        const cb = document.querySelector('#mkBand');
+        felder.band = cb ? !!cb.checked : true;
       }
       guard(async () => {
         const d = await saveMarker(id, felder);
