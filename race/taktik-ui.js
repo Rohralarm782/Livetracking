@@ -128,6 +128,78 @@ function aktivZahl(g) {
     !(r && (r.status === 'dsq' || r.status === 'dnf'))).length;
 }
 
+// Soviele Gruppen zeigt der Streifen einzeln. Bis 2.10.0 zeigte er
+// alle: am Renntag standen neun Gruppen darin, der Streifen lief oben
+// und unten aus dem Bild, und im fahrenden Auto war nicht mehr zu
+// erkennen, wo das Feld steht. Der Wert steht bewusst als Konstante
+// und nicht als Einstellung - eine Schraube mehr im Menue loest das
+// Problem nicht, sie verschiebt es.
+const STRIP_MAX = 5;
+
+// Teilt die Gruppen in Posten: einzeln gezeigte Gruppen und
+// zusammengefasste Bloecke ("Rest"). Ein Block deckt immer
+// AUFEINANDERFOLGENDE Gruppen ab - das ist die Bedingung dafuer, dass
+// die Abstaende stimmen bleiben: gap ist seit 2.10.0 der Rueckstand auf
+// die Gruppe davor, und zwischen zwei Posten ist das genau der Wert der
+// ersten Gruppe des naechsten Postens.
+function stripPosten(list) {
+  // Ein Rest, der genau eine Gruppe verdeckt, braucht dieselbe Zeile
+  // und nimmt nur Name und Farbe weg. Deshalb wird erst eingeklappt,
+  // wenn mindestens zwei Gruppen darin landen.
+  if (list.length <= STRIP_MAX + 1) return list.map(g => ({ rest: false, gs: [g] }));
+  // Das Hauptfeld bleibt immer sichtbar: bei vielen Ausreissern rutscht
+  // es hinter Platz 5 und waere sonst ausgerechnet die Gruppe, die im
+  // Rest verschwindet. Gleiche Regel wie im Server und in
+  // mainGroupIdx(): ausdruecklicher Marker, sonst die letzte Gruppe.
+  let mi = list.findIndex(g => g && g.main === true);
+  if (mi < 0) mi = list.length - 1;
+  const sicht = new Set();
+  for (let i = 0; i < STRIP_MAX; i++) sicht.add(i);
+  if (!sicht.has(mi)) { sicht.delete(STRIP_MAX - 1); sicht.add(mi); }
+  const posten = [];
+  list.forEach((g, i) => {
+    const letzter = posten[posten.length - 1];
+    if (!sicht.has(i) && letzter && letzter.rest) { letzter.gs.push(g); return; }
+    posten.push({ rest: !sicht.has(i), gs: [g] });
+  });
+  // Wird das Hauptfeld nach vorne geholt, koennen zwei Bloecke
+  // entstehen - einer davor, einer dahinter. Enthaelt einer davon nur
+  // eine Gruppe, wird sie wieder ausgeschrieben (gleicher Grund wie oben).
+  posten.forEach(p => { if (p.rest && p.gs.length === 1) p.rest = false; });
+  return posten;
+}
+
+// Eine gewoehnliche Kachel. Inhalt unveraendert seit 2.10.0, nur aus
+// renderStrip() herausgeloest.
+function stripKachel(g) {
+  // g.name kann fehlen, wenn eine Gruppe ueber die API angelegt
+  // wurde. Frueher warf .length hier - und weil pollGroups() den
+  // Fehler schluckt, hoerte der Streifen einfach auf zu leben.
+  const nm  = String(g.name || 'Gruppe');
+  const lbl = nm.length > 7 ? nm.slice(0, 6) + '.' : nm;
+  // Wie auf dem Garmin: DSQ und DNF zaehlen nicht mehr mit.
+  return `<div class="strip-grp">
+      <div class="strip-dot" style="background:${g.color}"></div>
+      <div class="strip-name">${escH(lbl)}</div>
+      <div class="strip-cnt">${aktivZahl(g)}</div>
+    </div>`;
+}
+
+// Die zusammengefasste Kachel. Grosse Zahl ist die Fahrerzahl - das ist
+// die Groesse, mit der auch jede andere Kachel beschriftet ist. Darunter
+// klein die Zahl der Gruppen, damit "Rest 6" nicht mit einer einzelnen
+// Sechsergruppe zu verwechseln ist.
+function stripRest(gs) {
+  const fahrer = gs.reduce((s, g) => s + aktivZahl(g), 0);
+  const titel  = gs.map(g => String(g.name || 'Gruppe') + ': ' + aktivZahl(g)).join(' \u00B7 ');
+  return `<div class="strip-grp strip-rest" title="${escH(titel)}">
+      <div class="strip-dot"></div>
+      <div class="strip-name">Rest</div>
+      <div class="strip-cnt">${fahrer}</div>
+      <div class="strip-sub">${gs.length} Gr.</div>
+    </div>`;
+}
+
 function renderStrip(grps) {
   const strip = document.getElementById('taktikStrip');
   // filter(Boolean) VOR dem Zaehlen: sonst zeigen die Verbindungslinien
@@ -136,27 +208,21 @@ function renderStrip(grps) {
   const reiter = renderStripReiter();
   if (list.length === 0 && !reiter) { strip.classList.add('hidden'); return; }
   strip.classList.remove('hidden');
-  strip.innerHTML = reiter + list.map((g, i) => {
-    // Wie auf dem Garmin: DSQ und DNF zaehlen nicht mehr mit.
-    const cnt      = aktivZahl(g);
-    // g.name kann fehlen, wenn eine Gruppe ueber die API angelegt
-    // wurde. Frueher warf .length hier - und weil pollGroups() den
-    // Fehler schluckt, hoerte der Streifen einfach auf zu leben.
-    const nm       = String(g.name || 'Gruppe');
-    const lbl      = nm.length > 7 ? nm.slice(0, 6) + '.' : nm;
-    const nextGap  = list[i + 1] ? list[i + 1].gap  : null;
-    const nextPrev = list[i + 1] ? list[i + 1].gapPrev : null;
-    const conn     = i < list.length - 1
+  const posten = stripPosten(list);
+  strip.innerHTML = reiter + posten.map((p, i) => {
+    // Der Abstand an der Linie gehoert zu dem, was DARUNTER kommt -
+    // unveraenderte Regel, nur zeigt sie jetzt auf die erste Gruppe des
+    // naechsten Postens statt auf die naechste Gruppe der Liste.
+    const nx       = posten[i + 1] ? posten[i + 1].gs[0] : null;
+    const nextGap  = nx ? nx.gap : null;
+    const nextPrev = nx ? nx.gapPrev : null;
+    const conn     = nx
       ? `<div class="strip-conn">
            <div class="strip-line"></div>
            <div class="strip-gap">${nextGap ? '+' + escH(nextGap) : '\u2013'}${trendArrow(nextGap, nextPrev)}</div>
            <div class="strip-line"></div>
          </div>` : '';
-    return `<div class="strip-grp">
-      <div class="strip-dot" style="background:${g.color}"></div>
-      <div class="strip-name">${escH(lbl)}</div>
-      <div class="strip-cnt">${cnt}</div>
-    </div>${conn}`;
+    return (p.rest ? stripRest(p.gs) : stripKachel(p.gs[0])) + conn;
   }).join('');
   // Der Kopf ist reine Beschriftung und faengt nichts ab: ein Tipp auf
   // den Streifen soll die Taktik oeffnen, egal wo er landet. Das eigene

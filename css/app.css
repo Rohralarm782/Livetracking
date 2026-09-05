@@ -849,6 +849,15 @@
     .strip-conn  { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
     .strip-line  { width: 1px; height: 8px; background: #ccc; }
     .strip-gap   { font-size: 11px; font-weight: 500; color: #aaa; }
+    /* ZUSAMMENGEFASSTE GRUPPEN ("Rest"). Bewusst grau statt bunt: der
+       Block hat keine eigene Farbe auf der Karte, und ein farbiger
+       Punkt wuerde eine Gruppe vortaeuschen, die es nicht gibt. */
+    .strip-rest .strip-dot  { background: #b0bec5; }
+    .strip-rest .strip-name { color: #78909c; }
+    .strip-rest .strip-cnt  { color: #546e7a; }
+    /* Zweite Zeile der Rest-Kachel: wie viele Gruppen darin stecken.
+       Klein und grau - die Fahrerzahl darueber bleibt die Hauptzahl. */
+    .strip-sub   { font-size: 9px; color: #b0bec5; line-height: 1.1; margin-top: 1px; }
 
     /* TAKTIK VOLLANSICHT */
     #taktikView {
