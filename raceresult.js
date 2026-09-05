@@ -22,6 +22,11 @@
 //     "…Road Race Start List". Namen werden daher NIE zwischengespeichert,
 //     sondern vor jedem Abruf frisch aus der config gelesen.
 //   * Nicht jede in der config genannte Liste ist auch abrufbar.
+//
+// Modulstand 2.9.1 (05.09.2026): LIVE-Listen mit zweistufiger
+// Gruppierung (Contest -> letzte Messstelle) werden gelesen, ihre
+// Zeitspalte erkannt und blockweise zu Gruppen verrechnet. Beobachtet
+// am 05.09.2026 an Event 409896 waehrend des laufenden Rennens.
 
 const BASIS_HOST = 'my.raceresult.com';
 const TIMEOUT_MS = 12000;
@@ -92,7 +97,14 @@ async function holeConfig(eventId, tab, host) {
       contest: String(l.Contest === undefined || l.Contest === null ? '' : l.Contest),
       name:    String(l.Name || ''),
       zeigeAls: String(l.ShowAs || l.Name || ''),
-      live:    !!l.Live
+      live:    !!l.Live,
+      // Der Zeitnehmer blendet Listen aus, die nicht gelten sollen.
+      // Am 05.09.2026 an Event 409896 haelt er je Contest eine
+      // "LIVE Time Trial" auf hidden bereit - sie fuehrt die Zeiten
+      // der Zeitfahr-Etappe und hat volle 124 Zeilen. Seit die
+      // Zeitspalte der LIVE-Listen erkannt wird, haette sie im
+      // laufenden Strassenrennen die richtige Liste verdraengt.
+      versteckt: String(l.Mode || '').toLowerCase() === 'hidden'
     })).filter(l => l.name)
   };
 }
@@ -110,29 +122,67 @@ async function holeListe(eventId, tab, key, listname, contest, host) {
   const d = r.daten;
   if (!d || d.error) return { fehler: (d && d.error) || 'leere Antwort' };
   if (!Array.isArray(d.DataFields)) return { fehler: 'Antwort ohne Spalten' };
+  const fl = flachMitBlock(d.data);
   return {
     spalten:  d.DataFields,
     felder:   (d.list && Array.isArray(d.list.Fields)) ? d.list.Fields : [],
-    zeilen:   flachZeilen(d.data),
+    zeilen:   fl.zeilen,
+    bloecke:  fl.bloecke,
+    blockNamen: fl.namen,
     intervall: (typeof d.LiveUpdateInterval === 'number' && d.LiveUpdateInterval > 0)
                  ? d.LiveUpdateInterval : null
   };
 }
 
 // data ist eine Liste von Zeilen - oder, sobald der Zeitnehmer eine
-// Gruppierung eingestellt hat, ein Objekt aus solchen Listen. Beides
-// kommt vor, also wird beides flachgezogen.
-function flachZeilen(data) {
-  if (Array.isArray(data)) return data.filter(Array.isArray);
-  if (data && typeof data === 'object') {
-    const out = [];
-    for (const v of Object.values(data)) {
-      if (Array.isArray(v)) for (const z of v) if (Array.isArray(z)) out.push(z);
+// Gruppierung eingestellt hat, ein Objekt aus solchen Listen - oder,
+// bei den LIVE-Listen, ein Objekt aus Objekten aus solchen Listen:
+// erst der Contest, darunter die zuletzt passierte Messstelle.
+//
+//   "#1_U17 Maennlich": {
+//       "#1_3. GPM Oefingen - 54.2 km": [ ... ],
+//       "#2_1. GPM Aasen - 5.1 km":     [ ... ],
+//       "#4_Start":                     [ ... ] }
+//
+// Bis 2.9.0 wurde nur eine Ebene verstanden. Fuer die LIVE-Liste kam
+// deshalb null Zeilen heraus, sie fiel durch bewerteListe() - und im
+// Rennen entstand nie ein Gruppenvorschlag. Am 05.09.2026 an Event
+// 409896 in allen drei laufenden Rennen so gemessen.
+//
+// Die Blattlisten sind nicht gleichwertig: sie stehen fuer
+// verschiedene Messstellen, und race|result ordnet sie vom weitesten
+// Punkt abwaerts. Zeiten aus zwei Blaettern sind NICHT vergleichbar -
+// deshalb wird zu jeder Zeile der Blattindex mitgefuehrt.
+//
+// Getrennt wird nur bei echter Verschachtelung (Tiefe >= 2). Eine
+// einstufige Gruppierung - etwa nach Altersklasse - fuehrt weiter zu
+// genau einem Block, damit sich das erprobte Verhalten der
+// Ergebnislisten nicht aendert.
+function flachMitBlock(data) {
+  const zeilen = [], bloecke = [], namen = [];
+  let tiefe = 0;
+
+  const lauf = (v, ebene, label) => {
+    if (Array.isArray(v)) {
+      const nur = v.filter(Array.isArray);
+      if (ebene > tiefe) tiefe = ebene;
+      const b = namen.length;
+      namen.push(String(label || '').replace(/^#\d+_/, ''));
+      for (const z of nur) { zeilen.push(z); bloecke.push(b); }
+      return;
     }
-    return out;
-  }
-  return [];
+    if (v && typeof v === 'object' && ebene < 4) {
+      for (const [k, w] of Object.entries(v)) lauf(w, ebene + 1, k);
+    }
+  };
+  lauf(data, 0, '');
+
+  if (tiefe < 2) return { zeilen, bloecke: bloecke.map(() => 0), namen: [''] };
+  return { zeilen, bloecke, namen };
 }
+
+// Rueckwaertskompatible Huelle: liefert nur die Zeilen.
+function flachZeilen(data) { return flachMitBlock(data).zeilen; }
 
 // ---------------------------------------------------------------------
 // Erkundung: welche Reiter, welche Rennen, welche Listen
@@ -182,6 +232,7 @@ async function erkunde(eingabe) {
         name:     l.name,
         zeigeAls: l.zeigeAls,
         live:     l.live,
+        versteckt: l.versteckt,
         abrufbar: !res.fehler,
         zeilen:   res.fehler ? 0 : res.zeilen.length,
         art:      res.fehler ? null : artDerListe(res),
@@ -236,7 +287,12 @@ const MUSTER = {
   jahr:   [/\[?YEAR\]?/i, /\[?JAHRGANG\]?/i],
   nation: [/NATION\.IOCNAME/i],
   platz:  [/StageRank/i, /DisplayPlace/i, /\bRank\(/i, /^RANK\d?$/i],
-  zeit:   [/TTDisplayTime/i, /StageTime/i, /^TIMETEXT$/i, /ChipTime/i, /GunTime/i],
+  // LastSplit( bewusst ganz hinten: es ist die Zeit an der zuletzt
+  // passierten Messstelle und damit die einzige Zeitangabe, die die
+  // LIVE-Liste fuehrt. Echte Zeitspalten sollen weiter vorgehen.
+  // LastSplitID( trifft das Muster nicht - dort folgt kein "(".
+  zeit:   [/TTDisplayTime/i, /StageTime/i, /^TIMETEXT$/i, /ChipTime/i, /GunTime/i,
+           /LastSplit\s*\(/i],
   rueck:  [/GapTimeTop/i, /GapTime/i]
 };
 
@@ -382,8 +438,11 @@ function alsFahrer(res) {
 
 function alsErgebnis(res) {
   const i = zuordnung(res);
+  const bl    = Array.isArray(res.bloecke) ? res.bloecke : null;
+  const namen = Array.isArray(res.blockNamen) ? res.blockNamen : [];
   const out = [];
-  for (const z of res.zeilen) {
+  for (let k = 0; k < res.zeilen.length; k++) {
+    const z = res.zeilen[k];
     // Zwingend dieselbe Wahl wie in alsFahrer: die Gruppen werden ueber
     // diese Nummern gegen races[].riders aufgeloest. Weichen beide
     // Seiten voneinander ab, zeigt jede Gruppe Nummern ohne Namen.
@@ -397,6 +456,10 @@ function alsErgebnis(res) {
       platz: i.platz !== undefined ? Number(String(sauber(z[i.platz])).replace(/\D/g, '')) : null
     };
     if (Number.isFinite(voll) && voll > 0 && voll !== nr) e.nrVoll = voll;
+    // Messstelle mitfuehren: Zeiten aus zwei Bloecken sind nicht
+    // vergleichbar, das entscheidet erst zuGruppen().
+    e.block     = bl ? (bl[k] || 0) : 0;
+    e.blockName = bl ? String(namen[bl[k]] || '') : '';
     if (!e.zeit && !e.rueck) continue;   // ohne Zeit keine Gruppe
     out.push(e);
   }
@@ -461,6 +524,60 @@ function ausSekunden(sek) {
 // steht dort 'schwelle', waren die Zeiten fahrerscharf - bei einem
 // Einzelzeitfahren kommt dann eine formal richtige, sachlich sinnlose
 // Gruppeneinteilung heraus, und die Oberflaeche muss das sagen duerfen.
+// Fehl-Lesungen. Ein einzelner Streu-Treffer an einer weit voraus
+// liegenden Messstelle wuerde sonst die Spitzengruppe anfuehren. Am
+// 05.09.2026 an Event 409896 zweimal gleichzeitig im Feld:
+//
+//   Contest 4: eine Nummer an "3. GPM Oefingen - 54.2 km" mit 09'53''
+//              - das waeren 329 km/h.
+//   Contest 5: eine Nummer an "Ziel" mit 20'07'', waehrend das Feld
+//              bei km 15,2 schon 28'59'' gebraucht hatte - wer weiter
+//              ist, kann nicht weniger Zeit verbraucht haben.
+//
+// Beide Regeln greifen nur bei Bloecken mit hoechstens drei Fahrern
+// und nie beim groessten Block. Eine echte Ausreisser-Gruppe an der
+// naechsten Messstelle hat eine GROESSERE Zeit als das Feld an der
+// vorherigen und bleibt damit unangetastet - genau die Gruppe, auf die
+// es im Rennen ankommt.
+const BLOCK_MAX_KMH = 70;
+const BLOCK_KLEIN   = 3;
+
+function verdaechtigeBloecke(mitZeit) {
+  const b = new Map();
+  for (const e of mitZeit) {
+    let v = b.get(e.block);
+    if (!v) { v = { n: 0, min: Infinity, max: -Infinity, name: e.blockName || '' }; b.set(e.block, v); }
+    v.n++;
+    if (e.sek < v.min) v.min = e.sek;
+    if (e.sek > v.max) v.max = e.sek;
+  }
+  if (b.size < 2) return new Set();
+
+  const groesster = Math.max(...[...b.values()].map(v => v.n));
+  const ids = [...b.keys()].sort((x, y) => x - y);
+  const raus = new Set();
+
+  for (const id of ids) {
+    const v = b.get(id);
+    if (v.n > BLOCK_KLEIN || v.n === groesster) continue;
+
+    // 1. Weg und Zeit passen nicht zueinander.
+    const km = String(v.name).match(/(\d+(?:[.,]\d+)?)\s*km/i);
+    if (km && v.min > 0) {
+      const kmh = (parseFloat(km[1].replace(',', '.')) / v.min) * 3600;
+      if (kmh > BLOCK_MAX_KMH) { raus.add(id); continue; }
+    }
+
+    // 2. Weiter vorn, aber schneller als ein Block dahinter.
+    for (const id2 of ids) {
+      if (id2 <= id) continue;
+      const w = b.get(id2);
+      if (w.n > v.n && w.min > v.max) { raus.add(id); break; }
+    }
+  }
+  return raus;
+}
+
 function zuGruppen(eintraege, optionen) {
   const opt      = optionen || {};
   const schwelle = (typeof opt.schwelle === 'number' && opt.schwelle > 0) ? opt.schwelle : 3;
@@ -490,10 +607,31 @@ function zuGruppen(eintraege, optionen) {
       if (z === null) continue;
       sek = z; roh = String(e.zeit).trim();
     }
-    mitZeit.push({ nr: e.nr, sek, roh });
+    mitZeit.push({
+      nr: e.nr, sek, roh,
+      block:     Number.isFinite(e.block) ? e.block : 0,
+      blockName: e.blockName || ''
+    });
   }
-  if (mitZeit.length === 0) return { modus: null, gruppen: [] };
-  mitZeit.sort((a, b) => a.sek - b.sek || a.nr - b.nr);
+  if (mitZeit.length === 0) return { modus: null, gruppen: [], verworfen: [] };
+
+  const raus = verdaechtigeBloecke(mitZeit);
+  const verworfen = [];
+  if (raus.size) {
+    for (let k = mitZeit.length - 1; k >= 0; k--) {
+      if (raus.has(mitZeit[k].block)) {
+        verworfen.push({ nr: mitZeit[k].nr, messstelle: mitZeit[k].blockName });
+        mitZeit.splice(k, 1);
+      }
+    }
+    verworfen.reverse();
+  }
+  if (mitZeit.length === 0) return { modus: null, gruppen: [], verworfen };
+
+  // Erst die Messstelle, dann die Zeit. Wer weiter ist, steht vorn -
+  // auch wenn seine Zeit groesser ist als die des Feldes an einem
+  // frueheren Punkt.
+  mitZeit.sort((a, b) => a.block - b.block || a.sek - b.sek || a.nr - b.nr);
 
   // Taugt die Rohschreibweise als Gruppenschluessel? Ein einzelner
   // Doppeltreffer reicht nicht: bei einem Einzelzeitfahren teilen sich
@@ -507,23 +645,48 @@ function zuGruppen(eintraege, optionen) {
     && zaehler.size <= mitZeit.length * 0.6
     && groesste >= 2;
 
+  // BunchColor wurde als zusaetzliches Gruppenkriterium geprueft und
+  // verworfen: am 05.09.2026 an Event 409896, Contest 3, wechselt die
+  // Farbe innerhalb desselben Feldes staendig (79 zu 78 Fahrer, im
+  // Zickzack). Sie ist ein Zebrastreifen zur Lesbarkeit, kein Bund.
+  // KEINE_ZEIT haelt die Spalte weiterhin von der Zeitrolle fern.
   const roh = [];
   let akt = null;
   for (const e of mitZeit) {
-    const neu = !akt || (nachGleich
-      ? e.roh !== akt.roh
+    // Die Schwelle gilt jetzt in BEIDEN Modi. Gleiche Zeit bindet
+    // weiterhin unbedingt zusammen; darueber hinaus zieht die Schwelle
+    // benachbarte Gruppen zusammen. Ohne das kamen aus einer
+    // LIVE-Messstelle 39 Gruppen zu je ein bis zwei Fahrern heraus -
+    // formal richtig, im Auto unbrauchbar. Am 05.09.2026 an Event
+    // 409896 in allen drei Rennen so gemessen.
+    //
+    // Bei einer Tageswertung liegen die Bunch-Zeiten weit genug
+    // auseinander, dass die Vorgabe von 3 s dort nichts veraendert.
+    const neu = !akt || e.block !== akt.block || (nachGleich
+      ? (e.roh !== akt.roh && (e.sek - akt.letzte) > schwelle)
       : (e.sek - akt.letzte) > schwelle);
-    if (neu) { akt = { roh: e.roh, sek: e.sek, letzte: e.sek, nrs: [e.nr] }; roh.push(akt); }
-    else     { akt.nrs.push(e.nr); akt.letzte = e.sek; }
+    if (neu) {
+      akt = { block: e.block, blockName: e.blockName, roh: e.roh,
+              sek: e.sek, letzte: e.sek, nrs: [e.nr] };
+      roh.push(akt);
+    } else { akt.nrs.push(e.nr); akt.letzte = e.sek; }
   }
 
-  const spitze = roh[0].sek;
+  // Abstaende gelten nur innerhalb einer Messstelle. Ueber Bloecke
+  // hinweg gibt es keinen belastbaren Rueckstand - dann lieber kein
+  // Wert als ein falscher.
+  const ersterBlock = roh[0].block;
+  const spitze      = roh[0].sek;
+  const gleich      = g => g.block === ersterBlock;
+
   return {
     modus: nachGleich ? 'gleich' : 'schwelle',
+    verworfen,
     gruppen: roh.map((g, i) => ({
-      riders: g.nrs,
-      gap:    i === 0 ? null : ausSekunden(g.sek - spitze),
-      gapSek: i === 0 ? 0    : Math.round(g.sek - spitze)
+      riders:     g.nrs,
+      gap:        i === 0 ? null : (gleich(g) ? ausSekunden(g.sek - spitze) : null),
+      gapSek:     i === 0 ? 0    : (gleich(g) ? Math.round(g.sek - spitze)  : null),
+      messstelle: g.blockName || null
     }))
   };
 }
@@ -587,6 +750,7 @@ function passtZu(katName, rennen) {
 // wirklich Daten drinstehen.
 function bewerteListe(l) {
   if (!l.abrufbar || l.art !== 'ergebnis') return -1;
+  if (l.versteckt) return -1;
   if (!l.zeilen) return -1;
   return (l.live ? 1000000 : 0) + l.zeilen;
 }
@@ -621,7 +785,7 @@ function waehleStartliste(reiter, contest) {
 module.exports = {
   eventIdAus, erkunde, holeConfig, holeListe,
   alsFahrer, alsErgebnis, zuGruppen, zuSekunden, ausSekunden,
-  zuordnung, sauber, artDerListe,
+  zuordnung, sauber, artDerListe, flachMitBlock, verdaechtigeBloecke, bewerteListe,
   normName, guete, passtZu, waehleListe, waehleStartliste,
   BASIS_HOST
 };
