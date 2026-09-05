@@ -402,8 +402,15 @@ function renderTaktikBody() {
         ? `<span title="Hauptfeld \u2013 hier endet der Text auf dem Garmin"
              style="flex-shrink:0;font-size:11px;font-weight:600;padding:2px 6px;border-radius:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7">HF</span>`
         : authToken
-          ? `<button class="btn" data-action="set-main" data-gid="${g.id}" title="Als Hauptfeld markieren"
-               style="flex:0;flex-shrink:0;min-width:unset;padding:2px 6px;font-size:11px;color:#ccc;border-color:#eee">HF</button>`
+          ? ((typeof hfVorschlagFuer === 'function' && hfVorschlagFuer(g.id))
+              // Nach einem Import: groesste Gruppe, aber nicht als Hauptfeld
+              // markiert. Derselbe Knopf, dieselbe Aktion - nur eingefaerbt
+              // und mit Fragezeichen, damit er als Frage lesbar ist.
+              ? `<button class="btn hf-vor" data-action="set-main" data-gid="${g.id}"
+                   title="Gr\u00F6\u00DFte Gruppe (${aktivZahl(g)} Fahrer) \u2013 Hauptfeld hierher setzen?"
+                   style="flex:0;flex-shrink:0;min-width:unset;padding:2px 6px;font-size:11px">HF?</button>`
+              : `<button class="btn" data-action="set-main" data-gid="${g.id}" title="Als Hauptfeld markieren"
+                   style="flex:0;flex-shrink:0;min-width:unset;padding:2px 6px;font-size:11px;color:#ccc;border-color:#eee">HF</button>`)
           : '';
       const riderRows = riders.map(r => {
         const nr = r.nr !== undefined ? r.nr : r;

@@ -223,6 +223,77 @@ function timingBewegungen() {
 }
 
 // ---------------------------------------------------------------------
+// Hauptfeld-Vorschlag nach einem Import
+// ---------------------------------------------------------------------
+// applyVorschlag() im Server ordnet die neuen Gruppen positionsweise auf
+// den Bestand: der HF-Marker bleibt am Index haengen, nicht an der
+// Gruppe. Kommen aus der Zeitmessung mehr oder weniger Gruppen als
+// vorher, steht er danach an der falschen Stelle - und auf dem Garmin
+// endet der Text am HF, der Fehler wirkt also bis ins Auto durch.
+//
+// Umgesetzt wird nichts von allein; das waere gegen die Grundregel der
+// Zeitmessung und im Gruppetto oft auch falsch. Stattdessen faerbt sich
+// der ohnehin vorhandene graue HF-Knopf der groessten Gruppe.
+const HF_VORSPRUNG = 2;        // Mindestabstand in Fahrern, sonst kein Vorschlag
+let   hfVorschlagGid = null;   // Gruppe, deren HF-Knopf gerade faerbt
+
+function hfVorschlagLoeschen() { hfVorschlagGid = null; }
+
+// Gruppengroesse ohne DSQ/DNF - wie aktivZahl() in race/taktik-ui.js.
+// Eigene Fassung, weil /timing/apply die Fahrer als reine Nummern
+// zurueckgibt (sanitizeGroups streift den Zustand ab). Der Zustand kommt
+// dann aus dem Stand vor dem Import, uebergeben in "zust".
+function hfZahl(g, zust) {
+  return ((g && g.riders) || []).filter(r => {
+    const nr = (r && r.nr !== undefined) ? r.nr : r;
+    const st = (r && r.status) || (zust ? zust[nr] : null);
+    return !(st === 'dsq' || st === 'dnf');
+  }).length;
+}
+
+// Zustaende aus dem Stand vor dem Import, nach Startnummer.
+function hfZustaende(gruppen) {
+  const zust = {};
+  (gruppen || []).forEach(g => ((g && g.riders) || []).forEach(r => {
+    if (r && r.nr !== undefined && r.status) zust[r.nr] = r.status;
+  }));
+  return zust;
+}
+
+// Liefert { gid, name, zahl } oder null. Kein Vorschlag, wenn:
+//   - weniger als zwei Gruppen da sind
+//   - zwei Gruppen gleich gross sind (kein eindeutiges Groesstes)
+//   - die groesste Gruppe schon das Hauptfeld ist
+//   - ihr Vorsprung kleiner als HF_VORSPRUNG ist (12 gegen 11 ist kein Grund)
+// Welche Gruppe als Hauptfeld gilt, wird wie in mainGroupIdx() und im
+// Server bestimmt: ausdruecklicher main-Marker, sonst die letzte Gruppe.
+function hfVorschlagRechne(gruppen, zust) {
+  const list = Array.isArray(gruppen) ? gruppen.filter(Boolean) : [];
+  if (list.length < 2) return null;
+  const zahlen = list.map(g => hfZahl(g, zust));
+  let max = -1, maxIdx = -1, doppelt = false;
+  zahlen.forEach((z, i) => {
+    if (z > max)       { max = z; maxIdx = i; doppelt = false; }
+    else if (z === max) doppelt = true;
+  });
+  if (maxIdx < 0 || doppelt || max <= 0) return null;
+  const mIdx = list.findIndex(g => g.main === true);
+  const hfIdx = mIdx >= 0 ? mIdx : list.length - 1;
+  if (maxIdx === hfIdx) return null;
+  if (max - zahlen[hfIdx] < HF_VORSPRUNG) return null;
+  return { gid: list[maxIdx].id, name: list[maxIdx].name || 'Gruppe', zahl: max };
+}
+
+// Frage der Oberflaeche: faerbt der HF-Knopf dieser Gruppe? Der Vorschlag
+// wird dabei jedes Mal neu gerechnet - wandern zwischendurch Fahrer,
+// verschwindet er still, statt auf eine ueberholte Lage zu zeigen.
+function hfVorschlagFuer(gid) {
+  if (!authToken || !hfVorschlagGid || hfVorschlagGid !== gid) return false;
+  const v = hfVorschlagRechne(taktikGroups, null);
+  return !!(v && v.gid === gid);
+}
+
+// ---------------------------------------------------------------------
 // Aktionen im Rennen
 // ---------------------------------------------------------------------
 
@@ -243,8 +314,14 @@ async function timingApply(gid) {
     taktikGroups = (d.groups || []).map(g => ({ ...g, src: 'auto' }));
     bewegBuchen(activeRaceId, alt, taktikGroups, 'auto');
     timingProp = null;
+    // Steht der HF-Marker nach dem Import noch richtig? Der Zustand der
+    // Fahrer kommt aus "alt", weil die Antwort nur Nummern enthaelt.
+    const vor = hfVorschlagRechne(taktikGroups, hfZustaende(alt));
+    hfVorschlagGid = vor ? vor.gid : null;
     renderTaktikBody(); renderStrip(taktikGroups);
-    showToast('\u23F1 \u00DCbernommen');
+    showToast('\u23F1 \u00DCbernommen' + (vor
+      ? ' \u00B7 gr\u00F6\u00DFte Gruppe: ' + String(vor.name).slice(0, 14) + ' (' + vor.zahl + ')'
+      : ''));
   } catch (e) { showToast('\u26A0\uFE0F ' + e.message); }
   finally { timingBusy = false; }
 }

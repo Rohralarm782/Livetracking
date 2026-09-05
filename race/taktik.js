@@ -54,6 +54,9 @@ async function arbeitsRennenNachladen() {
   mergingGid      = null;
   movingRider     = { gid: null, nr: null };
   splitNrs.clear();
+  // Der Vorschlag gehoert zum alten Rennen: seine Gruppen-ID gibt es hier
+  // nicht, und die groesste Gruppe ist eine andere.
+  if (typeof hfVorschlagLoeschen === 'function') hfVorschlagLoeschen();
   await loadGroups();
   if (typeof loadDisplays      === 'function') await loadDisplays();
   if (typeof loadGapSeries     === 'function') await loadGapSeries(true);
@@ -357,6 +360,9 @@ function mainGroupIdx() {
 // Gruppe traegt ihn, ein Klick verschiebt ihn.
 async function setMainGroup(gid) {
   if (!authToken) return;
+  // Der Vorschlag hat seinen Zweck erfuellt - egal an welcher Gruppe
+  // gesetzt wurde, gefaerbt wird danach nichts mehr.
+  if (typeof hfVorschlagLoeschen === 'function') hfVorschlagLoeschen();
   taktikGroups.forEach(g => { g.main = (g.id === gid); });
   await saveGroups();
   renderTaktikBody(); renderStrip(taktikGroups);
