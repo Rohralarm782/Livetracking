@@ -681,7 +681,29 @@ function markerBeschriftung(m) {
 // Nichts hier schreibt: startOffset, marker[] und die Streckenpunkte
 // werden nur gelesen.
 
-const NP_ANZAHL     = 5;     // so viele Zeilen
+// Zeilenanzahl. Im Auto zaehlt der schnelle Blick, und der Kasten darf
+// den Kartenausschnitt auf dem Handy nicht zustellen - dort bleibt es
+// bei fuenf. Am Schreibtisch ist Platz da, und wer plant, will weiter
+// nach vorne sehen als bis zur naechsten Verpflegung.
+//
+// Gerechnet wird bei jedem Zeichnen neu, deshalb braucht es keinen
+// resize-Horcher: Drehen des Geraets oder Verkleinern des Fensters
+// wirkt beim naechsten Takt.
+const NP_ANZAHL_MIN =   5;   // Handy und schmale Fenster
+const NP_ANZAHL_MAX =   8;   // mehr wird auch am Schreibtisch nicht gelesen
+const NP_BREIT_PX   = 768;   // dieselbe Schwelle wie die Media Query im Stilblatt
+const NP_ZEILE_PX   =  25;   // gemessene Zeilenhoehe inklusive Trennlinie
+const NP_OBEN_PX    = 124;   // Oberkante des Kastens, siehe #naechstePunkte
+const NP_UNTEN_PX   =  40;   // Luft zur Fussleiste von Leaflet
+
+function npAnzahl() {
+  if (typeof window === 'undefined') return NP_ANZAHL_MIN;
+  if ((window.innerWidth || 0) < NP_BREIT_PX) return NP_ANZAHL_MIN;
+  const platz = Math.floor(
+    ((window.innerHeight || 0) - NP_OBEN_PX - NP_UNTEN_PX) / NP_ZEILE_PX);
+  if (!isFinite(platz)) return NP_ANZAHL_MIN;
+  return Math.max(NP_ANZAHL_MIN, Math.min(NP_ANZAHL_MAX, platz));
+}
 const NP_ABSEITS_M  = 250;   // darueber gilt die Projektion als unsicher
 const NP_RUNDKURS_M = 200;   // Abstand Anfang/Ende, bis zu dem es eine Runde ist
 const NP_ZIEL_ICON  = '\u{1F3C1}';
@@ -774,8 +796,28 @@ function naechstePunkteAb(lat, lon, raceId) {
   return {
     abstand:   t.dist,
     abseits:   t.dist > NP_ABSEITS_M,
-    eintraege: eintraege.slice(0, NP_ANZAHL)
+    eintraege: eintraege.slice(0, npAnzahl())
   };
+}
+
+// Abstand einer Koordinate zur Strecke eines Rennens, in Metern.
+// Nur der Abstand, nicht die Streckenposition: map.js waehlt damit
+// unter mehreren Teamautos dasjenige aus, das wirklich am Rennen
+// haengt. Ein Wagen, der ueber die Bundesstrasse zum Ziel vorfaehrt,
+// wird zwar ebenfalls auf die Strecke projiziert - aber eben mit
+// einigen Kilometern Abstand.
+//
+// Bewusst nicht die Streckenposition: auf einem Rundkurs hat der
+// Fuehrende direkt hinter dem Zielstrich s ~ 0 und waere damit der
+// Hinterste. Nichts hier schreibt.
+function npStreckenAbstand(lat, lon, raceId) {
+  if (typeof lat !== 'number' || typeof lon !== 'number' || !raceId) return null;
+  const coords = gpxByRace[raceId];
+  if (!Array.isArray(coords) || coords.length < 2) return null;
+  const cum = npCumOf(coords);
+  if (!cum) return null;
+  const t = sNaechst(lat, lon, coords, cum);
+  return t ? t.dist : null;
 }
 
 let markerLayer = [];

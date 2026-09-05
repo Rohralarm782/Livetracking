@@ -663,16 +663,40 @@ function updateNpUi() {
   const sub = document.getElementById('npSub');
   if (sw)  sw.classList.toggle('on', npOn);
   if (sub) sub.textContent = npOn
-    ? 'Links auf der Karte: Entfernung bis zu den n\u00E4chsten f\u00FCnf Punkten des eigenen Rennens.'
+    ? 'Links auf der Karte: Entfernung bis zu den n\u00E4chsten Punkten des eigenen Rennens. Am gro\u00DFen Bildschirm mehr Zeilen als am Handy.'
     : 'Aus. Die Karte zeigt keine Entfernungen zu den n\u00E4chsten Punkten.';
+}
+
+// Der einmal gewaehlte Tracker bleibt der Bezugspunkt, solange er
+// frisch meldet. Ohne dieses Gedaechtnis wechselt der Bezug im Konvoi
+// bei jedem Takt zwischen zwei Wagen hin und her, weil mal der eine und
+// mal der andere naeher an der Linie liegt - die Kilometerzahlen
+// springen dann um hunderte Meter, ohne dass sich etwas geaendert hat.
+let npBezugId = null;
+
+// Ein Eintrag aus /positions, wenn er brauchbar ist. Eine veraltete
+// Position waere schlimmer als keine: sie sieht aus wie eine Aussage
+// und ist keine. Grenze ist STALE_MS, dieselbe wie beim Ausgrauen der
+// Marker.
+function npFrisch(daten, id) {
+  const p = daten ? daten[id] : null;
+  if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return null;
+  if (p.timestamp && Date.now() - p.timestamp > STALE_MS) return null;
+  return p;
 }
 
 // Bezugspunkt der Rechnung.
 //
 // Erste Wahl ist die eigene Ortung, solange sie laeuft: sie ist eine
 // Sekunde frisch statt einen Abfragetakt alt. Sonst die Position, die
-// der SpoLei sendet - sie markiert, wo das Rennen ist, und steht in
-// /positions jedem Geraet zur Verfuegung.
+// der SpoLei ueber /team-position sendet - sie liegt unter dem
+// Schluessel TEAMAUTO und steht jedem Geraet zur Verfuegung.
+//
+// Ab 2.13.0 als dritte Stufe jeder Tracker mit der Rolle Teamauto. Die
+// native App sendet unter ihrer eigenen Kennung, nicht als TEAMAUTO -
+// ihre Position blieb damit bis 2.12.0 ungenutzt, und der Kasten
+// meldete "Keine Teamauto-Position", obwohl der Wagen auf der Karte
+// stand.
 //
 // lastPosData wird in race/taktik.js mit let deklariert, und das laedt
 // nach map.js. Ein Zugriff vor dem Laden faellt in die temporale Tote
@@ -684,12 +708,37 @@ function npBezugsPunkt() {
   }
   let daten = null;
   try { daten = lastPosData; } catch (e) { return null; }
-  const p = daten ? daten['TEAMAUTO'] : null;
-  if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return null;
-  // Eine Stunde alte Position waere schlimmer als keine: sie sieht aus
-  // wie eine Aussage und ist keine.
-  if (p.timestamp && Date.now() - p.timestamp > STALE_MS) return null;
-  return [p.lat, p.lon];
+
+  const p = npFrisch(daten, 'TEAMAUTO');
+  if (p) return [p.lat, p.lon];
+
+  // Die bestehende Wahl zuerst - sie gilt weiter, solange der Wagen
+  // meldet und seine Rolle behalten hat.
+  const klebt = npBezugId ? npFrisch(daten, npBezugId) : null;
+  if (klebt && klebt.role === 'teamauto') return [klebt.lat, klebt.lon];
+  npBezugId = null;
+
+  // Erstwahl: der Wagen mit dem kleinsten Abstand zur Strecke des
+  // eigenen Rennens. Laeuft nur, solange keiner gewaehlt ist - die
+  // Projektion ueber alle Streckenpunkte je Kandidat soll nicht in
+  // jedem Takt anfallen.
+  const rid = (typeof meinRaceId === 'function') ? meinRaceId() : null;
+  let wahl = null, besterAbstand = Infinity;
+  let ersatz = null, ersatzZeit = -1;
+  for (const id of Object.keys(daten || {})) {
+    const k = npFrisch(daten, id);
+    if (!k || k.role !== 'teamauto') continue;
+    // Rueckfall, falls keine Strecke geladen ist: die juengste Meldung.
+    const zeit = k.timestamp || 0;
+    if (zeit > ersatzZeit) { ersatzZeit = zeit; ersatz = id; }
+    const d = (rid && typeof npStreckenAbstand === 'function')
+      ? npStreckenAbstand(k.lat, k.lon, rid) : null;
+    if (d !== null && d < besterAbstand) { besterAbstand = d; wahl = id; }
+  }
+  npBezugId = wahl || ersatz;
+  if (!npBezugId) return null;
+  const w = daten[npBezugId];
+  return [w.lat, w.lon];
 }
 
 // Unter einem Kilometer in Zehnerschritten - "in 940 m" ist im Auto
